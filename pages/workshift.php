@@ -1,3 +1,8 @@
+<?php 
+require_once '../db.php';  // Ensure the file is included only once
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -136,239 +141,132 @@
     </div>
     <div class="sidenav-footer mx-3 ">
       <div class="card card-plain shadow-none" id="sidenavCard">
-        <img class="w-50 mx-auto" src="../assets/img/illustrations/icon-documentation.svg" alt="sidebar_illustration">
         <div class="card-body text-center p-3 w-100 pt-0">
           <div class="docs-info">
-            <h6 class="mb-0">Need help?</h6>
-            <p class="text-xs font-weight-bold mb-0">Please check our docs</p>
           </div>
         </div>
       </div>
-      <a href="https://www.creative-tim.com/learning-lab/bootstrap/license/argon-dashboard" target="_blank" class="btn btn-dark btn-sm w-100 mb-3">Documentation</a>
-      <a class="btn btn-primary btn-sm mb-0 w-100" href="https://www.creative-tim.com/product/argon-dashboard-pro?ref=sidebarfree" type="button">Upgrade to pro</a>
     </div>
   </aside> <!--smpai sini-->>
-  <!--<main class="main-content position-relative border-radius-lg ">
-    Navbar
-    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
-      <div class="container-fluid py-1 px-3">
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
-            <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Settings</a></li>
-            <li class="breadcrumb-item text-sm text-white active" aria-current="page">Work Shift</li>
-          </ol>
-          <h6 class="font-weight-bolder text-white mb-0">Work Shift</h6>
-        </nav>
-        <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
-          <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-            <div class="input-group">
-              <span class="input-group-text text-body"><i class="fas fa-search" aria-hidden="true"></i></span>
-              <input type="text" class="form-control" placeholder="Type here...">
-            </div>
-          </div>
-          <ul class="navbar-nav  justify-content-end">
-            <li class="nav-item d-flex align-items-center">
-              <a href="javascript:;" class="nav-link text-white font-weight-bold px-0">
-                <i class="fa fa-user me-sm-1"></i>
-                <span class="d-sm-inline d-none">Sign In</span>
-              </a>
-            </li>
-            <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
-              <a href="javascript:;" class="nav-link text-white p-0" id="iconNavbarSidenav">
-                <div class="sidenav-toggler-inner">
-                  <i class="sidenav-toggler-line bg-white"></i>
-                  <i class="sidenav-toggler-line bg-white"></i>
-                  <i class="sidenav-toggler-line bg-white"></i>
+    <main class="main-content position-relative border-radius-lg">
+            <!-- Navbar -->
+            <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
+            <div class="container-fluid py-1 px-3">
+                <nav aria-label="breadcrumb">
+                <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+                    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Settings</a></li>
+                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Work Shift</li>
+                </ol>
+                <h6 class="font-weight-bolder text-white mb-0">Work Shift</h6>
+                </nav>
+                <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
+                <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+                    <div class="input-group">
+                    <span class="input-group-text text-body"><i class="fas fa-search" aria-hidden="true"></i></span>
+                    <input type="text" class="form-control" placeholder="Type here...">
+                    </div>
                 </div>
-              </a>
-            </li>
-            <li class="nav-item px-3 d-flex align-items-center">
-              <a href="javascript:;" class="nav-link text-white p-0">
-                <i class="fa fa-cog fixed-plugin-button-nav cursor-pointer"></i>
-              </a>
-            </li>
-            <li class="nav-item dropdown pe-2 d-flex align-items-center">
-              <a href="javascript:;" class="nav-link text-white p-0" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fa fa-bell cursor-pointer"></i>
-              </a>
-              <ul class="dropdown-menu  dropdown-menu-end  px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButton">
-                <li class="mb-2">
-                  <a class="dropdown-item border-radius-md" href="javascript:;">
-                    <div class="d-flex py-1">
-                      <div class="my-auto">
-                        <img src="../assets/img/team-2.jpg" class="avatar avatar-sm  me-3 ">
-                      </div>
-                      <div class="d-flex flex-column justify-content-center">
-                        <h6 class="text-sm font-weight-normal mb-1">
-                          <span class="font-weight-bold">New message</span> from Laur
-                        </h6>
-                        <p class="text-xs text-secondary mb-0">
-                          <i class="fa fa-clock me-1"></i>
-                          13 minutes ago
-                        </p>
-                      </div>
-                    </div>
-                  </a>
-                </li>
-                <li class="mb-2">
-                  <a class="dropdown-item border-radius-md" href="javascript:;">
-                    <div class="d-flex py-1">
-                      <div class="my-auto">
-                        <img src="../assets/img/small-logos/logo-spotify.svg" class="avatar avatar-sm bg-gradient-dark  me-3 ">
-                      </div>
-                      <div class="d-flex flex-column justify-content-center">
-                        <h6 class="text-sm font-weight-normal mb-1">
-                          <span class="font-weight-bold">New album</span> by Travis Scott
-                        </h6>
-                        <p class="text-xs text-secondary mb-0">
-                          <i class="fa fa-clock me-1"></i>
-                          1 day
-                        </p>
-                      </div>
-                    </div>
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item border-radius-md" href="javascript:;">
-                    <div class="d-flex py-1">
-                      <div class="avatar avatar-sm bg-gradient-secondary  me-3  my-auto">
-                        <svg width="12px" height="12px" viewBox="0 0 43 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-                          <title>credit-card</title>
-                          <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                            <g transform="translate(-2169.000000, -745.000000)" fill="#FFFFFF" fill-rule="nonzero">
-                              <g transform="translate(1716.000000, 291.000000)">
-                                <g transform="translate(453.000000, 454.000000)">
-                                  <path class="color-background" d="M43,10.7482083 L43,3.58333333 C43,1.60354167 41.3964583,0 39.4166667,0 L3.58333333,0 C1.60354167,0 0,1.60354167 0,3.58333333 L0,10.7482083 L43,10.7482083 Z" opacity="0.593633743"></path>
-                                  <path class="color-background" d="M0,16.125 L0,32.25 C0,34.2297917 1.60354167,35.8333333 3.58333333,35.8333333 L39.4166667,35.8333333 C41.3964583,35.8333333 43,34.2297917 43,32.25 L43,16.125 L0,16.125 Z M19.7083333,26.875 L7.16666667,26.875 L7.16666667,23.2916667 L19.7083333,23.2916667 L19.7083333,26.875 Z M35.8333333,26.875 L28.6666667,26.875 L28.6666667,23.2916667 L35.8333333,23.2916667 L35.8333333,26.875 Z"></path>
+                <ul class="navbar-nav  justify-content-end">
+                    <li class="nav-item d-flex align-items-center">
+                    <a href="javascript:;" class="nav-link text-white font-weight-bold px-0">
+                        <i class="fa fa-user me-sm-1"></i>
+                        <span class="d-sm-inline d-none">Sign In</span>
+                    </a>
+                    </li>
+                    <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
+                    <a href="javascript:;" class="nav-link text-white p-0" id="iconNavbarSidenav">
+                        <div class="sidenav-toggler-inner">
+                        <i class="sidenav-toggler-line bg-white"></i>
+                        <i class="sidenav-toggler-line bg-white"></i>
+                        <i class="sidenav-toggler-line bg-white"></i>
+                        </div>
+                    </a>
+                    </li>
+                    <li class="nav-item px-3 d-flex align-items-center">
+                    <a href="javascript:;" class="nav-link text-white p-0">
+                        <i class="fa fa-cog fixed-plugin-button-nav cursor-pointer"></i>
+                    </a>
+                    </li>
+                    <li class="nav-item dropdown pe-2 d-flex align-items-center">
+                    <a href="javascript:;" class="nav-link text-white p-0" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-bell cursor-pointer"></i>
+                    </a>
+                    <ul class="dropdown-menu  dropdown-menu-end  px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButton">
+                        <li class="mb-2">
+                        <a class="dropdown-item border-radius-md" href="javascript:;">
+                            <div class="d-flex py-1">
+                            <div class="my-auto">
+                                <img src="../assets/img/team-2.jpg" class="avatar avatar-sm  me-3 ">
+                            </div>
+                            <div class="d-flex flex-column justify-content-center">
+                                <h6 class="text-sm font-weight-normal mb-1">
+                                <span class="font-weight-bold">New message</span> from Laur
+                                </h6>
+                                <p class="text-xs text-secondary mb-0">
+                                <i class="fa fa-clock me-1"></i>
+                                13 minutes ago
+                                </p>
+                            </div>
+                            </div>
+                        </a>
+                        </li>
+                        <li class="mb-2">
+                        <a class="dropdown-item border-radius-md" href="javascript:;">
+                            <div class="d-flex py-1">
+                            <div class="my-auto">
+                                <img src="../assets/img/small-logos/logo-spotify.svg" class="avatar avatar-sm bg-gradient-dark  me-3 ">
+                            </div>
+                            <div class="d-flex flex-column justify-content-center">
+                                <h6 class="text-sm font-weight-normal mb-1">
+                                <span class="font-weight-bold">New album</span> by Travis Scott
+                                </h6>
+                                <p class="text-xs text-secondary mb-0">
+                                <i class="fa fa-clock me-1"></i>
+                                1 day
+                                </p>
+                            </div>
+                            </div>
+                        </a>
+                        </li>
+                        <li>
+                        <a class="dropdown-item border-radius-md" href="javascript:;">
+                            <div class="d-flex py-1">
+                            <div class="avatar avatar-sm bg-gradient-secondary  me-3  my-auto">
+                                <svg width="12px" height="12px" viewBox="0 0 43 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                                <title>credit-card</title>
+                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                    <g transform="translate(-2169.000000, -745.000000)" fill="#FFFFFF" fill-rule="nonzero">
+                                    <g transform="translate(1716.000000, 291.000000)">
+                                        <g transform="translate(453.000000, 454.000000)">
+                                        <path class="color-background" d="M43,10.7482083 L43,3.58333333 C43,1.60354167 41.3964583,0 39.4166667,0 L3.58333333,0 C1.60354167,0 0,1.60354167 0,3.58333333 L0,10.7482083 L43,10.7482083 Z" opacity="0.593633743"></path>
+                                        <path class="color-background" d="M0,16.125 L0,32.25 C0,34.2297917 1.60354167,35.8333333 3.58333333,35.8333333 L39.4166667,35.8333333 C41.3964583,35.8333333 43,34.2297917 43,32.25 L43,16.125 L0,16.125 Z M19.7083333,26.875 L7.16666667,26.875 L7.16666667,23.2916667 L19.7083333,23.2916667 L19.7083333,26.875 Z M35.8333333,26.875 L28.6666667,26.875 L28.6666667,23.2916667 L35.8333333,23.2916667 L35.8333333,26.875 Z"></path>
+                                        </g>
+                                    </g>
+                                    </g>
                                 </g>
-                              </g>
-                            </g>
-                          </g>
-                        </svg>
-                      </div>
-                      <div class="d-flex flex-column justify-content-center">
-                        <h6 class="text-sm font-weight-normal mb-1">
-                          Payment successfully completed
-                        </h6>
-                        <p class="text-xs text-secondary mb-0">
-                          <i class="fa fa-clock me-1"></i>
-                          2 days
-                        </p>
-                      </div>
-                    </div>
-                  </a>
-                </li>
-              </ul>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-    End Navbar 
-    <div class="col-lg-8">
-  <div class="card h-100">
-    <div class="card-header pb-0 p-3">
-      <div class="row">
-        <div class="col-6 d-flex align-items-center">
-          <h6 class="mb-0">Work Shift Management</h6>
-        </div>
-        <div class="col-6 text-end">
-          <button class="btn btn-outline-primary btn-sm mb-0" onclick="document.getElementById('addShiftForm').style.display='block'">Add New Shift</button>
-        </div>
-      </div>
-    </div>
-    <div class="card-body p-3 pb-0">
-      <ul class="list-group">
-        <li class="list-group-item border-0 d-flex justify-content-between align-items-center ps-0 mb-2 border-radius-lg">
-          <div class="d-flex flex-column">
-            <h6 class="mb-1 text-dark font-weight-bold text-sm">001 - Morning Shift</h6>
-            <span class="text-xs">08:00 - 16:00 | Work: 8h | Break: 1h | Status: Active</span>
-          </div>
-          <div>
-            <button class="btn btn-sm btn-info me-1">Edit</button>
-            <button class="btn btn-sm btn-danger">Delete</button>
-          </div>
-        </li>
-        <li class="list-group-item border-0 d-flex justify-content-between align-items-center ps-0 mb-2 border-radius-lg">
-          <div class="d-flex flex-column">
-            <h6 class="mb-1 text-dark font-weight-bold text-sm">002 - Afternoon Shift</h6>
-            <span class="text-xs">14:00 - 22:00 | Work: 8h | Break: 1h | Status: Inactive</span>
-          </div>
-          <div>
-            <button class="btn btn-sm btn-info me-1">Edit</button>
-            <button class="btn btn-sm btn-danger">Delete</button>
-          </div>
-        </li>
-      </ul>
-    </div>
-  </div>
-</div>
-
-<div class="col-lg-4 mt-4" id="addShiftForm" style="display: none;">
-  <div class="card h-100">
-    <div class="card-header pb-0 p-3">
-      <h6 class="mb-0">Add New Shift</h6>
-    </div>
-    <div class="card-body p-3">
-      <form>
-        <div class="mb-3">
-          <label for="code" class="form-label">Shift Code</label>
-          <input type="text" class="form-control" id="code" required>
-        </div>
-        <div class="mb-3">
-          <label for="description" class="form-label">Description</label>
-          <input type="text" class="form-control" id="description" required>
-        </div>
-        <div class="mb-3">
-          <label for="start_time" class="form-label">Start Time</label>
-          <input type="time" class="form-control" id="start_time" required>
-        </div>
-        <div class="mb-3">
-          <label for="end_time" class="form-label">End Time</label>
-          <input type="time" class="form-control" id="end_time" required>
-        </div>
-        <div class="mb-3">
-          <label for="work_hour" class="form-label">Work Hour</label>
-          <input type="number" class="form-control" id="work_hour" required>
-        </div>
-        <div class="mb-3">
-          <label for="break_hour" class="form-label">Break Hour</label>
-          <input type="number" class="form-control" id="break_hour" required>
-        </div>
-        <div class="mb-3">
-          <label for="status" class="form-label">Status</label>
-          <select class="form-select" id="status" required>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-            <option value="Archived">Archived</option>
-          </select>
-        </div>
-        <div class="d-flex justify-content-between">
-          <button type="submit" class="btn btn-primary">Add Shift</button>
-          <button type="button" class="btn btn-secondary" onclick="document.getElementById('addShiftForm').style.display='none'">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>-->
-<main class="main-content position-relative border-radius-lg">
-  <!-- Navbar -->
-  <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl" id="navbarBlur" data-scroll="false">
-    <div class="container-fluid py-1 px-3">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
-          <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Settings</a></li>
-          <li class="breadcrumb-item text-sm text-white active" aria-current="page">Work Shift</li>
-        </ol>
-        <h6 class="font-weight-bolder text-white mb-0">Work Shift</h6>
-      </nav>
-      <!-- Add your other navbar content here -->
-    </div>
-  </nav>
-
-  <!-- Main content -->
+                                </svg>
+                            </div>
+                            <div class="d-flex flex-column justify-content-center">
+                                <h6 class="text-sm font-weight-normal mb-1">
+                                Payment successfully completed
+                                </h6>
+                                <p class="text-xs text-secondary mb-0">
+                                <i class="fa fa-clock me-1"></i>
+                                2 days
+                                </p>
+                            </div>
+                            </div>
+                        </a>
+                        </li>
+                    </ul>
+                    </li>
+                </ul>
+                </div>
+            </div>
+            </nav>
+            <!-- End Navbar -->
+  <!-- Main content
   <div class="row">
-    <!-- Work Shift List -->
     <div class="col-lg-6">
       <div class="card h-100">
         <div class="card-header pb-0 p-3">
@@ -405,7 +303,7 @@
       </div>
     </div>
 
-    <!-- Add Shift Form -->
+    Add Shift Form
     <div class="col-lg-6 mt-4">
       <div class="card h-100" id="addShiftForm">
         <div class="card-header pb-0 p-3">
@@ -454,6 +352,98 @@
       </div>
     </div>
   </div>
-</main>
+</main>-->
 
+<!-- Main content -->
+<div class="container-fluid">
+  <div class="row">
+    <!-- Work Shift List -->
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-header py-3 px-4">
+          <h6 class="mb-0">Work Shift Management</h6>
+        </div>
+        <div class="card-body p-3">
+          <ul class="list-group">
+            <?php
+            include '../db.php';
+            $sql = "SELECT * FROM shifts";
+            $result = $conn->query($sql);
+
+            if ($result->num_rows > 0) {
+              while ($row = $result->fetch_assoc()) {
+                echo '
+                <li class="list-group-item d-flex justify-content-between align-items-center mb-2 p-3 border-radius-lg">
+                  <div class="d-flex flex-column">
+                    <h6 class="mb-1 text-dark font-weight-bold text-sm">'
+                      . htmlspecialchars($row['code']) . ' - ' . htmlspecialchars($row['description']) . '</h6>
+                    <span class="text-xs">'
+                      . htmlspecialchars($row['start_time']) .
+                      ' | Work: ' . htmlspecialchars($row['work_hour']) . 'h | Break: ' . htmlspecialchars($row['break_hour']) .
+                      'h | Status: ' . htmlspecialchars($row['status']) .
+                    '</span>
+                  </div>
+                  <div class="d-flex">
+                    <form method="POST" action="crudshift.php" onsubmit="return confirm(\'Are you sure you want to delete this shift?\');">
+                      <input type="hidden" name="delete_code" value="' . htmlspecialchars($row['code']) . '">
+                      <button type="submit" name="delete_shift" class="btn btn-sm btn-danger ms-2">Delete</button>
+                    </form>
+                  </div>
+                </li>';
+              }
+            } else {
+              echo '<li class="list-group-item">No shifts available.</li>';
+            }
+            ?>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Shift Form -->
+    <div class="col-lg-6 mt-4 mt-lg-0">
+      <div class="card shadow-sm border-0 rounded-3" id="addShiftForm">
+        <div class="card-header py-3 px-4">
+          <h6 class="mb-0">Add New Shift</h6>
+        </div>
+        <div class="card-body p-3">
+          <form method="POST" action="crudshift.php">
+            <div class="mb-3">
+              <label for="code" class="form-label">Shift Code</label>
+              <input type="text" class="form-control" id="code" name="code" required>
+            </div>
+            <div class="mb-3">
+              <label for="description" class="form-label">Description</label>
+              <input type="text" class="form-control" id="description" name="description" required>
+            </div>
+            <div class="mb-3">
+              <label for="start_time" class="form-label">Start Time</label>
+              <input type="time" class="form-control" id="start_time" name="start_time" required>
+            </div>
+            <div class="mb-3">
+              <label for="work_hour" class="form-label">Work Hour</label>
+              <input type="number" class="form-control" id="work_hour" name="work_hour" required>
+            </div>
+            <div class="mb-3">
+              <label for="break_hour" class="form-label">Break Hour</label>
+              <input type="number" class="form-control" id="break_hour" name="break_hour" required>
+            </div>
+            <div class="mb-3">
+              <label for="status" class="form-label">Status</label>
+              <select class="form-select" id="status" name="status" required>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+            <div class="d-flex justify-content-between">
+              <button type="submit" class="btn btn-primary">Add Shift</button>
+              <!--<button type="button" class="btn btn-secondary" onclick="document.getElementById('addShiftForm').style.display='none'">Cancel</button>-->
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        </main>
 </html>
