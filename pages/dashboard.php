@@ -72,13 +72,45 @@
           </a>
         </li>
         <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-toggle="collapse" href="#settingsMenu" role="button" aria-expanded="false" aria-controls="settingsMenu">
+          <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
+            <i class="ni ni-settings text-dark text-sm opacity-10"></i>
+          </div>
+          <span class="nav-link-text ms-1">Settings</span>
+        </a>
+        <div class="collapse" id="settingsMenu">
+          <ul class="nav ms-4 ps-3">
+            <li class="nav-item">
+              <a class="nav-link" href="../pages/company.php">
+                <span class="sidenav-normal">Company</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="../pages/department.php">
+                <span class="sidenav-normal">Department</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="../pages/roles.php">
+                <span class="sidenav-normal">Roles</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="../pages/workshift.php">
+                <span class="sidenav-normal">Work Shift</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+        <!--<li class="nav-item">
           <a class="nav-link " href="../pages/virtual-reality.html">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-app text-dark text-sm opacity-10"></i>
             </div>
             <span class="nav-link-text ms-1">Virtual Reality</span>
           </a>
-        </li>
+        </li>-->
         <li class="nav-item">
           <a class="nav-link " href="../pages/rtl.html">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
