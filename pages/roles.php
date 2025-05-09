@@ -339,6 +339,7 @@ if (empty($_SESSION['csrf_token'])) {
                                         <?php endif; ?>
                                     </tbody>
                                 </table>
+
                             </div>
                         </div>
                     </div>
@@ -500,3 +501,5 @@ if (empty($_SESSION['csrf_token'])) {
 // Close connection
 $conn->close();
 ?>
+=======
+

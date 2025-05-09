@@ -26,6 +26,7 @@ if (isset($_POST['add_role'])) {
             throw new Exception("Invalid security token");
         }
 
+
         $name = $_POST['name'];
         $status = isset($_POST['status']) ? (int) $_POST['status'] : 0;
 
