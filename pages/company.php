@@ -162,7 +162,7 @@ require_once '../db.php';  // Ensure the file is included only once
               <table class="table table-striped">
                 <thead>
                   <tr>
-                    <th>ID</th>
+                    <th>No</th>
                     <th>Code</th>
                     <th>Name</th>
                     <th>Status</th>
@@ -171,37 +171,52 @@ require_once '../db.php';  // Ensure the file is included only once
                 </thead>
                 <tbody>
                 <?php
-                  $result = $conn->query("SELECT * FROM company");
-                  if ($result && $result->num_rows > 0) {
-                    while ($row = $result->fetch_assoc()) {
-                      $id = $row['id'];
-                      $code = htmlspecialchars($row['code']);
-                      $name = htmlspecialchars($row['name']);
-                      $status = $row['status'] ? 'Active' : 'Inactive';
-                      $raw_status = $row['status'];
+                  // Display company list
+                  $query = "SELECT * FROM company";
+                  $result = $conn->query($query);
 
-                      echo "
-                        <tr>
-                          <td>$id</td>
-                          <td>$code</td>
-                          <td>$name</td>
-                          <td>$status</td>
-                          <td>
-                            <a href='#' class='btn btn-warning btn-sm edit-btn'
-                              data-id='$id'
-                              data-code='$code'
-                              data-name='$name'
-                              data-status='$raw_status'
-                              data-bs-toggle='modal'
-                              data-bs-target='#editCompanyModal'>Edit</a>
-                            <a href='crudCompany.php?delete_id=$id' class='btn btn-danger btn-sm' onclick='return confirm(\"Are you sure?\")'>Delete</a>
-                          </td>
-                        </tr>";
-                    }
+                  if ($result && $result->num_rows > 0) {
+                      $counter = 1; // Numbering starts from 1
+
+                      while ($row = $result->fetch_assoc()) {
+                          $id = $row['id']; // Actual database ID
+                          $code = htmlspecialchars($row['code']);
+                          $name = htmlspecialchars($row['name']);
+                          $status = $row['status'] ? 'Active' : 'Inactive';
+                          $raw_status = $row['status']; // Needed for modal input
+
+                          echo '
+                          <tr>
+                              <td>' . $counter++ . '</td>
+                              <td>' . $code . '</td>
+                              <td>' . $name . '</td>
+                              <td>' . $status . '</td>
+                              <td>
+                                  <a href="#" class="btn btn-warning btn-sm edit-company-btn"
+                                    data-id="' . $id . '"
+                                    data-code="' . $code . '"
+                                    data-name="' . $name . '"
+                                    data-status="' . $raw_status . '"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editCompanyModal">
+                                    Edit
+                                  </a>
+                                  <a href="crudCompany.php?delete_id=' . $id . '" 
+                                    class="btn btn-danger btn-sm" 
+                                    onclick="return confirm(\'Are you sure you want to delete this company?\');">
+                                    Delete
+                                  </a>
+                              </td>
+                          </tr>';
+                      }
                   } else {
-                    echo "<tr><td colspan='5'>No company found.</td></tr>";
+                      echo '
+                      <tr>
+                          <td colspan="5" class="text-center">No companies found.</td>
+                      </tr>';
                   }
-                ?>
+                  ?>
+
                 </tbody>
               </table>
             </div>
@@ -219,12 +234,21 @@ require_once '../db.php';  // Ensure the file is included only once
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <input type="text" class="form-control mb-3" name="code" placeholder="Code" required>
-            <input type="text" class="form-control mb-3" name="name" placeholder="Name" required>
-            <select class="form-select mb-3" name="status">
-              <option value="1">Active</option>
-              <option value="0">Inactive</option>
-            </select>
+            <div class="mb-3">
+              <label for="company-code" class="form-label">Company Code</label>
+              <input type="text" class="form-control" id="company-code" name="code" placeholder="Enter code" required>
+            </div>
+            <div class="mb-3">
+              <label for="company-name" class="form-label">Company Name</label>
+              <input type="text" class="form-control" id="company-name" name="name" placeholder="Enter name" required>
+            </div>
+            <div class="mb-3">
+              <label for="company-status" class="form-label">Status</label>
+              <select class="form-select" id="company-status" name="status">
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+              </select>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="submit" name="add_company" class="btn btn-primary">Save</button>
@@ -243,12 +267,24 @@ require_once '../db.php';  // Ensure the file is included only once
           </div>
           <div class="modal-body">
             <input type="hidden" name="edit_id" id="edit_id">
-            <input type="text" class="form-control mb-3" name="edit_code" id="edit_code" required>
-            <input type="text" class="form-control mb-3" name="edit_name" id="edit_name" required>
-            <select class="form-select mb-3" name="edit_status" id="edit_status">
-              <option value="1">Active</option>
-              <option value="0">Inactive</option>
-            </select>
+            
+            <div class="mb-3">
+              <label for="edit_code" class="form-label">Company Code</label>
+              <input type="text" class="form-control" name="edit_code" id="edit_code" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="edit_name" class="form-label">Company Name</label>
+              <input type="text" class="form-control" name="edit_name" id="edit_name" required>
+            </div>
+            
+            <div class="mb-3">
+              <label for="edit_status" class="form-label">Status</label>
+              <select class="form-select" name="edit_status" id="edit_status">
+                <option value="1">Active</option>
+                <option value="0">Inactive</option>
+              </select>
+            </div>
           </div>
           <div class="modal-footer">
             <button type="submit" name="update_company" class="btn btn-primary">Update</button>
