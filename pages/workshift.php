@@ -384,12 +384,69 @@ require_once '../db.php';  // Ensure the file is included only once
                     '</span>
                   </div>
                   <div class="d-flex">
+                     <!-- Edit Button -->
+                    <button type="button" class="btn btn-sm btn-warning ms-2" data-bs-toggle="modal" data-bs-target="#editModal' . $row['id'] . '">
+                      Edit
+                    </button>
+                    <!-- Delete Button -->
                     <form method="POST" action="crudshift.php" onsubmit="return confirm(\'Are you sure you want to delete this shift?\');">
                       <input type="hidden" name="delete_code" value="' . htmlspecialchars($row['code']) . '">
                       <button type="submit" name="delete_shift" class="btn btn-sm btn-danger ms-2">Delete</button>
                     </form>
                   </div>
                 </li>';
+
+                // Static Edit Modal
+                echo '
+                <div class="modal fade" id="editModal' . $row['id'] . '" tabindex="-1" aria-labelledby="editModalLabel' . $row['id'] . '" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <form method="POST" action="crudshift.php">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="editModalLabel' . $row['id'] . '">Edit Shift</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                          <input type="hidden" name="edit_id" value="' . $row['id'] . '">
+                          <!-- Do not allow editing the code -->
+                          <div class="mb-3">
+                            <label>Shift Code </label>
+                            <input type="text" class="form-control" value="' . htmlspecialchars($row['code']) . '" disabled>
+                          </div>
+                          <div class="mb-3">
+                            <label>Description</label>
+                            <input type="text" class="form-control" name="edit_description" value="' . htmlspecialchars($row['description']) . '" required>
+                          </div>
+                          <div class="mb-3">
+                            <label>Start Time</label>
+                            <input type="time" class="form-control" name="edit_start_time" value="' . htmlspecialchars($row['start_time']) . '" required>
+                          </div>
+                          <div class="mb-3">
+                            <label>Work Hour</label>
+                            <input type="number" class="form-control" name="edit_work_hour" value="' . htmlspecialchars($row['work_hour']) . '" required>
+                          </div>
+                          <div class="mb-3">
+                            <label>Break Hour</label>
+                            <input type="number" class="form-control" name="edit_break_hour" value="' . htmlspecialchars($row['break_hour']) . '" required>
+                          </div>
+                          <div class="mb-3">
+                            <label>Status</label>
+                            <select class="form-select" name="edit_status" required>
+                              <option value="Active" ' . ($row['status'] == 'Active' ? 'selected' : '') . '>Active</option>
+                              <option value="Inactive" ' . ($row['status'] == 'Inactive' ? 'selected' : '') . '>Inactive</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="submit" name="update_shift" class="btn btn-success">Save Changes</button>
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>';
+                  //</div>
+                //</li>';
               }
             } else {
               echo '<li class="list-group-item">No shifts available.</li>';
@@ -445,5 +502,7 @@ require_once '../db.php';  // Ensure the file is included only once
     </div>
   </div>
 </div>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
         </main>
 </html>

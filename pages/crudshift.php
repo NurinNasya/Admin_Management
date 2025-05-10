@@ -41,6 +41,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
     $stmt->close();
 }
 
+
+    //UPDATE SHIFT
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_shift'])) {
+        $id = $_POST['edit_id'];  // Keep the shift's ID hidden
+        $description = $_POST['edit_description'];
+        $start_time = $_POST['edit_start_time'];
+        $work_hour = $_POST['edit_work_hour'];
+        $break_hour = $_POST['edit_break_hour'];
+        $status = $_POST['edit_status'];
+
+        $stmt = $conn->prepare("UPDATE shifts SET description=?, start_time=?, work_hour=?, break_hour=?, status=? WHERE id=?");
+
+        if (!$stmt) {
+            die("Update prepare failed: " . $conn->error);
+        }
+
+        $stmt->bind_param("sssssi", $description, $start_time, $work_hour, $break_hour, $status, $id);
+
+        if ($stmt->execute()) {
+            header("Location: workshift.php?updated=1");
+            exit();
+        } else {
+            echo "Error updating shift: " . $stmt->error;
+        }
+
+        $stmt->close();
+    }
+
+
 // DELETE SHIFT
 if (isset($_POST['delete_shift'])) {
     $delete_code = $_POST['delete_code'] ?? null;
