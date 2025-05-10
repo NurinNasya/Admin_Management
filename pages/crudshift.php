@@ -15,6 +15,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
     $break_hour = $_POST['break_hour'];
     $status = $_POST['status'];
 
+     // Check for duplicate code and start_time
+    $check = $conn->prepare("SELECT id FROM shifts WHERE code = ? AND start_time = ?");
+    $check->bind_param("ss", $code, $start_time);
+    $check->execute();
+    $check->store_result();
+
+    if ($check->num_rows > 0) {
+        // Duplicate found
+        header("Location: workshift.php?error=duplicate");
+        exit();
+    }
+    $check->close();
+
     $stmt = $conn->prepare("INSERT INTO shifts (code, description, start_time, work_hour, break_hour, status) 
                             VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("ssssss", $code, $description, $start_time, $work_hour, $break_hour, $status);
