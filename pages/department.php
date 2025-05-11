@@ -1,5 +1,6 @@
 <?php 
 require_once '../db.php';  // Ensure the file is included only once
+session_start(); // Start session to access session messages
 ?>
 
 <!DOCTYPE html>
@@ -154,6 +155,21 @@ require_once '../db.php';  // Ensure the file is included only once
       <div class="row">
         <div class="col-md-12">
           <div class="card">
+
+            <?php if (isset($_SESSION['success_message'])): ?>
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?= htmlspecialchars($_SESSION['success_message']) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          <?php unset($_SESSION['success_message']); ?>
+        <?php elseif (isset($_SESSION['error_message'])): ?>
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <?= htmlspecialchars($_SESSION['error_message']) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
+
             <div class="card-header d-flex justify-content-between align-items-center">
               <h5>Department Management</h5>
               <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">Add Department</button>
@@ -172,7 +188,7 @@ require_once '../db.php';  // Ensure the file is included only once
                 <tbody>
                 <?php
                   // Display department list
-                  $query = "SELECT * FROM department";
+                  $query = "SELECT * FROM department ORDER BY id DESC";
                   $result = $conn->query($query);
 
                   if ($result && $result->num_rows > 0) {

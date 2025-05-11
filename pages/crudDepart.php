@@ -1,8 +1,8 @@
 <?php
 require_once '../db.php';
+session_start(); // Needed for flash messages
 
 // CREATE
-// Inside crudDepart.php (where you handle form submissions)
 if (isset($_POST['add_department'])) {
     $code = $_POST['code'];
     $name = $_POST['name'];
@@ -15,25 +15,18 @@ if (isset($_POST['add_department'])) {
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
-        // Department name already exists
-        session_start();
-        $_SESSION['error_message'] = "Error: A department with this name already exists.";
-        header("Location: ../pages/department.php");
-        exit(); // Ensure the rest of the code doesn't execute
+        $_SESSION['error_message'] = "A department with this name already exists.";
     } else {
-        // Insert new department into the database
         $stmt = $conn->prepare("INSERT INTO department (code, name, status) VALUES (?, ?, ?)");
         $stmt->bind_param("ssi", $code, $name, $status);
-
         if ($stmt->execute()) {
-            header("Location: ../pages/department.php?success=1");
+            $_SESSION['success_message'] = "Department added successfully.";
         } else {
-            echo "Error: " . $stmt->error;
+            $_SESSION['error_message'] = "Failed to add department.";
         }
-        $stmt->close();
     }
-
-    $conn->close();
+    header("Location: ../pages/department.php");
+    exit();
 }
 
 // UPDATE
@@ -43,42 +36,37 @@ if (isset($_POST['update_department'])) {
     $name = $_POST['edit_name'];
     $status = $_POST['edit_status'];
 
-    $stmt = $conn->prepare("UPDATE department SET code=?, name=?, status=? WHERE id=?");
-    $stmt->bind_param("ssii", $code, $name, $status, $id);
+    // Check if another department with the same name exists
+    $stmt = $conn->prepare("SELECT * FROM department WHERE name = ? AND id != ?");
+    $stmt->bind_param("si", $name, $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    if ($stmt->execute()) {
-        header("Location: ../pages/department.php?updated=1");
+    if ($result->num_rows > 0) {
+        $_SESSION['error_message'] = "Another department with this name already exists.";
     } else {
-        echo "Error updating department: " . $stmt->error;
+        $stmt = $conn->prepare("UPDATE department SET code = ?, name = ?, status = ? WHERE id = ?");
+        $stmt->bind_param("ssii", $code, $name, $status, $id);
+        if ($stmt->execute()) {
+            $_SESSION['success_message'] = "Department updated successfully.";
+        } else {
+            $_SESSION['error_message'] = "Failed to update department.";
+        }
     }
-    $stmt->close();
-    $conn->close();
+    header("Location: ../pages/department.php");
     exit();
 }
 
 // DELETE
 if (isset($_GET['delete_id'])) {
-    $id = $_GET['delete_id'];  // Get the ID from the URL
-
-    // Check if ID is valid
-    if (is_numeric($id)) {
-        // Prepare DELETE query
-        $stmt = $conn->prepare("DELETE FROM department WHERE id = ?");
-        $stmt->bind_param("i", $id);
-
-        // Execute query
-        if ($stmt->execute()) {
-            // Redirect back to department page after successful deletion
-            header("Location: ../pages/department.php?deleted=1");
-        } else {
-            // Output error message if deletion fails
-            echo "Error deleting department: " . $stmt->error;
-        }
-        $stmt->close();
+    $id = $_GET['delete_id'];
+    $stmt = $conn->prepare("DELETE FROM department WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    if ($stmt->execute()) {
+        $_SESSION['success_message'] = "Department deleted successfully.";
     } else {
-        echo "Invalid department ID.";
+        $_SESSION['error_message'] = "Failed to delete department.";
     }
-    $conn->close();
-    exit();  // Stop further execution
+    header("Location: ../pages/department.php");
+    exit();
 }
-?>

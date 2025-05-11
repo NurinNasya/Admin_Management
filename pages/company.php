@@ -1,5 +1,6 @@
 <?php 
 require_once '../db.php';  // Ensure the file is included only once
+session_start(); // Start session to access session messages
 ?>
 
 <!DOCTYPE html>
@@ -154,6 +155,21 @@ require_once '../db.php';  // Ensure the file is included only once
       <div class="row">
         <div class="col-md-12">
           <div class="card">
+
+          <?php if (isset($_SESSION['success_message'])): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <?= htmlspecialchars($_SESSION['success_message']) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <?php unset($_SESSION['success_message']); ?>
+        <?php elseif (isset($_SESSION['error_message'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <?= htmlspecialchars($_SESSION['error_message']) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <?php unset($_SESSION['error_message']); ?>
+        <?php endif; ?>
+
             <div class="card-header d-flex justify-content-between align-items-center">
               <h5>Company Management</h5>
               <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCompanyModal">Add Company</button>
@@ -172,7 +188,7 @@ require_once '../db.php';  // Ensure the file is included only once
                 <tbody>
                 <?php
                   // Display company list
-                  $query = "SELECT * FROM company";
+                  $query = "SELECT * FROM company ORDER BY id DESC";
                   $result = $conn->query($query);
 
                   if ($result && $result->num_rows > 0) {
@@ -226,25 +242,26 @@ require_once '../db.php';  // Ensure the file is included only once
     </div>
 
     <!-- Add Company Modal -->
-    <div class="modal fade" id="addCompanyModal" tabindex="-1">
+    <!-- Add Company Modal -->
+    <div class="modal fade" id="addCompanyModal" tabindex="-1" aria-labelledby="addCompanyModalLabel" aria-hidden="true">
       <div class="modal-dialog">
         <form action="crudCompany.php" method="POST" class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Add New Company</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <h5 class="modal-title" id="addCompanyModalLabel">Add New Company</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <div class="mb-3">
-              <label for="company-code" class="form-label">Company Code</label>
+              <label for="company-code" class="form-label">Company Code <i class="bi bi-asterisk text-danger"></i></label>
               <input type="text" class="form-control" id="company-code" name="code" placeholder="Enter code" required>
             </div>
             <div class="mb-3">
-              <label for="company-name" class="form-label">Company Name</label>
+              <label for="company-name" class="form-label">Company Name <i class="bi bi-asterisk text-danger"></i></label>
               <input type="text" class="form-control" id="company-name" name="name" placeholder="Enter name" required>
             </div>
             <div class="mb-3">
-              <label for="company-status" class="form-label">Status</label>
-              <select class="form-select" id="company-status" name="status">
+              <label for="company-status" class="form-label">Status <i class="bi bi-asterisk text-danger"></i></label>
+              <select class="form-select" id="company-status" name="status" required>
                 <option value="1">Active</option>
                 <option value="0">Inactive</option>
               </select>
@@ -298,14 +315,14 @@ require_once '../db.php';  // Ensure the file is included only once
   <script src="../assets/js/core/bootstrap.min.js"></script>
   <script src="../assets/js/argon-dashboard.min.js?v=2.1.0"></script>
   <script>
-    document.querySelectorAll('.edit-btn').forEach(button => {
+    document.querySelectorAll('.edit-company-btn').forEach(button => {
       button.addEventListener('click', () => {
-        document.getElementById('edit_id').value = button.dataset.id;
-        document.getElementById('edit_code').value = button.dataset.code;
-        document.getElementById('edit_name').value = button.dataset.name;
-        document.getElementById('edit_status').value = button.dataset.status;
+          document.getElementById('edit_id').value = button.dataset.id;
+          document.getElementById('edit_code').value = button.dataset.code;
+          document.getElementById('edit_name').value = button.dataset.name;
+          document.getElementById('edit_status').value = button.dataset.status;
       });
-    });
+  });
   </script>
 </body>
 </html>
