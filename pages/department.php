@@ -208,20 +208,22 @@ session_start(); // Start session to access session messages
                               <td>' . $name . '</td>
                               <td>' . $status . '</td>
                               <td>
-                                  <a href="#" class="btn btn-warning btn-sm edit-btn"
-                                    data-id="' . $id . '"
-                                    data-code="' . $code . '"
-                                    data-name="' . $name . '"
-                                    data-status="' . $raw_status . '"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#editDepartmentModal">
-                                    Edit
-                                  </a>
-                                  <a href="crudDepart.php?delete_id=' . $id . '" 
-                                    class="btn btn-danger btn-sm" 
-                                    onclick="return confirm(\'Are you sure you want to delete this department?\');">
-                                    Delete
-                                  </a>
+                                <a href="#" class="text-primary me-5 edit-company-btn"
+                                  data-id="' . $id . '"
+                                  data-code="' . $code . '"
+                                  data-name="' . $name . '"
+                                  data-status="' . $raw_status . '"
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#editCompanyModal"
+                                  title="Edit">
+                                  <i class="bi bi-pencil-square fs-4"></i>
+                                </a>
+                                <a href="crudCompany.php?delete_id=' . $id . '" 
+                                  class="text-danger" 
+                                  onclick="return confirm(\'Are you sure you want to delete this company?\');"
+                                  title="Delete">
+                                  <i class="bi bi-trash-fill fs-4"></i>
+                                </a>
                               </td>
                           </tr>';
                       }
@@ -333,5 +335,6 @@ session_start(); // Start session to access session messages
     }
   }, 3000); // 3000ms = 3 seconds
 </script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </body>
 </html>

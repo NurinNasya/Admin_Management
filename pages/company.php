@@ -150,30 +150,32 @@ session_start(); // Start session to access session messages
   </aside>
 
 <!-- Main Content -->
-  <main class="main-content position-relative border-radius-lg">
+ <main class="main-content position-relative border-radius-lg">
     <div class="container-fluid py-4">
       <div class="row">
         <div class="col-md-12">
           <div class="card">
 
-          <?php if (isset($_SESSION['success_message'])): ?>
-            <div class="alert alert-success alert-dismissible fade show auto-dismiss" role="alert">
-              <?= htmlspecialchars($_SESSION['success_message']) ?>
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            <?php unset($_SESSION['success_message']); ?>
-          <?php elseif (isset($_SESSION['error_message'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show auto-dismiss" role="alert">
-              <?= htmlspecialchars($_SESSION['error_message']) ?>
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            <?php unset($_SESSION['error_message']); ?>
-          <?php endif; ?>
+            <!-- Alert Messages -->
+            <?php if (isset($_SESSION['success_message'])): ?>
+              <div class="alert alert-success alert-dismissible fade show auto-dismiss" role="alert">
+                <?= htmlspecialchars($_SESSION['success_message']) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+              <?php unset($_SESSION['success_message']); ?>
+            <?php elseif (isset($_SESSION['error_message'])): ?>
+              <div class="alert alert-danger alert-dismissible fade show auto-dismiss" role="alert">
+                <?= htmlspecialchars($_SESSION['error_message']) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+              <?php unset($_SESSION['error_message']); ?>
+            <?php endif; ?>
 
             <div class="card-header d-flex justify-content-between align-items-center">
               <h5>Company Management</h5>
               <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCompanyModal">Add Company</button>
             </div>
+
             <div class="card-body">
               <table class="table table-striped">
                 <thead>
@@ -187,80 +189,77 @@ session_start(); // Start session to access session messages
                 </thead>
                 <tbody>
                 <?php
-                  // Display company list
                   $query = "SELECT * FROM company ORDER BY id DESC";
                   $result = $conn->query($query);
 
                   if ($result && $result->num_rows > 0) {
-                      $counter = 1; // Numbering starts from 1
+                    $counter = 1;
+                    while ($row = $result->fetch_assoc()) {
+                      $id = $row['id'];
+                      $code = htmlspecialchars($row['code']);
+                      $name = htmlspecialchars($row['name']);
+                      $status = $row['status'] ? 'Active' : 'Inactive';
+                      $raw_status = $row['status'];
 
-                      while ($row = $result->fetch_assoc()) {
-                          $id = $row['id']; // Actual database ID
-                          $code = htmlspecialchars($row['code']);
-                          $name = htmlspecialchars($row['name']);
-                          $status = $row['status'] ? 'Active' : 'Inactive';
-                          $raw_status = $row['status']; // Needed for modal input
-
-                          echo '
-                          <tr>
-                              <td>' . $counter++ . '</td>
-                              <td>' . $code . '</td>
-                              <td>' . $name . '</td>
-                              <td>' . $status . '</td>
-                              <td>
-                                  <a href="#" class="btn btn-warning btn-sm edit-company-btn"
-                                    data-id="' . $id . '"
-                                    data-code="' . $code . '"
-                                    data-name="' . $name . '"
-                                    data-status="' . $raw_status . '"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#editCompanyModal">
-                                    Edit
-                                  </a>
-                                  <a href="crudCompany.php?delete_id=' . $id . '" 
-                                    class="btn btn-danger btn-sm" 
-                                    onclick="return confirm(\'Are you sure you want to delete this company?\');">
-                                    Delete
-                                  </a>
-                              </td>
-                          </tr>';
-                      }
-                  } else {
                       echo '
                       <tr>
-                          <td colspan="5" class="text-center">No companies found.</td>
+                        <td>' . $counter++ . '</td>
+                        <td>' . $code . '</td>
+                        <td>' . $name . '</td>
+                        <td>' . $status . '</td>
+                        <td>
+                          <a href="#" class="text-primary me-5 edit-company-btn"
+                            data-id="' . $id . '"
+                            data-code="' . $code . '"
+                            data-name="' . $name . '"
+                            data-status="' . $raw_status . '"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editCompanyModal"
+                            title="Edit">
+                            <i class="bi bi-pencil-square fs-4"></i>
+                          </a>
+                          <a href="crudCompany.php?delete_id=' . $id . '" 
+                            class="text-danger" 
+                            onclick="return confirm(\'Are you sure you want to delete this company?\');"
+                            title="Delete">
+                            <i class="bi bi-trash-fill fs-4"></i>
+                          </a>
+                        </td>
                       </tr>';
+                    }
+                  } else {
+                    echo '<tr><td colspan="5" class="text-center">No data found</td></tr>';
                   }
-                  ?>
-
+                ?>
                 </tbody>
               </table>
             </div>
+
           </div>
         </div>
       </div>
     </div>
-    
+
     <!-- Add Company Modal -->
-    <div class="modal fade" id="addCompanyModal" tabindex="-1" aria-labelledby="addCompanyModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addCompanyModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <form action="crudCompany.php" method="POST" class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="addCompanyModalLabel">Add New Company</h5>
+            <h5 class="modal-title">Add New Company</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <div class="mb-3">
-              <label for="company-code" class="form-label">Company Code <i class="bi bi-asterisk text-danger"></i></label>
-              <input type="text" class="form-control" id="company-code" name="code" placeholder="Enter code" required>
+              <label for="company-code" class="form-label">Company Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="company-code" name="code" required>
             </div>
             <div class="mb-3">
-              <label for="company-name" class="form-label">Company Name <i class="bi bi-asterisk text-danger"></i></label>
-              <input type="text" class="form-control" id="company-name" name="name" placeholder="Enter name" required>
+              <label for="company-name" class="form-label">Company Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="company-name" name="name" required>
             </div>
             <div class="mb-3">
-              <label for="company-status" class="form-label">Status <i class="bi bi-asterisk text-danger"></i></label>
-              <select class="form-select" id="company-status" name="status" required>
+              <label for="company-status" class="form-label">Status</label>
+              <select class="form-select" id="company-status" name="status">
                 <option value="1">Active</option>
                 <option value="0">Inactive</option>
               </select>
@@ -283,17 +282,14 @@ session_start(); // Start session to access session messages
           </div>
           <div class="modal-body">
             <input type="hidden" name="edit_id" id="edit_id">
-            
             <div class="mb-3">
               <label for="edit_code" class="form-label">Company Code</label>
               <input type="text" class="form-control" name="edit_code" id="edit_code" required>
             </div>
-            
             <div class="mb-3">
               <label for="edit_name" class="form-label">Company Name</label>
               <input type="text" class="form-control" name="edit_name" id="edit_name" required>
             </div>
-            
             <div class="mb-3">
               <label for="edit_status" class="form-label">Status</label>
               <select class="form-select" name="edit_status" id="edit_status">
@@ -310,29 +306,28 @@ session_start(); // Start session to access session messages
     </div>
   </main>
 
-  <script src="../assets/js/core/popper.min.js"></script>
-  <script src="../assets/js/core/bootstrap.min.js"></script>
-  <script src="../assets/js/argon-dashboard.min.js?v=2.1.0"></script>
+  <!-- JS Scripts -->
+  <script src="../assets/js/core/bootstrap.bundle.min.js"></script>
   <script>
+    // Fill edit modal with selected data
     document.querySelectorAll('.edit-company-btn').forEach(button => {
       button.addEventListener('click', () => {
-          document.getElementById('edit_id').value = button.dataset.id;
-          document.getElementById('edit_code').value = button.dataset.code;
-          document.getElementById('edit_name').value = button.dataset.name;
-          document.getElementById('edit_status').value = button.dataset.status;
+        document.getElementById('edit_id').value = button.dataset.id;
+        document.getElementById('edit_code').value = button.dataset.code;
+        document.getElementById('edit_name').value = button.dataset.name;
+        document.getElementById('edit_status').value = button.dataset.status;
       });
-  });
+    });
+
+    // Auto-dismiss alerts
+    setTimeout(() => {
+      const alert = document.querySelector('.auto-dismiss');
+      if (alert) {
+        alert.classList.remove('show');
+        alert.classList.add('fade');
+      }
+    }, 3000);
   </script>
-  <!-- Add this script block -->
-<script>
-  // Automatically dismiss alerts after 3 seconds
-  setTimeout(function () {
-    const alert = document.querySelector('.auto-dismiss');
-    if (alert) {
-      const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-      bsAlert.close();
-    }
-  }, 3000); // 3000ms = 3 seconds
-</script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </body>
 </html>
