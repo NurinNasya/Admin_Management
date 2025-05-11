@@ -495,19 +495,19 @@ require_once '../db.php';  // Ensure the file is included only once
               <input type="text" class="form-control" id="code" name="code" required>
             </div>
             <div class="mb-3">
-              <label for="description" class="form-label">Description</label>
+              <label for="description" class="form-label">Description<span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="description" name="description" required>
             </div>
             <div class="mb-3">
-              <label for="start_time" class="form-label">Start Time</label>
+              <label for="start_time" class="form-label">Start Time<span class="text-danger">*</span></label>
               <input type="time" class="form-control" id="start_time" name="start_time" required>
             </div>
             <div class="mb-3">
-              <label for="work_hour" class="form-label">Work Hour</label>
+              <label for="work_hour" class="form-label">Work Hour<span class="text-danger">*</span></label>
               <input type="number" class="form-control" id="work_hour" name="work_hour" required>
             </div>
             <div class="mb-3">
-              <label for="break_hour" class="form-label">Break Hour</label>
+              <label for="break_hour" class="form-label">Break Hour<span class="text-danger">*</span></label>
               <input type="number" class="form-control" id="break_hour" name="break_hour" required>
             </div>
             <div class="mb-3">
