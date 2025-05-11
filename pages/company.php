@@ -157,18 +157,18 @@ session_start(); // Start session to access session messages
           <div class="card">
 
           <?php if (isset($_SESSION['success_message'])): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <?= htmlspecialchars($_SESSION['success_message']) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <div class="alert alert-success alert-dismissible fade show auto-dismiss" role="alert">
+              <?= htmlspecialchars($_SESSION['success_message']) ?>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             <?php unset($_SESSION['success_message']); ?>
-        <?php elseif (isset($_SESSION['error_message'])): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <?= htmlspecialchars($_SESSION['error_message']) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          <?php elseif (isset($_SESSION['error_message'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show auto-dismiss" role="alert">
+              <?= htmlspecialchars($_SESSION['error_message']) ?>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
             <?php unset($_SESSION['error_message']); ?>
-        <?php endif; ?>
+          <?php endif; ?>
 
             <div class="card-header d-flex justify-content-between align-items-center">
               <h5>Company Management</h5>
@@ -240,8 +240,7 @@ session_start(); // Start session to access session messages
         </div>
       </div>
     </div>
-
-    <!-- Add Company Modal -->
+    
     <!-- Add Company Modal -->
     <div class="modal fade" id="addCompanyModal" tabindex="-1" aria-labelledby="addCompanyModalLabel" aria-hidden="true">
       <div class="modal-dialog">
@@ -324,5 +323,16 @@ session_start(); // Start session to access session messages
       });
   });
   </script>
+  <!-- Add this script block -->
+<script>
+  // Automatically dismiss alerts after 3 seconds
+  setTimeout(function () {
+    const alert = document.querySelector('.auto-dismiss');
+    if (alert) {
+      const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+      bsAlert.close();
+    }
+  }, 3000); // 3000ms = 3 seconds
+</script>
 </body>
 </html>
