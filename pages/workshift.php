@@ -364,10 +364,34 @@ require_once '../db.php';  // Ensure the file is included only once
           <h6 class="mb-0">Work Shift Management</h6>
         </div>
         <div class="card-body p-3">
+          
+        <!-- Success/Error Messages -->
+                  <?php if (isset($_GET['success'])): ?>
+                  <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    ✅ Shift added successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                <?php elseif (isset($_GET['updated'])): ?>
+                  <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    🔄 Shift updated successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                <?php elseif (isset($_GET['deleted'])): ?>
+                  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    🗑️ Shift deleted successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                <?php elseif (isset($_GET['error']) && $_GET['error'] === 'duplicate'): ?>
+                  <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    ⚠️ Duplicate shift code and start time detected.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+                <?php endif; ?>
+
           <ul class="list-group">
             <?php
             include '../db.php';
-            $sql = "SELECT * FROM shifts";
+            $sql = "SELECT * FROM shifts ORDER BY id DESC";
             $result = $conn->query($sql);
 
             if ($result->num_rows > 0) {
@@ -384,15 +408,16 @@ require_once '../db.php';  // Ensure the file is included only once
                     '</span>
                   </div>
                   <div class="d-flex">
-                     <!-- Edit Button -->
-                    <button type="button" class="btn btn-sm btn-warning ms-2" data-bs-toggle="modal" data-bs-target="#editModal' . $row['id'] . '">
-                      Edit
-                    </button>
-                    <!-- Delete Button -->
-                    <form method="POST" action="crudshift.php" onsubmit="return confirm(\'Are you sure you want to delete this shift?\');">
-                      <input type="hidden" name="delete_code" value="' . htmlspecialchars($row['code']) . '">
-                      <button type="submit" name="delete_shift" class="btn btn-sm btn-danger ms-2">Delete</button>
-                    </form>
+                    <!-- Edit Icon -->
+                <i class="bi bi-pencil-square fs-5 text-primary ms-3" role="button" data-bs-toggle="modal" data-bs-target="#editModal' . $row['id'] . '"></i>
+
+                <!-- Delete Icon inside a form -->
+                <form method="POST" action="crudshift.php" onsubmit="return confirm(\'Are you sure you want to delete this shift?\');" class="d-inline">
+                  <input type="hidden" name="delete_code" value="' . htmlspecialchars($row['code']) . '">
+                  <button type="submit" name="delete_shift" class="btn p-0 border-0 bg-transparent ms-3">
+                    <i class="bi bi-trash-fill fs-5 text-danger"></i>
+                  </button>
+                </form>
                   </div>
                 </li>';
 
@@ -438,7 +463,7 @@ require_once '../db.php';  // Ensure the file is included only once
                           </div>
                         </div>
                         <div class="modal-footer">
-                          <button type="submit" name="update_shift" class="btn btn-success">Save Changes</button>
+                          <button type="submit" name="update_shift" class="btn btn-primary">Save Changes</button>
                           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         </div>
                       </div>
@@ -504,5 +529,17 @@ require_once '../db.php';  // Ensure the file is included only once
 </div>
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+ <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <script>
+    setTimeout(function () {
+      var alert = document.querySelector('.alert');
+      if (alert) {
+        alert.classList.remove('show');
+        alert.classList.add('fade');
+        setTimeout(() => alert.remove(), 500);
+      }
+    }, 3000);
+  </script>
         </main>
 </html>
