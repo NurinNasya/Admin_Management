@@ -157,13 +157,13 @@ session_start(); // Start session to access session messages
           <div class="card">
 
             <?php if (isset($_SESSION['success_message'])): ?>
-              <div class="alert alert-success alert-dismissible fade show auto-dismiss" role="alert">
+              <div class="alert alert-success alert-dismissible fade show auto-dismiss show text-white" role="alert">
                 <?= htmlspecialchars($_SESSION['success_message']) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
               </div>
               <?php unset($_SESSION['success_message']); ?>
             <?php elseif (isset($_SESSION['error_message'])): ?>
-              <div class="alert alert-danger alert-dismissible fade show auto-dismiss" role="alert">
+              <div class="alert alert-danger alert-dismissible fade show auto-dismiss show text-white" role="alert">
                 <?= htmlspecialchars($_SESSION['error_message']) ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
               </div>

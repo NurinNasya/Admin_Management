@@ -367,23 +367,23 @@ require_once '../db.php';  // Ensure the file is included only once
           
         <!-- Success/Error Messages -->
                   <?php if (isset($_GET['success'])): ?>
-                  <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    ✅ Shift added successfully!
+                  <div class="alert alert-success alert-dismissible fade show text-white" role="alert">
+                    Shift added successfully!
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                   </div>
                 <?php elseif (isset($_GET['updated'])): ?>
-                  <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    🔄 Shift updated successfully!
+                  <div class="alert alert-info alert-dismissible fade show text-white" role="alert">
+                    Shift updated successfully!
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                   </div>
                 <?php elseif (isset($_GET['deleted'])): ?>
-                  <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    🗑️ Shift deleted successfully!
+                  <div class="alert alert-danger alert-dismissible show text-white" role="alert">
+                    Shift deleted successfully!
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                   </div>
                 <?php elseif (isset($_GET['error']) && $_GET['error'] === 'duplicate'): ?>
-                  <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                    ⚠️ Duplicate shift code and start time detected.
+                  <div class="alert alert-warning alert-dismissible show text-white" role="alert">
+                    Duplicate shift code and start time detected.
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                   </div>
                 <?php endif; ?>
