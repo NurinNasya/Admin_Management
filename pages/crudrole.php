@@ -6,8 +6,7 @@ require_once '../db.php';
 $current_user_id = $_SESSION['user_id'] ?? 0;
 
 // Function to validate role input
-function validateRoleInput($name)
-{
+function validateRoleInput($name) {
     $name = trim($name);
     if (empty($name)) {
         return "Role name cannot be empty";
@@ -18,19 +17,43 @@ function validateRoleInput($name)
     return null;
 }
 
-// Handle Add Role
-if (isset($_POST['add_role'])) {
+// Handle Reset Auto-Increment
+if (isset($_POST['reset_ids'])) {
     try {
-        // Validate CSRF token
         if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
             throw new Exception("Invalid security token");
         }
 
+        if (!isset($_SESSION['is_admin']) || !$_SESSION['is_admin']) {
+            throw new Exception("You don't have permission to perform this action");
+        }
+
+        $reset_query = "ALTER TABLE roles AUTO_INCREMENT = 1";
+        if (!$conn->query($reset_query)) {
+            throw new Exception("Error resetting auto_increment: " . $conn->error);
+        }
+
+        $_SESSION['message'] = "ID counter has been reset successfully. New roles will start from ID 1.";
+        header("Location: roles.php");
+        exit();
+    } catch (Exception $e) {
+        $_SESSION['error'] = $e->getMessage();
+        error_log("Reset auto-increment error: " . $e->getMessage());
+        header("Location: roles.php");
+        exit();
+    }
+}
+
+// Handle Add Role
+if (isset($_POST['add_role'])) {
+    try {
+        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+            throw new Exception("Invalid security token");
+        }
 
         $name = $_POST['name'];
-        $status = isset($_POST['status']) ? (int) $_POST['status'] : 0;
+        $status = isset($_POST['status']) ? (int)$_POST['status'] : 0;
 
-        // Validate input
         if ($error = validateRoleInput($name)) {
             throw new Exception($error);
         }
@@ -46,6 +69,16 @@ if (isset($_POST['add_role'])) {
             throw new Exception("A role with this name already exists");
         }
         $check_stmt->close();
+
+        // Check if table is empty and reset auto-increment if needed
+        $check_empty = $conn->query("SELECT COUNT(*) as count FROM roles");
+        $row = $check_empty->fetch_assoc();
+        if ($row['count'] == 0) {
+            $reset_query = "ALTER TABLE roles AUTO_INCREMENT = 1";
+            if (!$conn->query($reset_query)) {
+                throw new Exception("Error resetting auto_increment: " . $conn->error);
+            }
+        }
 
         // Insert new role
         $insert_sql = "INSERT INTO roles (name, status, created_at, created_by, updated_at, updated_by) 
@@ -70,6 +103,7 @@ if (isset($_POST['add_role'])) {
     }
 }
 
+// 
 // Handle Update Role
 if (isset($_POST['update_role'])) {
     try {
@@ -138,7 +172,7 @@ if (isset($_POST['update_role'])) {
     }
 }
 
-// Handle Delete Role
+// Handle Delete Role (HARD DELETE)
 if (isset($_POST['delete_role'])) {
     try {
         // Validate CSRF token
@@ -177,7 +211,7 @@ if (isset($_POST['delete_role'])) {
             }
             $check_usage_stmt->close();
 
-            // 3. Delete the role
+            // 3. HARD DELETE the role
             $delete_sql = "DELETE FROM roles WHERE id = ?";
             $delete_stmt = $conn->prepare($delete_sql);
             $delete_stmt->bind_param("i", $role_id);
@@ -209,4 +243,3 @@ if (isset($_POST['delete_role'])) {
 $_SESSION['error'] = "Invalid request";
 header("Location: roles.php");
 exit();
-?>
