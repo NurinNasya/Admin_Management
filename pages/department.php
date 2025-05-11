@@ -252,11 +252,11 @@ session_start(); // Start session to access session messages
           </div>
           <div class="modal-body">
             <div class="mb-3">
-              <label for="dept-code" class="form-label">Department Code</label>
+              <label for="dept-code" class="form-label">Department Code <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="dept-code" name="code" placeholder="Enter code" required>
             </div>
             <div class="mb-3">
-              <label for="dept-name" class="form-label">Department Name</label>
+              <label for="dept-name" class="form-label">Department Name <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="dept-name" name="name" placeholder="Enter name" required>
             </div>
             <div class="mb-3">
