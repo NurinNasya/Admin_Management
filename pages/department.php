@@ -208,19 +208,19 @@ session_start(); // Start session to access session messages
                               <td>' . $name . '</td>
                               <td>' . $status . '</td>
                               <td>
-                                <a href="#" class="text-primary me-5 edit-company-btn"
+                                <a href="#" class="text-primary me-5 edit-department-btn"
                                   data-id="' . $id . '"
                                   data-code="' . $code . '"
                                   data-name="' . $name . '"
                                   data-status="' . $raw_status . '"
                                   data-bs-toggle="modal"
-                                  data-bs-target="#editCompanyModal"
+                                  data-bs-target="#editDepartmentModal"
                                   title="Edit">
                                   <i class="bi bi-pencil-square fs-4"></i>
                                 </a>
-                                <a href="crudCompany.php?delete_id=' . $id . '" 
+                                <a href="crudDepartment.php?delete_id=' . $id . '" 
                                   class="text-danger" 
-                                  onclick="return confirm(\'Are you sure you want to delete this company?\');"
+                                  onclick="return confirm(\'Are you sure you want to delete this department?\');"
                                   title="Delete">
                                   <i class="bi bi-trash-fill fs-4"></i>
                                 </a>
@@ -275,41 +275,41 @@ session_start(); // Start session to access session messages
     </div>
 
     <!-- Edit Department Modal -->
-    <div class="modal fade" id="editDepartmentModal" tabindex="-1">
-      <div class="modal-dialog">
-        <form action="crudDepart.php" method="POST" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Edit Department</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" name="edit_id" id="edit_id">
+    <div class="modal fade" id="editDepartmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form action="crudDepart.php" method="POST" class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Department</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="edit_id" id="edit_id" value="1">
 
-            <div class="mb-3">
-              <label for="edit_code" class="form-label">Department Code</label>
-              <input type="text" class="form-control" name="edit_code" id="edit_code" required>
-            </div>
-
-            <div class="mb-3">
-              <label for="edit_name" class="form-label">Department Name</label>
-              <input type="text" class="form-control" name="edit_name" id="edit_name" required>
-            </div>
-
-            <div class="mb-3">
-              <label for="edit_status" class="form-label">Status</label>
-              <select class="form-select" name="edit_status" id="edit_status">
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-              </select>
-            </div>
+          <div class="mb-3">
+            <label for="edit_code" class="form-label">Department Code</label>
+            <input type="text" class="form-control" name="edit_code" id="edit_code" required value="DPT001">
           </div>
-          <div class="modal-footer">
-            <button type="submit" name="update_department" class="btn btn-primary">Update</button>
+
+          <div class="mb-3">
+            <label for="edit_name" class="form-label">Department Name</label>
+            <input type="text" class="form-control" name="edit_name" id="edit_name" required value="Finance">
           </div>
-        </form>
-      </div>
+
+          <div class="mb-3">
+            <label for="edit_status" class="form-label">Status</label>
+            <select class="form-select" name="edit_status" id="edit_status">
+              <option value="1" selected>Active</option>
+              <option value="0">Inactive</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" name="update_department" class="btn btn-primary">Update</button>
+        </div>
+      </form>
     </div>
-  </main>
+  </div>
+</main>
 
   <script src="../assets/js/core/popper.min.js"></script>
   <script src="../assets/js/core/bootstrap.min.js"></script>
@@ -336,5 +336,6 @@ session_start(); // Start session to access session messages
   }, 3000); // 3000ms = 3 seconds
 </script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
