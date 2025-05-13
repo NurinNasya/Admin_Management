@@ -13,7 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
     $start_time = $_POST['start_time'];
     $work_hour = $_POST['work_hour'];
     $break_hour = $_POST['break_hour'];
-    $status = $_POST['status'];
+    $status = ($_POST['status'] === 'Active') ? 1 : 0;
+
 
    // Check for duplicate code
     $checkCode = $conn->prepare("SELECT id FROM shifts WHERE code = ?");
@@ -60,7 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
         $start_time = $_POST['edit_start_time'];
         $work_hour = $_POST['edit_work_hour'];
         $break_hour = $_POST['edit_break_hour'];
-        $status = $_POST['edit_status'];
+        $status = ($_POST['edit_status'] === 'Active') ? 1 : 0;
+
 
         $stmt = $conn->prepare("UPDATE shifts SET description=?, start_time=?, work_hour=?, break_hour=?, status=? WHERE id=?");
 

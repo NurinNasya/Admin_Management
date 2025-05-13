@@ -409,7 +409,7 @@ require_once '../db.php';  // Ensure the file is included only once
                     <span class="text-xs">'
                       . htmlspecialchars($row['start_time']) .
                       ' | Work: ' . htmlspecialchars($row['work_hour']) . 'h | Break: ' . htmlspecialchars($row['break_hour']) .
-                      'h | Status: ' . htmlspecialchars($row['status']) .
+                      'h | Status: ' . ($row['status'] == 1 ? 'Active' : 'Inactive') .
                     '</span>
                   </div>
                   <div class="d-flex">
@@ -462,8 +462,8 @@ require_once '../db.php';  // Ensure the file is included only once
                           <div class="mb-3">
                             <label>Status</label>
                             <select class="form-select" name="edit_status" required>
-                              <option value="Active" ' . ($row['status'] == 'Active' ? 'selected' : '') . '>Active</option>
-                              <option value="Inactive" ' . ($row['status'] == 'Inactive' ? 'selected' : '') . '>Inactive</option>
+                              <option value="1" ' . ($row['status'] == 1 ? 'selected' : '') . '>Active</option>
+                              <option value="0" ' . ($row['status'] == 0 ? 'selected' : '') . '>Inactive</option>
                             </select>
                           </div>
                         </div>
