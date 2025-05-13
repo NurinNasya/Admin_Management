@@ -367,26 +367,31 @@ require_once '../db.php';  // Ensure the file is included only once
           
         <!-- Success/Error Messages -->
                   <?php if (isset($_GET['success'])): ?>
-                  <div class="alert alert-success alert-dismissible fade show text-white" role="alert">
-                    Shift added successfully!
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
-                <?php elseif (isset($_GET['updated'])): ?>
-                  <div class="alert alert-info alert-dismissible fade show text-white" role="alert">
-                    Shift updated successfully!
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
-                <?php elseif (isset($_GET['deleted'])): ?>
-                  <div class="alert alert-danger alert-dismissible show text-white" role="alert">
-                    Shift deleted successfully!
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
-                <?php elseif (isset($_GET['error']) && $_GET['error'] === 'duplicate'): ?>
-                  <div class="alert alert-warning alert-dismissible show text-white" role="alert">
-                    Duplicate shift code and start time detected.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                  </div>
-                <?php endif; ?>
+              <div class="alert alert-success alert-dismissible fade show text-white" role="alert">
+                Shift added successfully!
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            <?php elseif (isset($_GET['updated'])): ?>
+              <div class="alert alert-info alert-dismissible fade show text-white" role="alert">
+                Shift updated successfully!
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            <?php elseif (isset($_GET['deleted'])): ?>
+              <div class="alert alert-danger alert-dismissible fade show text-white" role="alert">
+                Shift deleted successfully!
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            <?php elseif (isset($_GET['error']) && $_GET['error'] === 'code'): ?>
+              <div class="alert alert-warning alert-dismissible fade show text-white" role="alert">
+                Duplicate shift code detected.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            <?php elseif (isset($_GET['error']) && $_GET['error'] === 'time'): ?>
+              <div class="alert alert-warning alert-dismissible fade show text-white" role="alert">
+                Duplicate start time detected.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+          <?php endif; ?>
 
           <ul class="list-group">
             <?php
@@ -435,23 +440,23 @@ require_once '../db.php';  // Ensure the file is included only once
                           <input type="hidden" name="edit_id" value="' . $row['id'] . '">
                           <!-- Do not allow editing the code -->
                           <div class="mb-3">
-                            <label>Shift Code </label>
+                            <label>Shift Code</label>
                             <input type="text" class="form-control" value="' . htmlspecialchars($row['code']) . '" disabled>
                           </div>
                           <div class="mb-3">
-                            <label>Description</label>
+                            <label>Description<span class="text-danger"> *</span></label>
                             <input type="text" class="form-control" name="edit_description" value="' . htmlspecialchars($row['description']) . '" required>
                           </div>
                           <div class="mb-3">
-                            <label>Start Time</label>
+                            <label>Start Time<span class="text-danger"> *</span></label>
                             <input type="time" class="form-control" name="edit_start_time" value="' . htmlspecialchars($row['start_time']) . '" required>
                           </div>
                           <div class="mb-3">
-                            <label>Work Hour</label>
+                            <label>Work Hour<span class="text-danger"> *</span></label>
                             <input type="number" class="form-control" name="edit_work_hour" value="' . htmlspecialchars($row['work_hour']) . '" required>
                           </div>
                           <div class="mb-3">
-                            <label>Break Hour</label>
+                            <label>Break Hour<span class="text-danger"> *</span></label>
                             <input type="number" class="form-control" name="edit_break_hour" value="' . htmlspecialchars($row['break_hour']) . '" required>
                           </div>
                           <div class="mb-3">
@@ -491,23 +496,23 @@ require_once '../db.php';  // Ensure the file is included only once
         <div class="card-body p-3">
           <form method="POST" action="crudshift.php">
             <div class="mb-3">
-              <label for="code" class="form-label">Shift Code</label>
+              <label for="code" class="form-label">Shift Code<span class="text-danger"> *</span></label>
               <input type="text" class="form-control" id="code" name="code" required>
             </div>
             <div class="mb-3">
-              <label for="description" class="form-label">Description<span class="text-danger">*</span></label>
+              <label for="description" class="form-label">Description<span class="text-danger"> *</span></label>
               <input type="text" class="form-control" id="description" name="description" required>
             </div>
             <div class="mb-3">
-              <label for="start_time" class="form-label">Start Time<span class="text-danger">*</span></label>
+              <label for="start_time" class="form-label">Start Time<span class="text-danger"> *</span></label>
               <input type="time" class="form-control" id="start_time" name="start_time" required>
             </div>
             <div class="mb-3">
-              <label for="work_hour" class="form-label">Work Hour<span class="text-danger">*</span></label>
+              <label for="work_hour" class="form-label">Work Hour<span class="text-danger"> *</span></label>
               <input type="number" class="form-control" id="work_hour" name="work_hour" required>
             </div>
             <div class="mb-3">
-              <label for="break_hour" class="form-label">Break Hour<span class="text-danger">*</span></label>
+              <label for="break_hour" class="form-label">Break Hour<span class="text-danger"> *</span></label>
               <input type="number" class="form-control" id="break_hour" name="break_hour" required>
             </div>
             <div class="mb-3">
@@ -517,10 +522,9 @@ require_once '../db.php';  // Ensure the file is included only once
                 <option value="Inactive">Inactive</option>
               </select>
             </div>
-            <div class="d-flex justify-content-between">
-              <button type="submit" class="btn btn-primary">Add Shift</button>
-              <!--<button type="button" class="btn btn-secondary" onclick="document.getElementById('addShiftForm').style.display='none'">Cancel</button>-->
-            </div>
+           <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary">Add Shift</button>
+          </div>
           </form>
         </div>
       </div>
