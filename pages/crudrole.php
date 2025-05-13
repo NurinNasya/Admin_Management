@@ -11,49 +11,24 @@ function validateRoleInput($name) {
     if (empty($name)) {
         return "Role name cannot be empty";
     }
-    if (strlen($name) > 100) {
-        return "Role name cannot exceed 100 characters";
+    if (strlen($name) > 255) {
+        return "Role name cannot exceed 255 characters";
     }
     return null;
-}
-
-// Handle Reset Auto-Increment
-if (isset($_POST['reset_ids'])) {
-    try {
-        if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
-            throw new Exception("Invalid security token");
-        }
-
-        if (!isset($_SESSION['is_admin']) || !$_SESSION['is_admin']) {
-            throw new Exception("You don't have permission to perform this action");
-        }
-
-        $reset_query = "ALTER TABLE roles AUTO_INCREMENT = 1";
-        if (!$conn->query($reset_query)) {
-            throw new Exception("Error resetting auto_increment: " . $conn->error);
-        }
-
-        $_SESSION['message'] = "ID counter has been reset successfully. New roles will start from ID 1.";
-        header("Location: roles.php");
-        exit();
-    } catch (Exception $e) {
-        $_SESSION['error'] = $e->getMessage();
-        error_log("Reset auto-increment error: " . $e->getMessage());
-        header("Location: roles.php");
-        exit();
-    }
 }
 
 // Handle Add Role
 if (isset($_POST['add_role'])) {
     try {
+        // Validate CSRF token
         if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
             throw new Exception("Invalid security token");
         }
 
-        $name = $_POST['name'];
-        $status = isset($_POST['status']) ? (int)$_POST['status'] : 0;
+        $name = trim($_POST['name']);
+        $status = isset($_POST['status']) ? 1 : 0;
 
+        // Validate input
         if ($error = validateRoleInput($name)) {
             throw new Exception($error);
         }
@@ -70,40 +45,26 @@ if (isset($_POST['add_role'])) {
         }
         $check_stmt->close();
 
-        // Check if table is empty and reset auto-increment if needed
-        $check_empty = $conn->query("SELECT COUNT(*) as count FROM roles");
-        $row = $check_empty->fetch_assoc();
-        if ($row['count'] == 0) {
-            $reset_query = "ALTER TABLE roles AUTO_INCREMENT = 1";
-            if (!$conn->query($reset_query)) {
-                throw new Exception("Error resetting auto_increment: " . $conn->error);
-            }
-        }
-
         // Insert new role
-        $insert_sql = "INSERT INTO roles (name, status, created_at, created_by, updated_at, updated_by) 
-                      VALUES (?, ?, NOW(), ?, NOW(), ?)";
+        $insert_sql = "INSERT INTO roles (name, status, created_by, updated_by) VALUES (?, ?, ?, ?)";
         $insert_stmt = $conn->prepare($insert_sql);
         $insert_stmt->bind_param("siii", $name, $status, $current_user_id, $current_user_id);
 
         if (!$insert_stmt->execute()) {
-            throw new Exception("Database error: " . $insert_stmt->error);
+            throw new Exception("Error creating role: " . $insert_stmt->error);
         }
 
-        $_SESSION['message'] = "Role added successfully";
-        $insert_stmt->close();
+        $_SESSION['message'] = "Role created successfully";
         header("Location: roles.php");
         exit();
 
     } catch (Exception $e) {
         $_SESSION['error'] = $e->getMessage();
-        error_log("Role creation error: " . $e->getMessage());
         header("Location: roles.php");
         exit();
     }
 }
 
-// 
 // Handle Update Role
 if (isset($_POST['update_role'])) {
     try {
@@ -112,9 +73,9 @@ if (isset($_POST['update_role'])) {
             throw new Exception("Invalid security token");
         }
 
-        $role_id = (int) $_POST['role_id'];
-        $name = $_POST['name'];
-        $status = isset($_POST['status']) ? (int) $_POST['status'] : 0;
+        $role_id = (int)$_POST['role_id'];
+        $name = trim($_POST['name']);
+        $status = isset($_POST['status']) ? 1 : 0;
 
         // Validate input
         if ($error = validateRoleInput($name)) {
@@ -146,27 +107,20 @@ if (isset($_POST['update_role'])) {
         $duplicate_stmt->close();
 
         // Update role
-        $update_sql = "UPDATE roles SET 
-                      name = ?, 
-                      status = ?, 
-                      updated_at = NOW(), 
-                      updated_by = ? 
-                      WHERE id = ?";
+        $update_sql = "UPDATE roles SET name = ?, status = ?, updated_by = ? WHERE id = ?";
         $update_stmt = $conn->prepare($update_sql);
         $update_stmt->bind_param("siii", $name, $status, $current_user_id, $role_id);
 
         if (!$update_stmt->execute()) {
-            throw new Exception("Database error: " . $update_stmt->error);
+            throw new Exception("Error updating role: " . $update_stmt->error);
         }
 
         $_SESSION['message'] = "Role updated successfully";
-        $update_stmt->close();
         header("Location: roles.php");
         exit();
 
     } catch (Exception $e) {
         $_SESSION['error'] = $e->getMessage();
-        error_log("Role update error: " . $e->getMessage());
         header("Location: roles.php");
         exit();
     }
@@ -180,7 +134,7 @@ if (isset($_POST['delete_role'])) {
             throw new Exception("Invalid security token");
         }
 
-        $role_id = (int) $_POST['role_id'];
+        $role_id = (int)$_POST['role_id'];
 
         // Start transaction
         $conn->begin_transaction();
@@ -207,22 +161,21 @@ if (isset($_POST['delete_role'])) {
             $row = $result->fetch_assoc();
 
             if ($row['user_count'] > 0) {
-                throw new Exception("Cannot delete role because it's assigned to users. Reassign users first.");
+                throw new Exception("Cannot delete role because it's assigned to " . $row['user_count'] . " user(s). Reassign users first.");
             }
             $check_usage_stmt->close();
 
-            // 3. HARD DELETE the role
+            // 3. Perform HARD DELETE
             $delete_sql = "DELETE FROM roles WHERE id = ?";
             $delete_stmt = $conn->prepare($delete_sql);
             $delete_stmt->bind_param("i", $role_id);
 
             if (!$delete_stmt->execute()) {
-                throw new Exception("Database error: " . $delete_stmt->error);
+                throw new Exception("Error deleting role: " . $delete_stmt->error);
             }
 
             $conn->commit();
             $_SESSION['message'] = "Role deleted successfully";
-            $delete_stmt->close();
             header("Location: roles.php");
             exit();
 
@@ -233,7 +186,6 @@ if (isset($_POST['delete_role'])) {
 
     } catch (Exception $e) {
         $_SESSION['error'] = $e->getMessage();
-        error_log("Role deletion error: " . $e->getMessage());
         header("Location: roles.php");
         exit();
     }

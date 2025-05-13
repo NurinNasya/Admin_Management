@@ -1,84 +1,99 @@
 <?php
 require_once '../db.php';
-session_start();
+session_start(); // Needed for flash messages
 
+// ===================
 // CREATE
-if (isset($_POST['add_company'])) {
-    // Ensure that all required fields are filled
-    if (empty($_POST['code']) || empty($_POST['name']) || !isset($_POST['status'])) {
-        $_SESSION['error_message'] = "Error: All fields are required.";
-        header("Location: ../pages/company.php");
-        exit();
-    }
+// ===================
+if (isset($_POST['code']) && isset($_POST['name']) && !isset($_POST['update_company'])) {
+    $code = trim($_POST['code']);
+    $name = trim($_POST['name']);
+    $status = isset($_POST['status']) ? 1 : 0;
 
-    $code = $_POST['code'];
-    $name = $_POST['name'];
-    $status = $_POST['status'];
-
-    // Check for duplicate company name
-    $stmt = $conn->prepare("SELECT * FROM company WHERE name = ?");
-    $stmt->bind_param("s", $name);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // Validation: Check if code or name exists
+    $check = $conn->prepare("SELECT * FROM companies WHERE code = ? OR name = ?");
+    $check->bind_param("ss", $code, $name);
+    $check->execute();
+    $result = $check->get_result();
 
     if ($result->num_rows > 0) {
-        $_SESSION['error_message'] = "Error: A company with this name already exists.";
-        header("Location: ../pages/company.php");
-        exit();
-    } else {
-        // Insert the new company into the database
-        $stmt = $conn->prepare("INSERT INTO company (code, name, status) VALUES (?, ?, ?)");
-        $stmt->bind_param("ssi", $code, $name, $status);
-        if ($stmt->execute()) {
-            $_SESSION['success_message'] = "Company added successfully.";
-        } else {
-            $_SESSION['error_message'] = "Error adding company.";
+        $existing = $result->fetch_assoc();
+        if ($existing['code'] === $code && $existing['name'] === $name) {
+            $_SESSION['error_message'] = "Code and Name already exist.";
+        } elseif ($existing['code'] === $code) {
+            $_SESSION['error_message'] = "Code already exists.";
+        } elseif ($existing['name'] === $name) {
+            $_SESSION['error_message'] = "Name already exists.";
         }
-        header("Location: ../pages/company.php");
-        exit();
+        header("Location: company.php");
+        exit;
     }
+
+    // If no duplicate, insert into database
+    $stmt = $conn->prepare("INSERT INTO companies (code, name, status) VALUES (?, ?, ?)");
+    $stmt->bind_param("ssi", $code, $name, $status);
+
+    if ($stmt->execute()) {
+        $_SESSION['success_message'] = "Company saved successfully.";
+    } else {
+        $_SESSION['error_message'] = "Error saving company.";
+    }
+
+    header("Location: company.php");
+    exit;
 }
 
+// ===================
 // UPDATE
+// ===================
 if (isset($_POST['update_company'])) {
     $id = $_POST['edit_id'];
-    $code = $_POST['edit_code'];
-    $name = $_POST['edit_name'];
+    $code = trim($_POST['edit_code']);
+    $name = trim($_POST['edit_name']);
     $status = $_POST['edit_status'];
 
-    // Check for name conflict (excluding the current record)
-    $stmt = $conn->prepare("SELECT * FROM company WHERE name = ? AND id != ?");
-    $stmt->bind_param("si", $name, $id);
+    // Validate duplicate code or name (excluding current row)
+    $stmt = $conn->prepare("SELECT * FROM companies WHERE (code = ? OR name = ?) AND id != ?");
+    $stmt->bind_param("ssi", $code, $name, $id);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
-        $_SESSION['error_message'] = "Error: A company with this name already exists.";
+        $existing = $result->fetch_assoc();
+        if ($existing['code'] === $code && $existing['name'] === $name) {
+            $_SESSION['error_message'] = "Code and Name already exist.";
+        } elseif ($existing['code'] === $code) {
+            $_SESSION['error_message'] = "Code already exists.";
+        } elseif ($existing['name'] === $name) {
+            $_SESSION['error_message'] = "Name already exists.";
+        }
     } else {
-        $stmt = $conn->prepare("UPDATE company SET code = ?, name = ?, status = ? WHERE id = ?");
+        // Perform the update
+        $stmt = $conn->prepare("UPDATE companies SET code = ?, name = ?, status = ? WHERE id = ?");
         $stmt->bind_param("ssii", $code, $name, $status, $id);
         if ($stmt->execute()) {
             $_SESSION['success_message'] = "Company updated successfully.";
         } else {
-            $_SESSION['error_message'] = "Error updating company.";
+            $_SESSION['error_message'] = "Failed to update company.";
         }
     }
+
     header("Location: ../pages/company.php");
     exit();
 }
 
+// ===================
 // DELETE
+// ===================
 if (isset($_GET['delete_id'])) {
     $id = $_GET['delete_id'];
-
-    $stmt = $conn->prepare("DELETE FROM company WHERE id = ?");
+    $stmt = $conn->prepare("DELETE FROM companies WHERE id = ?");
     $stmt->bind_param("i", $id);
     if ($stmt->execute()) {
         $_SESSION['success_message'] = "Company deleted successfully.";
     } else {
-        $_SESSION['error_message'] = "Error deleting company.";
+        $_SESSION['error_message'] = "Failed to delete company.";
     }
     header("Location: ../pages/company.php");
     exit();
 }
-?>
