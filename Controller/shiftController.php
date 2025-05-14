@@ -18,19 +18,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
 
     // Check for duplicate code
     if ($shiftModel->checkDuplicateCode($code)) {
-        header("Location: workshift.php?error=code");
+        header("Location: ../pages/workshift.php?error=code");
         exit();
     }
 
     // Check for duplicate start time
     if ($shiftModel->checkDuplicateStartTime($start_time)) {
-        header("Location: workshift.php?error=time");
+        header("Location: ../pages/workshift.php?error=time");
         exit();
     }
 
     // Create the shift
     if ($shiftModel->createShift($code, $description, $start_time, $work_hour, $break_hour, $status)) {
-        header("Location: workshift.php?success=1");
+        //header("Location: workshift.php?success=1");
+        header("Location: ../pages/workshift.php?success=1"); 
         exit();
     } else {
         echo "Error inserting shift";
@@ -48,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_shift'])) {
 
     // Update the shift
     if ($shiftModel->updateShift($id, $description, $start_time, $work_hour, $break_hour, $status)) {
-        header("Location: workshift.php?updated=1");
+        header("Location: ../pages/workshift.php?updated=1");
         exit();
     } else {
         echo "Error updating shift";
@@ -62,7 +63,7 @@ if (isset($_POST['delete_shift'])) {
     if ($delete_code !== null) {
         // Delete the shift
         if ($shiftModel->deleteShift($delete_code)) {
-            header("Location: workshift.php?deleted=1");
+           header("Location: ../pages/workshift.php?deleted=1");
             exit();
         } else {
             echo "Error deleting shift";
