@@ -1,6 +1,10 @@
 <?php 
 require_once '../db.php';  // Ensure the file is included only once
 ?>
+<?php
+include_once '../Controller/shiftController.php';
+?>
+
 
 
 <!DOCTYPE html>
@@ -306,8 +310,86 @@ require_once '../db.php';  // Ensure the file is included only once
           <?php endif; ?>
 
           <ul class="list-group">
+        <?php if (!empty($shifts)): ?>
+            <?php foreach ($shifts as $row): ?>
+              <li class="list-group-item d-flex justify-content-between align-items-center mb-2 p-3 border-radius-lg">
+                <div class="d-flex flex-column">
+                  <h6 class="mb-1 text-dark font-weight-bold text-sm">
+                    <?= htmlspecialchars($row['code']) ?> - <?= htmlspecialchars($row['description']) ?>
+                  </h6>
+                  <span class="text-xs">
+                    <?= htmlspecialchars($row['start_time']) ?> |
+                    Work: <?= htmlspecialchars($row['work_hour']) ?>h |
+                    Break: <?= htmlspecialchars($row['break_hour']) ?>h |
+                    Status: <?= $row['status'] == 1 ? 'Active' : 'Inactive' ?>
+                  </span>
+                </div>
+                <div class="d-flex">
+                  <i class="bi bi-pencil-square fs-5 text-primary ms-3" role="button" data-bs-toggle="modal" data-bs-target="#editModal<?= $row['id'] ?>"></i>
+                  <form method="POST" action="../Controller/shiftController.php" onsubmit="return confirm('Are you sure you want to delete this shift?');" class="d-inline">
+                    <input type="hidden" name="delete_code" value="<?= htmlspecialchars($row['code']) ?>">
+                    <button type="submit" name="delete_shift" class="btn p-0 border-0 bg-transparent ms-3">
+                      <i class="bi bi-trash-fill fs-5 text-danger"></i>
+                    </button>
+                  </form>
+                </div>
+              </li>
+
+              <!-- Edit Modal -->
+              <div class="modal fade" id="editModal<?= $row['id'] ?>" tabindex="-1" aria-labelledby="editModalLabel<?= $row['id'] ?>" aria-hidden="true">
+                <div class="modal-dialog">
+                  <form method="POST" action="../Controller/shiftController.php">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="editModalLabel<?= $row['id'] ?>">Edit Shift</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                      </div>
+                      <div class="modal-body">
+                        <input type="hidden" name="edit_id" value="<?= $row['id'] ?>">
+                        <div class="mb-3">
+                          <label>Shift Code</label>
+                          <input type="text" class="form-control" value="<?= htmlspecialchars($row['code']) ?>" disabled>
+                        </div>
+                        <div class="mb-3">
+                          <label>Description<span class="text-danger"> *</span></label>
+                          <input type="text" class="form-control" name="edit_description" value="<?= htmlspecialchars($row['description']) ?>" required>
+                        </div>
+                        <div class="mb-3">
+                          <label>Start Time<span class="text-danger"> *</span></label>
+                          <input type="time" class="form-control" name="edit_start_time" value="<?= htmlspecialchars($row['start_time']) ?>" required>
+                        </div>
+                        <div class="mb-3">
+                          <label>Work Hour<span class="text-danger"> *</span></label>
+                          <input type="number" class="form-control" name="edit_work_hour" value="<?= htmlspecialchars($row['work_hour']) ?>" required>
+                        </div>
+                        <div class="mb-3">
+                          <label>Break Hour<span class="text-danger"> *</span></label>
+                          <input type="number" class="form-control" name="edit_break_hour" value="<?= htmlspecialchars($row['break_hour']) ?>" required>
+                        </div>
+                        <div class="mb-3">
+                          <label>Status</label>
+                          <select class="form-select" name="edit_status" required>
+                            <option value="1" <?= $row['status'] == 1 ? 'selected' : '' ?>>Active</option>
+                            <option value="0" <?= $row['status'] == 0 ? 'selected' : '' ?>>Inactive</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="submit" name="update_shift" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <li class="list-group-item">No shifts available.</li>
+          <?php endif; ?>
+
             <?php
-            include '../db.php';
+            //ori
+            /*include '../db.php';
             $sql = "SELECT * FROM shifts ORDER BY id DESC";
             $result = $conn->query($sql);
 
@@ -392,7 +474,7 @@ require_once '../db.php';  // Ensure the file is included only once
               }
             } else {
               echo '<li class="list-group-item">No shifts available.</li>';
-            }
+            }*/
             ?>
           </ul>
         </div>
@@ -406,7 +488,7 @@ require_once '../db.php';  // Ensure the file is included only once
           <h6 class="mb-0">Add New Shift</h6>
         </div>
         <div class="card-body p-3">
-          <form method="POST" action="crudshift.php">
+          <form method="POST" action="../Controller/shiftController.php">
             <div class="mb-3">
               <label for="code" class="form-label">Shift Code<span class="text-danger"> *</span></label>
               <input type="text" class="form-control" id="code" name="code" required>
