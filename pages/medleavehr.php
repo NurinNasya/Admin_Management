@@ -272,24 +272,30 @@ require_once '../db.php';  // Ensure the file is included only once
                 <div class="col-md-12">
                   <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                      <h5>Individual Leave Quota List</h5>
+                      <h5>Medical > Quota Configuration</h5>
                       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">Add Quota</button>
                     </div>
                 <div class="card-body">
+                      <!-- Label outside the table -->
+          <div class="mb-3 p-2 bg-secondary text-start text-white rounded">
+            <strong>Individual Medical Claim Quota List</strong>
+          </div>
+
             <table class="table table-bordered table-striped mt-3">
               <thead class="table-dark">
                 <tr>
-                  <th>Leave Type</th>
-                  <th>Leave Quota</th>
+                  <th>Start/End</th>
+                  <th>Entitled</th>
                   <th>Used</th>
-                  <th>Current Balance</th>
-                  <th>In Process</th>
-                  <th>Available Balance</th>
+                  <th>Current</th>
+                  <th>Pending</th>
+                  <th>Available</th>
                   <th>Action</th>
                 </tr>
               </thead>
 
               <tbody>
+
                 <!-- Expired Medical Leave -->
                 <tr>
                   <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
@@ -299,9 +305,9 @@ require_once '../db.php';  // Ensure the file is included only once
                   <td>0</td>
                   <td>0</td>
                   <td>
-                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
+                    <!--<a href="#" class="btn btn-sm btn-primary">Edit</a>
                     <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                  </td>
+                  </td>-->
                 </tr>
 
                 <!-- Expired Annual Leave -->
@@ -313,124 +319,9 @@ require_once '../db.php';  // Ensure the file is included only once
                   <td>0</td>
                   <td>0</td>
                   <td>
-                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
+                    <!--<a href="#" class="btn btn-sm btn-primary">Edit</a>
                     <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                  </td>
+                  </td>-->
                 </tr>
-
-                <!-- Section Header for Non-Quota Leaves -->
-                <tr class="table-secondary text-center">
-                  <td colspan="7"><strong></strong></td>
-                </tr>
-
-                <!-- Non-Quota Leave Rows -->
-                <tr>
-                  <td>Unpaid Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Paternity Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Maternity Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Compassionate Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Hospitalization Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Replacement Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-              </tbody>
-            </table>
-
-           <!-- <table class="table table-bordered table-striped mt-3">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Leave Type</th>
-                        <th>Leave Quota</th>
-                        <th>Used</th>
-                        <th>Current Balance</th>
-                        <th>In Process</th>
-                        <th>Available Balance</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                    <tbody>
-              <tr>
-                <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>
-                  <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                  <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-              </tr>
-              <tr>
-                <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>
-                  <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                  <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-              </tr>
-
-                <tbody>
-                <?php //if ($leaves && $leaves->num_rows > 0): ?>
-                    <?php //while($row = $leaves->fetch_assoc()): ?>
-                        <tr>
-                            <!--<td><?= htmlspecialchars($row['type']) ?></td>
-                            <td><?= htmlspecialchars($row['quota']) ?></td>
-                            <td><?= htmlspecialchars($row['used']) ?></td>
-                            <td><?= htmlspecialchars($row['balance']) ?></td>
-                            <td><?= htmlspecialchars($row['in_process']) ?></td>
-                            <td><?= htmlspecialchars($row['available']) ?></td>
-                            <td>
-                                <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                                <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                            </td>-->
-                        </tr>
-                    <?php //endwhile; ?>
-                <?php //else: ?>
-                    <tr>
-                        <!--<td colspan="7" class="text-center">No leave records found.</td>-->
-                    </tr>
-                <?php //endif; ?>
-                </tbody>
-
-              <!--<tr class="table-secondary text-center">
-                <td colspan="7"><strong>Details of Non-Quota Leave Types</strong></td>
-              </tr>
-
-              <tr><td>Unpaid Leave</td><td colspan="6"></td></tr>
-              <tr><td>Paternity Leave</td><td colspan="6"></td></tr>
-              <tr><td>Maternity Leave</td><td colspan="6"></td></tr>
-              <tr><td>Compassionate Leave</td><td colspan="6"></td></tr>
-              <tr><td>Hospitalization Leave</td><td colspan="6"></td></tr>
-              <tr><td>Replacement Leave</td><td colspan="6"></td></tr>
-
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-            </table>
-</div>-->
 </body>
 </html>
