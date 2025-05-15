@@ -1,7 +1,7 @@
 <?php
 require_once '../db.php';  // Ensure the file is included only once
 ?>
-<?php include_once '../Controller/staffController.php'; ?>
+<?php/* include_once '../Controller/staffController.php'; */?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -82,7 +82,7 @@ require_once '../db.php';  // Ensure the file is included only once
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/medleave.php">
+          <a class="nav-link " href="../pages/staff.php">
             <div
               class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
@@ -335,9 +335,9 @@ require_once '../db.php';  // Ensure the file is included only once
             <div class="card-header pb-0">
               <div class="d-flex justify-content-between align-items-center">
                 <h6>Employee List</h6>
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                <a href="employee.php" class="btn btn-primary btn-sm">
                   <i class="fas fa-plus me-1"></i> Add Employee
-                </button>
+                </a>
               </div>
             </div>
             <div class="card-body px-0 pt-0 pb-2">
@@ -356,16 +356,16 @@ require_once '../db.php';  // Ensure the file is included only once
                   </thead>
                   <tbody>
                     <?php 
-                    // Create dummy data if no employees found
-                    if (empty($employees)) {
+                    // Create dummy data if no staffs found
+                    if (empty($staffs)) {
                       $departments = ['HR', 'Finance', 'IT', 'Marketing', 'Operations'];
                       $roles = ['Manager', 'Developer', 'Designer', 'Accountant', 'HR Specialist'];
                       
                       for ($i = 1; $i <= 50; $i++) {
-                        $employees[] = [
+                        $staffs[] = [
                           'id' => $i,
                           'profile_pic' => '../assets/img/default-avatar.png',
-                          'name' => 'Employee ' . $i,
+                          'name' => 'Staff ' . $i,
                           'role' => $roles[array_rand($roles)],
                           'department' => $departments[array_rand($departments)],
                           'phone' => '012-3456' . str_pad($i, 3, '0', STR_PAD_LEFT),
@@ -375,29 +375,29 @@ require_once '../db.php';  // Ensure the file is included only once
                     }
                     ?>
                     
-                    <?php if (!empty($employees)): ?>
-                      <?php foreach ($employees as $index => $employee): ?>
+                    <?php if (!empty($staffs)): ?>
+                      <?php foreach ($staffs as $index => $staff): ?>
                         <tr>
                           <td class="ps-4">
                             <p class="text-xs font-weight-bold mb-0"><?= $index + 1 ?></p>
                           </td>
                           <td>
                             <div>
-                              <img src="<?= $employee['profile_pic'] ?: '../assets/img/default-avatar.png' ?>"
+                              <img src="<?= $staff['profile_pic'] ?: '../assets/img/default-avatar.png' ?>"
                                 class="avatar avatar-sm me-3" alt="user1">
                             </div>
                           </td>
                           <td>
-                            <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($employee['name']) ?></p>
+                            <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($staff['name']) ?></p>
                           </td>
                           <td>
-                            <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($employee['role']) ?></p>
+                            <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($staff['role']) ?></p>
                           </td>
                           <td>
-                            <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($employee['department']) ?></p>
+                            <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($staff['department']) ?></p>
                           </td>
                           <td>
-                            <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($employee['phone']) ?></p>
+                            <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($staff['phone']) ?></p>
                           </td>
                           <td class="align-middle">
                             <div class="dropdown">
@@ -407,28 +407,25 @@ require_once '../db.php';  // Ensure the file is included only once
                               </button>
                               <ul class="dropdown-menu dropdown-menu-end px-2 py-3">
                                 <li>
-                                  <a class="dropdown-item border-radius-md" href="#" data-bs-toggle="modal"
-                                    data-bs-target="#editEmployeeModal<?= $employee['id'] ?>">
+                                  <a class="dropdown-item border-radius-md" href="#" data-bs-toggle="modal" data-bs-target="#editStaffModal<?= $staff['id'] ?>">
                                     <i class="fas fa-pen me-2"></i> Edit
                                   </a>
                                 </li>
                                 <li>
-                                  <a class="dropdown-item border-radius-md" href="#" data-bs-toggle="modal"
-                                    data-bs-target="#medicalLeaveModal<?= $employee['id'] ?>">
+                                  <a class="dropdown-item border-radius-md" href="medleavehr.php">
                                     <i class="fas fa-file-medical me-2"></i> Medical Leave
                                   </a>
                                 </li>
                                 <li>
-                                  <a class="dropdown-item border-radius-md" href="#" data-bs-toggle="modal"
-                                    data-bs-target="#quotaModal<?= $employee['id'] ?>">
-                                    <i class="fas fa-list-check me-2"></i> Medical Quota
+                                  <a class="dropdown-item border-radius-md" href="medleave.php">
+                                    <i class="fas fa-file-medical me-2"></i> Medical Quota
                                   </a>
                                 </li>
                                 <li>
-                                  <form method="POST" action="../Controller/employeeController.php"
-                                    onsubmit="return confirm('Are you sure you want to delete this employee?');">
-                                    <input type="hidden" name="employee_id" value="<?= $employee['id'] ?>">
-                                    <button type="submit" name="delete_employee"
+                                  <form method="POST" action="../Controller/staffController.php"
+                                    onsubmit="return confirm('Are you sure you want to delete this staff?');">
+                                    <input type="hidden" name="staff_id" value="<?= $staff['id'] ?>">
+                                    <button type="submit" name="delete_staff"
                                       class="dropdown-item border-radius-md text-danger">
                                       <i class="fas fa-trash me-2"></i> Delete
                                     </button>
@@ -439,38 +436,38 @@ require_once '../db.php';  // Ensure the file is included only once
                           </td>
                         </tr>
 
-                        <!-- Edit Employee Modal -->
-                        <div class="modal fade" id="editEmployeeModal<?= $employee['id'] ?>" tabindex="-1"
-                          aria-labelledby="editEmployeeModalLabel<?= $employee['id'] ?>" aria-hidden="true">
+                        <!-- Edit staff Modal -->
+                        <div class="modal fade" id="editStaffModal<?= $staff['id'] ?>" tabindex="-1"
+                          aria-labelledby="editStaffModalLabel<?= $staff['id'] ?>" aria-hidden="true">
                           <div class="modal-dialog">
                             <div class="modal-content">
                               <div class="modal-header">
-                                <h5 class="modal-title" id="editEmployeeModalLabel<?= $employee['id'] ?>">Edit Employee</h5>
+                                <h5 class="modal-title" id="editStaffModalLabel<?= $staff['id'] ?>">Edit Staff</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                               </div>
-                              <form method="POST" action="../Controller/employeeController.php"
+                              <form method="POST" action="../Controller/staffController.php"
                                 enctype="multipart/form-data">
                                 <div class="modal-body">
-                                  <input type="hidden" name="employee_id" value="<?= $employee['id'] ?>">
+                                  <input type="hidden" name="staff_id" value="<?= $staff['id'] ?>">
                                   <div class="mb-3">
                                     <label class="form-label">Nama Pekerja</label>
                                     <input type="text" class="form-control" name="name"
-                                      value="<?= htmlspecialchars($employee['name']) ?>" required>
+                                      value="<?= htmlspecialchars($staff['name']) ?>" required>
                                   </div>
                                   <div class="mb-3">
                                     <label class="form-label">Kumpulan Peranan</label>
                                     <input type="text" class="form-control" name="role"
-                                      value="<?= htmlspecialchars($employee['role']) ?>" required>
+                                      value="<?= htmlspecialchars($staff['role']) ?>" required>
                                   </div>
                                   <div class="mb-3">
                                     <label class="form-label">Bahagian</label>
                                     <input type="text" class="form-control" name="department"
-                                      value="<?= htmlspecialchars($employee['department']) ?>" required>
+                                      value="<?= htmlspecialchars($staff['department']) ?>" required>
                                   </div>
                                   <div class="mb-3">
                                     <label class="form-label">No Talefon</label>
                                     <input type="text" class="form-control" name="phone"
-                                      value="<?= htmlspecialchars($employee['phone']) ?>" required>
+                                      value="<?= htmlspecialchars($staff['phone']) ?>" required>
                                   </div>
                                   <div class="mb-3">
                                     <label class="form-label">Gambar Profil</label>
@@ -479,7 +476,7 @@ require_once '../db.php';  // Ensure the file is included only once
                                 </div>
                                 <div class="modal-footer">
                                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                  <button type="submit" name="update_employee" class="btn btn-primary">Save Changes</button>
+                                  <button type="submit" name="update_staff" class="btn btn-primary">Save Changes</button>
                                 </div>
                               </form>
                             </div>
@@ -487,18 +484,18 @@ require_once '../db.php';  // Ensure the file is included only once
                         </div>
 
                         <!-- Medical Leave Modal -->
-                        <div class="modal fade" id="medicalLeaveModal<?= $employee['id'] ?>" tabindex="-1"
-                          aria-labelledby="medicalLeaveModalLabel<?= $employee['id'] ?>" aria-hidden="true">
+                        <div class="modal fade" id="medicalLeaveModal<?= $staff['id'] ?>" tabindex="-1"
+                          aria-labelledby="medicalLeaveModalLabel<?= $staff['id'] ?>" aria-hidden="true">
                           <div class="modal-dialog">
                             <div class="modal-content">
                               <div class="modal-header">
-                                <h5 class="modal-title" id="medicalLeaveModalLabel<?= $employee['id'] ?>">Apply Medical
+                                <h5 class="modal-title" id="medicalLeaveModalLabel<?= $staff['id'] ?>">Apply Medical
                                   Leave</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                               </div>
-                              <form method="POST" action="../Controller/employeeController.php">
+                              <form method="POST" action="../Controller/staffController.php">
                                 <div class="modal-body">
-                                  <input type="hidden" name="employee_id" value="<?= $employee['id'] ?>">
+                                  <input type="hidden" name="staff_id" value="<?= $staff['id'] ?>">
                                   <div class="mb-3">
                                     <label class="form-label">Start Date</label>
                                     <input type="date" class="form-control" name="start_date" required>
@@ -522,21 +519,21 @@ require_once '../db.php';  // Ensure the file is included only once
                         </div>
 
                         <!-- Quota Modal -->
-                        <div class="modal fade" id="quotaModal<?= $employee['id'] ?>" tabindex="-1"
-                          aria-labelledby="quotaModalLabel<?= $employee['id'] ?>" aria-hidden="true">
+                        <div class="modal fade" id="quotaModal<?= $staff['id'] ?>" tabindex="-1"
+                          aria-labelledby="quotaModalLabel<?= $staff['id'] ?>" aria-hidden="true">
                           <div class="modal-dialog">
                             <div class="modal-content">
                               <div class="modal-header">
-                                <h5 class="modal-title" id="quotaModalLabel<?= $employee['id'] ?>">Medical Leave Quota</h5>
+                                <h5 class="modal-title" id="quotaModalLabel<?= $staff['id'] ?>">Medical Leave Quota</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                               </div>
                               <form method="POST" action="../Controller/staffController.php">
                                 <div class="modal-body">
-                                  <input type="hidden" name="employee_id" value="<?= $employee['id'] ?>">
+                                  <input type="hidden" name="staff_id" value="<?= $staff['id'] ?>">
                                   <div class="mb-3">
                                     <label class="form-label">Current Quota</label>
                                     <input type="number" class="form-control" name="quota"
-                                      value="<?= $employee['medical_leave_quota'] ?? 0 ?>" required>
+                                      value="<?= $staff['medical_leave_quota'] ?? 0 ?>" required>
                                   </div>
                                   <div class="mb-3">
                                     <label class="form-label">Leave History</label>
@@ -574,7 +571,7 @@ require_once '../db.php';  // Ensure the file is included only once
                       <?php endforeach; ?>
                     <?php else: ?>
                       <tr>
-                        <td colspan="7" class="text-center py-4">No employees found</td>
+                        <td colspan="7" class="text-center py-4">No staff found</td>
                       </tr>
                     <?php endif; ?>
                   </tbody>
@@ -636,19 +633,19 @@ require_once '../db.php';  // Ensure the file is included only once
     <script>
       // Initialize DataTable
       $(document).ready(function() {
-        $('#employeeTable').DataTable({
+        $('#staffTable').DataTable({
           scrollX: true,
           responsive: true,
           lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
           dom: '<"top"lf>rt<"bottom"ip>',
           language: {
             search: "_INPUT_",
-            searchPlaceholder: "Search employees...",
-            lengthMenu: "Show _MENU_ employees per page",
-            zeroRecords: "No matching employees found",
-            info: "Showing _START_ to _END_ of _TOTAL_ employees",
-            infoEmpty: "No employees available",
-            infoFiltered: "(filtered from _MAX_ total employees)"
+            searchPlaceholder: "Search staffs...",
+            lengthMenu: "Show _MENU_ staffs per page",
+            zeroRecords: "No matching staffs found",
+            info: "Showing _START_ to _END_ of _TOTAL_ staffs",
+            infoEmpty: "No staffs available",
+            infoFiltered: "(filtered from _MAX_ total staffs)"
           }
         });
       });

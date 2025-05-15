@@ -57,7 +57,7 @@ session_start(); // Start session to access session messages
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/employee.php">
+          <a class="nav-link " href="../pages/staff.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
@@ -428,8 +428,8 @@ session_start(); // Start session to access session messages
 
             <!-- Submit Buttons -->
             <div class="mt-4 text-end">
-              <a href="#" class="btn btn-secondary">Kembali</a>
-              <button type="submit" class="btn btn-primary">Seterusnya</button>
+              <a href="staff.php" class="btn btn-secondary">Kembali</a>
+              <a href="staff.php" class="btn btn-primary">Seterusnya</a>
             </div>
           </form>
         </div>
@@ -437,3 +437,5 @@ session_start(); // Start session to access session messages
     </div>
   </div>
 </div>
+</body>
+</head>
