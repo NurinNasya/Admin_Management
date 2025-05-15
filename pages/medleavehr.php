@@ -276,6 +276,11 @@ require_once '../db.php';  // Ensure the file is included only once
                       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">Add Quota</button>
                     </div>
                 <div class="card-body">
+              <h5 class="card-title">Employee Info</h5>
+              <p class="card-text"><strong>Name:</strong> Aiman Hakim</p>
+              <p class="card-text"><strong>IC:</strong> 920101-10-1234</p>
+              <p class="card-text"><strong>Company:</strong> Tech Solutions Sdn Bhd</p>
+              <p class="card-text"><strong>Department:</strong> IT Department</p>
                       <!-- Label outside the table -->
           <div class="mb-3 p-2 bg-secondary text-start text-white rounded">
             <strong>Individual Medical Claim Quota List</strong>
