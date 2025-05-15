@@ -267,16 +267,91 @@ require_once '../db.php';  // Ensure the file is included only once
             <!-- End Navbar -->
 
 <!-- Main content -->
- <div class="container-fluid py-4">
-      <div class="row">
-        <div class="col-md-12">
-          <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h5>Individual Leave Quota List</h5>
-              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">Add Quota</button>
-            </div>
-        <div class="card-body">
+        <div class="container-fluid py-4">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                      <h5>Individual Leave Quota List</h5>
+                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">Add Quota</button>
+                    </div>
+                <div class="card-body">
             <table class="table table-bordered table-striped mt-3">
+              <thead class="table-dark">
+                <tr>
+                  <th>Leave Type</th>
+                  <th>Leave Quota</th>
+                  <th>Used</th>
+                  <th>Current Balance</th>
+                  <th>In Process</th>
+                  <th>Available Balance</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <!-- Expired Medical Leave -->
+                <tr>
+                  <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>
+                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                  </td>
+                </tr>
+
+                <!-- Expired Annual Leave -->
+                <tr>
+                  <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>
+                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                  </td>
+                </tr>
+
+                <!-- Section Header for Non-Quota Leaves -->
+                <tr class="table-secondary text-center">
+                  <td colspan="7"><strong></strong></td>
+                </tr>
+
+                <!-- Non-Quota Leave Rows -->
+                <tr>
+                  <td>Unpaid Leave</td>
+                  <td></td><td></td><td></td><td></td><td></td><td></td>
+                </tr>
+                <tr>
+                  <td>Paternity Leave</td>
+                  <td></td><td></td><td></td><td></td><td></td><td></td>
+                </tr>
+                <tr>
+                  <td>Maternity Leave</td>
+                  <td></td><td></td><td></td><td></td><td></td><td></td>
+                </tr>
+                <tr>
+                  <td>Compassionate Leave</td>
+                  <td></td><td></td><td></td><td></td><td></td><td></td>
+                </tr>
+                <tr>
+                  <td>Hospitalization Leave</td>
+                  <td></td><td></td><td></td><td></td><td></td><td></td>
+                </tr>
+                <tr>
+                  <td>Replacement Leave</td>
+                  <td></td><td></td><td></td><td></td><td></td><td></td>
+                </tr>
+              </tbody>
+            </table>
+
+           <!-- <table class="table table-bordered table-striped mt-3">
                 <thead class="table-dark">
                     <tr>
                         <th>Leave Type</th>
@@ -289,7 +364,6 @@ require_once '../db.php';  // Ensure the file is included only once
                     </tr>
                 </thead>
                     <tbody>
-              <!-- Expired Medical Leave -->
               <tr>
                 <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
                 <td>0</td>
@@ -302,8 +376,6 @@ require_once '../db.php';  // Ensure the file is included only once
                   <a href="#" class="btn btn-sm btn-danger">Delete</a>
                 </td>
               </tr>
-
-              <!-- Expired Annual Leave -->
               <tr>
                 <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
                 <td>0</td>
@@ -340,12 +412,10 @@ require_once '../db.php';  // Ensure the file is included only once
                 <?php //endif; ?>
                 </tbody>
 
-                 <!-- Section Header for Non-Quota Leaves -->
-              <tr class="table-secondary text-center">
+              <!--<tr class="table-secondary text-center">
                 <td colspan="7"><strong>Details of Non-Quota Leave Types</strong></td>
               </tr>
 
-              <!-- Non-Quota Leave Rows -->
               <tr><td>Unpaid Leave</td><td colspan="6"></td></tr>
               <tr><td>Paternity Leave</td><td colspan="6"></td></tr>
               <tr><td>Maternity Leave</td><td colspan="6"></td></tr>
@@ -361,34 +431,6 @@ require_once '../db.php';  // Ensure the file is included only once
   </div>
 </div>
             </table>
-</div>
-
- <!-- Second Table -->
-      <!--<div class="card mt-4">
-        <div class="card-header">
-          <h5>Details of Non-Quota Leave Types</h5>
-        </div>
-        <div class="card-body">
-          <table class="table table-bordered table-striped mt-3">
-            <thead class="table-dark">
-              <tr>
-                <th>Leave Type</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>Unpaid Leave</td></tr>
-              <tr><td>Paternity Leave</td></tr>
-              <tr><td>Maternity Leave</td></tr>
-              <tr><td>Compassionate Leave</td></tr>
-              <tr><td>Hospitalization Leave</td></tr>
-              <tr><td>Replacement Leave</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-    </div>
-  </div>
 </div>-->
 </body>
 </html>

@@ -1,9 +1,7 @@
 <?php 
 require_once '../db.php';  // Ensure the file is included only once
-session_start(); // Start session to access session messages
 ?>
-<?php require_once '../Controller/departController.php'; ?>
-
+<?php include_once '../Controller/medleaveController.php'; ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -57,7 +55,7 @@ session_start(); // Start session to access session messages
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/employee.php">
+          <a class="nav-link " href="../pages/medleave.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
@@ -149,19 +147,17 @@ session_start(); // Start session to access session messages
         </div>
       </div>
     </div>
-  </aside>
-
-<!--main content-->
-<main class="main-content position-relative border-radius-lg">
-  <!-- Navbar -->
+  </aside> <!--smpai sini-->>
+    <main class="main-content position-relative border-radius-lg">
+            <!-- Navbar -->
             <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
             <div class="container-fluid py-1 px-3">
                 <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Settings</a></li>
-                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Department</li>
+                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Work Shift</li>
                 </ol>
-                <h6 class="font-weight-bolder text-white mb-0">Department</h6>
+                <h6 class="font-weight-bolder text-white mb-0">Work Shift</h6>
                 </nav>
                 <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
                 <div class="ms-md-auto pe-md-3 d-flex align-items-center">
@@ -268,172 +264,64 @@ session_start(); // Start session to access session messages
                 </div>
             </div>
             </nav>
+            <!-- End Navbar -->
 
-<div class="container-fluid py-4">
-  <!-- Maklumat Peribadi -->
-  <div class="row">
-    <div class="col-12 mb-4">
-      <div class="card">
-        <div class="card-header pb-0">
-          <h5 class="mb-0">Maklumat Peribadi</h5>
-        </div>
-        <div class="card-body pt-0">
-          <form method="POST" action="index.php?action=save">
-            <div class="row">
-              <div class="col-md-4">
-                <label class="form-label">Kad Pengenalan <span class="text-danger">*</span></label>
-                <input type="text" name="noic" class="form-control" required>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Nama <span class="text-danger">*</span></label>
-                <input type="text" name="name" class="form-control" required>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Katalaluan <span class="text-danger">*</span></label>
-                <input type="password" name="pwd" class="form-control" required>
-              </div>
-            </div>
+<!-- Main content -->
+        <div class="container-fluid py-4">
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                      <h5>Medical > Quota Configuration</h5>
+                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">Add Quota</button>
+                    </div>
+                <div class="card-body">
+                      <!-- Label outside the table -->
+          <div class="mb-3 p-2 bg-secondary text-start text-white rounded">
+            <strong>Individual Medical Claim Quota List</strong>
+          </div>
 
-            <div class="row mt-3">
-              <div class="col-md-4">
-                <label class="form-label">Emel <span class="text-danger">*</span></label>
-                <input type="email" name="email" class="form-control" required>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Status Perkahwinan <span class="text-danger">*</span></label>
-                <select name="status_martial" class="form-control" required>
-                  <option value="">-- Pilih --</option>
-                  <option value="1">Bujang</option>
-                  <option value="2">Berkahwin</option>
-                </select>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Jantina <span class="text-danger">*</span></label>
-                <select name="gender" class="form-control" required>
-                  <option value="">-- Pilih --</option>
-                  <option value="L">Lelaki</option>
-                  <option value="P">Perempuan</option>
-                </select>
-              </div>
-            </div>
+            <table class="table table-bordered table-striped mt-3">
+              <thead class="table-dark">
+                <tr>
+                  <th>Start/End</th>
+                  <th>Entitled</th>
+                  <th>Used</th>
+                  <th>Current</th>
+                  <th>Pending</th>
+                  <th>Available</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
 
-            <div class="row mt-3">
-              <div class="col-md-6">
-                <label class="form-label">Alamat Tetap <span class="text-danger">*</span></label>
-                <textarea name="permenant_address" class="form-control" required></textarea>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Alamat Surat Menyurat <span class="text-danger">*</span></label>
-                <textarea name="mail_address" class="form-control" required></textarea>
-              </div>
-            </div>
+              <tbody>
 
-            <div class="row mt-3">
-              <div class="col-md-4">
-                <label class="form-label">Bilangan Tanggungan <span class="text-danger">*</span></label>
-                <input type="number" name="dependent" class="form-control" required>
-              </div>
-            </div>
+                <!-- Expired Medical Leave -->
+                <tr>
+                  <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>
+                    <!--<a href="#" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                  </td>-->
+                </tr>
 
-            <hr class="my-4">
-
-            <!-- Maklumat Staf -->
-            <div class="card">
-              <div class="card-header pb-0">
-                <h5 class="mb-0">Maklumat Staf</h5>
-              </div>
-              <div class="card-body pt-0">
-                <div class="row">
-                  <div class="col-md-4">
-                    <label class="form-label">No Staf <span class="text-danger">*</span></label>
-                    <input type="text" name="staff_no" class="form-control" required>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Jawatan <span class="text-danger">*</span></label>
-                    <input type="text" name="position" class="form-control" required>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Status Jawatan <span class="text-danger">*</span></label>
-                    <select name="position_status" class="form-control" required>
-                      <option value="">-- Pilih --</option>
-                      <option value="Tetap">Tetap</option>
-                      <option value="Kontrak">Kontrak</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="row mt-3">
-                  <div class="col-md-4">
-                    <label class="form-label">Bahagian (ID) <span class="text-danger">*</span></label>
-                    <input type="number" name="dept_id" class="form-control" required>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Syarikat (ID) <span class="text-danger">*</span></label>
-                    <input type="number" name="company_id" class="form-control" required>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Shift (ID) <span class="text-danger">*</span></label>
-                    <input type="number" name="shift_id" class="form-control" required>
-                  </div>
-                </div>
-
-                <div class="row mt-3">
-                  <div class="col-md-4">
-                    <label class="form-label">Kelulusan Cuti (ID)</label>
-                    <input type="number" name="leave_approval" class="form-control">
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Status Umum</label>
-                    <input type="number" name="status" class="form-control">
-                  </div>
-                </div>
-
-                <!-- Optional status fields -->
-                <div class="row mt-3">
-                  <div class="col-md-3">
-                    <label class="form-label">QR Code</label>
-                    <select name="status_qrcode" class="form-control">
-                      <option value="">-- Pilih --</option>
-                      <option value="1">Aktif</option>
-                      <option value="0">Tidak Aktif</option>
-                    </select>
-                  </div>
-                  <div class="col-md-3">
-                    <label class="form-label">Swafoto</label>
-                    <select name="status_swafoto" class="form-control">
-                      <option value="">-- Pilih --</option>
-                      <option value="1">Ya</option>
-                      <option value="0">Tidak</option>
-                    </select>
-                  </div>
-                  <div class="col-md-3">
-                    <label class="form-label">Monitor</label>
-                    <select name="status_monitor" class="form-control">
-                      <option value="">-- Pilih --</option>
-                      <option value="1">Ya</option>
-                      <option value="0">Tidak</option>
-                    </select>
-                  </div>
-                  <div class="col-md-3">
-                    <label class="form-label">Taraf Perkahwinan</label>
-                    <select name="status_martial" class="form-control">
-                      <option value="">-- Pilih --</option>
-                      <option value="1">Bujang</option>
-                      <option value="2">Berkahwin</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Submit Buttons -->
-            <div class="mt-4 text-end">
-              <a href="#" class="btn btn-secondary">Kembali</a>
-              <button type="submit" class="btn btn-primary">Seterusnya</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+                <!-- Expired Annual Leave -->
+                <tr>
+                  <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>
+                    <!--<a href="#" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                  </td>-->
+                </tr>
+</body>
+</html>
