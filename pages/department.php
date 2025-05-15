@@ -2,6 +2,8 @@
 require_once '../db.php';  // Ensure the file is included only once
 session_start(); // Start session to access session messages
 ?>
+<?php require_once '../Controller/departController.php'; ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -292,78 +294,62 @@ session_start(); // Start session to access session messages
             </div>
           <?php endif; ?>
             <div class="card-body">
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                <?php
-                  // Display department list
-                  $query = "SELECT * FROM departments ORDER BY id DESC";
-                  $result = $conn->query($query);
-
-                  if ($result && $result->num_rows > 0) {
-                      $counter = 1; // Initialize counter for numbering
-
-                      while ($row = $result->fetch_assoc()) {
-                          $id = $row['id']; // Get the actual ID from database
-                          $code = htmlspecialchars($row['code']);
-                          $name = htmlspecialchars($row['name']);
-                          $raw_status = $row['status']; // Store raw status for modal
-
-                          // Display badge with border color based on status
-                          if ($raw_status) {
-                              $statusBadge = '<span class="badge border border-success text-success px-3 py-2">Active</span>';
-                          } else {
-                              $statusBadge = '<span class="badge border border-danger text-danger px-3 py-2">Inactive</span>';
-                          }
-
-                          echo '
-                          <tr>
-                              <td>' . $counter++ . '</td>
-                              <td>' . $code . '</td>
-                              <td>' . $name . '</td>
-                              <td>' . $statusBadge . '</td>
-                              <td>
-                                  <a href="#" class="text-primary me-5 edit-department-btn"
-                                    data-id="' . $id . '"
-                                    data-code="' . $code . '"
-                                    data-name="' . $name . '"
-                                    data-status="' . $raw_status . '"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#editDepartmentModal"
-                                    title="Edit">
-                                    <i class="bi bi-pencil-square fs-4"></i>
-                                  </a>
-                                  <a href="crudDepart.php?delete_id=' . $id . '" 
-                                    class="text-danger" 
-                                    onclick="return confirm(\'Are you sure you want to delete this department?\');"
-                                    title="Delete">
-                                    <i class="bi bi-trash-fill fs-4"></i>
-                                  </a>
-                              </td>
-                          </tr>';
-                      }
-                  } else {
-                      echo '
-                      <tr>
-                          <td colspan="5" class="text-center">No departments found.</td>
-                      </tr>';
-                  }
-                  ?>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Code</th>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php if ($departmentList && $departmentList->num_rows > 0): ?>
+        <?php $counter = 1; ?>
+        <?php while ($row = $departmentList->fetch_assoc()): ?>
+          <?php
+            $id = $row['id'];
+            $code = htmlspecialchars($row['code']);
+            $name = htmlspecialchars($row['name']);
+            $raw_status = $row['status'];
+            $statusBadge = $raw_status
+              ? '<span class="badge border border-success text-success px-3 py-2">Active</span>'
+              : '<span class="badge border border-danger text-danger px-3 py-2">Inactive</span>';
+          ?>
+          <tr>
+            <td><?= $counter++ ?></td>
+            <td><?= $code ?></td>
+            <td><?= $name ?></td>
+            <td><?= $statusBadge ?></td>
+            <td>
+              <a href="#" class="text-primary me-5 edit-department-btn"
+                data-id="<?= $id ?>"
+                data-code="<?= $code ?>"
+                data-name="<?= $name ?>"
+                data-status="<?= $raw_status ?>"
+                data-bs-toggle="modal"
+                data-bs-target="#editDepartmentModal"
+                title="Edit">
+                <i class="bi bi-pencil-square fs-4"></i>
+              </a>
+              <a href="../Controller/departController.php?delete_id=<?= $id ?>" 
+                class="text-danger" 
+                onclick="return confirm('Are you sure you want to delete this department?');"
+                title="Delete">
+                <i class="bi bi-trash-fill fs-4"></i>
+              </a>
+            </td>
+          </tr>
+        <?php endwhile; ?>
+      <?php else: ?>
+        <tr>
+          <td colspan="5" class="text-center">No departments found.</td>
+        </tr>
+      <?php endif; ?>
+    </tbody>
+  </table>
+</div>
 
     <!-- Add Department Modal -->
     <div class="modal fade" id="addDepartmentModal" tabindex="-1">

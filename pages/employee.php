@@ -2,9 +2,8 @@
 require_once '../db.php';  // Ensure the file is included only once
 session_start(); // Start session to access session messages
 ?>
-<?php
-require_once '../Controller/compController.php';
-?>
+<?php require_once '../Controller/departController.php'; ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -58,11 +57,11 @@ require_once '../Controller/compController.php';
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/billing.html">
+          <a class="nav-link " href="../pages/employee.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
-            <span class="nav-link-text ms-1">Billing</span>
+            <span class="nav-link-text ms-1">Staff</span>
           </a>
         </li>
         <li class="nav-item">
@@ -80,8 +79,8 @@ require_once '../Controller/compController.php';
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="../pages/company.php">
-                <span class="sidenav-normal">Com</span>
+              <a class="nav-link" href="../pages/department.php">
+                <span class="sidenav-normal">Department</span>
               </a>
             </li>
             <li class="nav-item">
@@ -152,17 +151,17 @@ require_once '../Controller/compController.php';
     </div>
   </aside>
 
-<!-- Main Content -->
- <main class="main-content position-relative border-radius-lg">
+<!--main content-->
+<main class="main-content position-relative border-radius-lg">
   <!-- Navbar -->
             <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
             <div class="container-fluid py-1 px-3">
                 <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Settings</a></li>
-                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Company</li>
+                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Department</li>
                 </ol>
-                <h6 class="font-weight-bolder text-white mb-0">Company</h6>
+                <h6 class="font-weight-bolder text-white mb-0">Department</h6>
                 </nav>
                 <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
                 <div class="ms-md-auto pe-md-3 d-flex align-items-center">
@@ -269,188 +268,172 @@ require_once '../Controller/compController.php';
                 </div>
             </div>
             </nav>
-    <!--start main content-->        
-    <div class="container-fluid py-4">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center" style="margin-bottom: 5px;">
-            <h5 style="margin-bottom: 0;">Company Management</h5>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCompanyModal" style="margin-top: 0;">Add Company</button>
-          </div>
-          <div class="card-body" style="padding-top: 10px;">
 
-      <!-- Alert Messages -->
-            <?php if (isset($_SESSION['success_message']) || isset($_SESSION['error_message'])): ?>
-            <div class="w-50">
-              <?php if (isset($_SESSION['success_message'])): ?>
-                <div class="alert alert-success alert-dismissible fade show auto-dismiss text-white" role="alert">
-                  <?= htmlspecialchars($_SESSION['success_message']) ?>
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                <?php unset($_SESSION['success_message']); ?>
-              <?php elseif (isset($_SESSION['error_message'])): ?>
-                <div class="alert alert-danger alert-dismissible fade show auto-dismiss text-white" role="alert">
-                  <?= htmlspecialchars($_SESSION['error_message']) ?>
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                <?php unset($_SESSION['error_message']); ?>
-              <?php endif; ?>
+<div class="container-fluid py-4">
+  <!-- Maklumat Peribadi -->
+  <div class="row">
+    <div class="col-12 mb-4">
+      <div class="card">
+        <div class="card-header pb-0">
+          <h5 class="mb-0">Maklumat Peribadi</h5>
+        </div>
+        <div class="card-body pt-0">
+          <form method="POST" action="index.php?action=save">
+            <div class="row">
+              <div class="col-md-4">
+                <label class="form-label">Kad Pengenalan <span class="text-danger">*</span></label>
+                <input type="text" name="noic" class="form-control" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Nama <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Katalaluan <span class="text-danger">*</span></label>
+                <input type="password" name="pwd" class="form-control" required>
+              </div>
             </div>
-          <?php endif; ?>
 
+            <div class="row mt-3">
+              <div class="col-md-4">
+                <label class="form-label">Emel <span class="text-danger">*</span></label>
+                <input type="email" name="email" class="form-control" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Status Perkahwinan <span class="text-danger">*</span></label>
+                <select name="status_martial" class="form-control" required>
+                  <option value="">-- Pilih --</option>
+                  <option value="1">Bujang</option>
+                  <option value="2">Berkahwin</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Jantina <span class="text-danger">*</span></label>
+                <select name="gender" class="form-control" required>
+                  <option value="">-- Pilih --</option>
+                  <option value="L">Lelaki</option>
+                  <option value="P">Perempuan</option>
+                </select>
+              </div>
+            </div>
 
-            <div class="card-body">
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <label class="form-label">Alamat Tetap <span class="text-danger">*</span></label>
+                <textarea name="permenant_address" class="form-control" required></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Alamat Surat Menyurat <span class="text-danger">*</span></label>
+                <textarea name="mail_address" class="form-control" required></textarea>
+              </div>
+            </div>
 
-                <?php if ($companyList && $companyList->num_rows > 0): ?>
-        <?php $counter = 1; ?>
-        <?php while ($row = $companyList->fetch_assoc()): ?>
-          <?php
-            $id = $row['id'];
-            $code = htmlspecialchars($row['code']);
-            $name = htmlspecialchars($row['name']);
-            $raw_status = $row['status'];
-            $statusBadge = $raw_status
-              ? '<span class="badge border border-success text-success px-3 py-2">Active</span>'
-              : '<span class="badge border border-danger text-danger px-3 py-2">Inactive</span>';
-          ?>
-          <tr>
-            <td><?= $counter++ ?></td>
-            <td><?= $code ?></td>
-            <td><?= $name ?></td>
-            <td><?= $statusBadge ?></td>
-            <td>
-              <a href="#" class="text-primary me-5 edit-company-btn"
-                data-id="<?= $id ?>"
-                data-code="<?= $code ?>"
-                data-name="<?= $name ?>"
-                data-status="<?= $raw_status ?>"
-                data-bs-toggle="modal"
-                data-bs-target="#editCompanyModal"
-                title="Edit">
-                <i class="bi bi-pencil-square fs-4"></i>
-              </a>
-              <a href="../Controller/compController.php?delete_id=<?= $id ?>" 
-                class="text-danger" 
-                onclick="return confirm('Are you sure you want to delete this company?');"
-                title="Delete">
-                <i class="bi bi-trash-fill fs-4"></i>
-              </a>
-            </td>
-          </tr>
-        <?php endwhile; ?>
-      <?php else: ?>
-        <tr>
-          <td colspan="5" class="text-center">No companies found.</td>
-        </tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
+            <div class="row mt-3">
+              <div class="col-md-4">
+                <label class="form-label">Bilangan Tanggungan <span class="text-danger">*</span></label>
+                <input type="number" name="dependent" class="form-control" required>
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Maklumat Staf -->
+            <div class="card">
+              <div class="card-header pb-0">
+                <h5 class="mb-0">Maklumat Staf</h5>
+              </div>
+              <div class="card-body pt-0">
+                <div class="row">
+                  <div class="col-md-4">
+                    <label class="form-label">No Staf <span class="text-danger">*</span></label>
+                    <input type="text" name="staff_no" class="form-control" required>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Jawatan <span class="text-danger">*</span></label>
+                    <input type="text" name="position" class="form-control" required>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Status Jawatan <span class="text-danger">*</span></label>
+                    <select name="position_status" class="form-control" required>
+                      <option value="">-- Pilih --</option>
+                      <option value="Tetap">Tetap</option>
+                      <option value="Kontrak">Kontrak</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="row mt-3">
+                  <div class="col-md-4">
+                    <label class="form-label">Bahagian (ID) <span class="text-danger">*</span></label>
+                    <input type="number" name="dept_id" class="form-control" required>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Syarikat (ID) <span class="text-danger">*</span></label>
+                    <input type="number" name="company_id" class="form-control" required>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Shift (ID) <span class="text-danger">*</span></label>
+                    <input type="number" name="shift_id" class="form-control" required>
+                  </div>
+                </div>
+
+                <div class="row mt-3">
+                  <div class="col-md-4">
+                    <label class="form-label">Kelulusan Cuti (ID)</label>
+                    <input type="number" name="leave_approval" class="form-control">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label">Status Umum</label>
+                    <input type="number" name="status" class="form-control">
+                  </div>
+                </div>
+
+                <!-- Optional status fields -->
+                <div class="row mt-3">
+                  <div class="col-md-3">
+                    <label class="form-label">QR Code</label>
+                    <select name="status_qrcode" class="form-control">
+                      <option value="">-- Pilih --</option>
+                      <option value="1">Aktif</option>
+                      <option value="0">Tidak Aktif</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Swafoto</label>
+                    <select name="status_swafoto" class="form-control">
+                      <option value="">-- Pilih --</option>
+                      <option value="1">Ya</option>
+                      <option value="0">Tidak</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Monitor</label>
+                    <select name="status_monitor" class="form-control">
+                      <option value="">-- Pilih --</option>
+                      <option value="1">Ya</option>
+                      <option value="0">Tidak</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Taraf Perkahwinan</label>
+                    <select name="status_martial" class="form-control">
+                      <option value="">-- Pilih --</option>
+                      <option value="1">Bujang</option>
+                      <option value="2">Berkahwin</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="mt-4 text-end">
+              <a href="#" class="btn btn-secondary">Kembali</a>
+              <button type="submit" class="btn btn-primary">Seterusnya</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-
-
-    <!-- Add Company Modal -->
-    <div class="modal fade" id="addCompanyModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <form action="crudCompany.php" method="POST" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Add New Company</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="company-code" class="form-label">Company Code <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="company-code" name="code" required>
-            </div>
-            <div class="mb-3">
-              <label for="company-name" class="form-label">Company Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="company-name" name="name" required>
-            </div>
-            <div class="mb-3">
-              <label for="company-status" class="form-label">Status</label>
-              <select class="form-select" id="company-status" name="status">
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" name="add_company" class="btn btn-primary">Save</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Edit Company Modal -->
-    <div class="modal fade" id="editCompanyModal" tabindex="-1">
-      <div class="modal-dialog">
-        <form action="crudCompany.php" method="POST" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Edit Company</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" name="edit_id" id="edit_id">
-            <div class="mb-3">
-              <label for="edit_code" class="form-label">Company Code <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="edit_code" id="edit_code" required>
-            </div>
-            <div class="mb-3">
-              <label for="edit_name" class="form-label">Company Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="edit_name" id="edit_name" required>
-            </div>
-            <div class="mb-3">
-              <label for="edit_status" class="form-label">Status</label>
-              <select class="form-select" name="edit_status" id="edit_status">
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" name="update_company" class="btn btn-primary">Update</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </main>
-
-  <!-- JS Scripts -->
-  <script src="../assets/js/core/bootstrap.bundle.min.js"></script>
-  <script>
-    // Fill edit modal with selected data
-    document.querySelectorAll('.edit-company-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        document.getElementById('edit_id').value = button.dataset.id;
-        document.getElementById('edit_code').value = button.dataset.code;
-        document.getElementById('edit_name').value = button.dataset.name;
-        document.getElementById('edit_status').value = button.dataset.status;
-      });
-    });
-
-    
-  </script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <script>
-    setTimeout(function () {
-      var alert = document.querySelector('.alert');
-      if (alert) {
-        alert.classList.remove('show');
-        alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 500);
-      }
-    }, 3000);
-  </script>
-</body>
-</html>
