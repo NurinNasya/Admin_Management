@@ -413,12 +413,12 @@ require_once '../db.php';  // Ensure the file is included only once
                                 </li>
                                 <li>
                                   <a class="dropdown-item border-radius-md" href="medleavehr.php">
-                                    <i class="fas fa-file-medical me-2"></i> Medical Leave
+                                    <i class="fas fa-file-medical me-2"></i> Medical Claim
                                   </a>
                                 </li>
                                 <li>
                                   <a class="dropdown-item border-radius-md" href="medleave.php">
-                                    <i class="fas fa-file-medical me-2"></i> Medical Quota
+                                    <i class="fas fa-file-medical me-2"></i> Leave Quota
                                   </a>
                                 </li>
                                 <li>

@@ -80,8 +80,8 @@ require_once '../Controller/compController.php';
               </a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="../pages/company.php">
-                <span class="sidenav-normal">Com</span>
+              <a class="nav-link" href="../pages/department.php">
+                <span class="sidenav-normal">Department</span>
               </a>
             </li>
             <li class="nav-item">

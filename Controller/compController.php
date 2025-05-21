@@ -1,9 +1,9 @@
 <?php
 require_once '../db.php';
-require_once '../Model/comp.php';
+require_once '../model/comp.php'; // make sure this path is correct
 
-$compModel = new CompModel($conn);
-$companyList = $compModel->getAllCompanies(); // fetch data
+$compModel = new Company(); // ← Class name must match the one in comp.php
+$companyList = $compModel->getAllCompanies();
 
 // ===================
 // CREATE
@@ -13,9 +13,8 @@ if (isset($_POST['code']) && isset($_POST['name']) && !isset($_POST['update_comp
     $name = trim($_POST['name']);
     $status = isset($_POST['status']) ? 1 : 0;
 
-    $result = $compModel->findDuplicate($code, $name);
-    if ($result->num_rows > 0) {
-        $existing = $result->fetch_assoc();
+    $existing = $compModel->getCompanyByCodeOrName($code, $name);
+    if ($existing) {
         if ($existing['code'] === $code && $existing['name'] === $name) {
             $_SESSION['error_message'] = "Code and Name already exist.";
         } elseif ($existing['code'] === $code) {
@@ -24,7 +23,7 @@ if (isset($_POST['code']) && isset($_POST['name']) && !isset($_POST['update_comp
             $_SESSION['error_message'] = "Name already exists.";
         }
     } else {
-        if ($compModel->insert($code, $name, $status)) {
+        if ($compModel->createCompany($code, $name, $status)) {
             $_SESSION['success_message'] = "Company saved successfully.";
         } else {
             $_SESSION['error_message'] = "Error saving company.";
@@ -44,9 +43,8 @@ if (isset($_POST['update_company'])) {
     $name = trim($_POST['edit_name']);
     $status = $_POST['edit_status'];
 
-    $result = $compModel->findDuplicate($code, $name, $id);
-    if ($result->num_rows > 0) {
-        $existing = $result->fetch_assoc();
+    $existing = $compModel->getCompanyByCodeOrName($code, $name, $id);
+    if ($existing) {
         if ($existing['code'] === $code && $existing['name'] === $name) {
             $_SESSION['error_message'] = "Code and Name already exist.";
         } elseif ($existing['code'] === $code) {
@@ -55,7 +53,7 @@ if (isset($_POST['update_company'])) {
             $_SESSION['error_message'] = "Name already exists.";
         }
     } else {
-        if ($compModel->update($id, $code, $name, $status)) {
+        if ($compModel->updateCompany($id, $code, $name, $status)) {
             $_SESSION['success_message'] = "Company updated successfully.";
         } else {
             $_SESSION['error_message'] = "Failed to update company.";
@@ -71,7 +69,7 @@ if (isset($_POST['update_company'])) {
 // ===================
 if (isset($_GET['delete_id'])) {
     $id = $_GET['delete_id'];
-    if ($compModel->delete($id)) {
+    if ($compModel->deleteCompany($id)) {
         $_SESSION['success_message'] = "Company deleted successfully.";
     } else {
         $_SESSION['error_message'] = "Failed to delete company.";
