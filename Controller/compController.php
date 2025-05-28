@@ -1,6 +1,6 @@
 <?php
 require_once '../db.php';
-require_once '../model/comp.php'; // make sure this path is correct
+require_once '../Model/comp.php'; // make sure this path is correct
 
 $compModel = new Company(); // ← Class name must match the one in comp.php
 $companyList = $compModel->getAllCompanies();

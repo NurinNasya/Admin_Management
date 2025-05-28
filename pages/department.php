@@ -1,9 +1,11 @@
 <?php 
 require_once '../db.php';  // Ensure the file is included only once
 session_start(); // Start session to access session messages
+require_once '../Model/depart.php'; // adjust if path is different
+$departModel = new Depart();
+$departments = $departModel->getAllRaw(); // ✅ correct variable name & method for table list
 ?>
 <?php require_once '../Controller/departController.php'; ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -305,9 +307,9 @@ session_start(); // Start session to access session messages
       </tr>
     </thead>
     <tbody>
-      <?php if ($departmentList && $departmentList->num_rows > 0): ?>
+      <?php if ($departments && $departments->num_rows > 0): ?>
         <?php $counter = 1; ?>
-        <?php while ($row = $departmentList->fetch_assoc()): ?>
+        <?php while ($row = $departments->fetch_assoc()): ?>
           <?php
             $id = $row['id'];
             $code = htmlspecialchars($row['code']);

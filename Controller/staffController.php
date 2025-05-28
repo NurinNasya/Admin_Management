@@ -1,6 +1,5 @@
 <?php
-require_once __DIR__ . '/../model/Staff.php';
-use Staff;
+require_once '../Model/Staff.php';
 
 class StaffController
 {
@@ -9,87 +8,178 @@ class StaffController
     public function __construct()
     {
         $this->staffModel = new Staff();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
     }
 
     public function index(): void
     {
-        $staffs = $this->staffModel->getAllStaff();
-        require_once __DIR__ . '/../pages/staff.php';
+        try {
+            $staffs = $this->staffModel->getAllStaff();
+
+            if (empty($staffs)) {
+                $_SESSION['warning'] = "No staff records found";
+            }
+
+            require_once '../pages/staff.php';
+
+        } catch (Exception $e) {
+            $_SESSION['error'] = "Error loading staff data: " . $e->getMessage();
+            header("Location: error.php");
+            exit();
+        }
     }
 
-    public function create(): void
+    public function showEmployeeInfo(int $id): void
     {
-        require_once __DIR__ . '/../pages/staff_create.php';
+        try {
+            // Verify ID is valid
+            if ($id <= 0) {
+                throw new Exception("Invalid employee ID");
+            }
+
+            // Get employee data
+            $employee = $this->staffModel->getStaffById($id);
+            
+            if (!$employee) {
+                throw new Exception("Employee not found");
+            }
+
+            // Get departments for dropdown
+            // You'll need to add a getDepartments() method to your Staff model
+            $departments = $this->staffModel->getDepartments();
+
+            // Pass data to view
+            require_once '../pages/employee_info.php';
+
+        } catch (Exception $e) {
+            $_SESSION['error'] = $e->getMessage();
+            header("Location: ../pages/staff.php");
+            exit();
+        }
     }
 
-    public function store(array $data, array $files): void
+    public function updateEmployeeInfo(array $data, array $files = []): void
     {
-        $data = $this->sanitizeData($data);
-        $data['profile_pic'] = $this->handleUpload($files);
+        try {
+            if (!isset($data['id'])) {
+                throw new Exception("Invalid employee ID");
+            }
 
-        if ($this->staffModel->insertStaff($data)) {
-            header("Location: staff.php?action=index&success=created");
-            return;
+            $data = $this->sanitizeData($data);
+            $id = $data['id'];
+            $noic = $data['noic'] ?? '';
+            $email = $data['email'] ?? '';
+
+            // Duplicate check
+            $result = $this->staffModel->findDuplicate($noic, $email, $id);
+            if ($result && $result->num_rows > 0) {
+                $existing = $result->fetch_assoc();
+                if ($existing['noic'] === $ic && $existing['email'] === $email) {
+                    $_SESSION['error'] = "IC and Email already exist.";
+                } elseif ($existing['noic'] === $ic) {
+                    $_SESSION['error'] = "IC already exists.";
+                } elseif ($existing['email'] === $email) {
+                    $_SESSION['error'] = "Email already exists.";
+                }
+                header("Location: ../pages/employee_info.php?id=" . $id);
+                exit();
+            }
+
+            // Handle profile picture upload
+            $profilePicPath = null;
+            if (!empty($files['profile_pic']['name'])) {
+                $targetDir = "../uploads/profile_pics/";
+                if (!is_dir($targetDir)) {
+                    mkdir($targetDir, 0777, true);
+                }
+
+                $filename = basename($files['profile_pic']['name']);
+                $safeFilename = time() . "_" . preg_replace("/[^A-Za-z0-9_.]/", "_", $filename);
+                $targetFile = $targetDir . $safeFilename;
+                $fileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
+
+                if (in_array($fileType, ['jpg', 'jpeg', 'png']) && $files['profile_pic']['size'] <= 2 * 1024 * 1024) {
+                    if (move_uploaded_file($files['profile_pic']['tmp_name'], $targetFile)) {
+                        $profilePicPath = $targetFile;
+                    } else {
+                        throw new Exception("Failed to upload profile picture.");
+                    }
+                } else {
+                    throw new Exception("Invalid image file. Please upload JPG or PNG under 2MB.");
+                }
+            }
+
+            // Remove existing picture if requested
+            if (!empty($data['remove_profile_pic'])) {
+                $existing = $this->staffModel->getStaffById($id);
+                if (!empty($existing['profile_pic']) && file_exists($existing['profile_pic'])) {
+                    unlink($existing['profile_pic']);
+                }
+                $profilePicPath = ''; // Clear the photo
+            }
+
+            // Prepare final update data
+            $updateData = [
+                'id' => $id,
+                'name' => $data['name'] ?? '',
+                'noic' => $noic,
+                'email' => $email,
+                'pwd' => $data['pwd'] ?? null, // allow null if not changed
+                'phone' => $data['phone'] ?? '',
+                'gender' => $data['gender'] ?? '',
+                'status_marital' => $data['status_marital'] ?? '',
+                'dependent' => $data['dependent'] ?? 0,
+                'roles' => $data['roles'] ?? '',
+                'roles_status' => $data['roles _status'] ?? '',
+                'staff_no' => $data['staff_no'] ?? '',
+                'status' => $data['status'] ?? '',
+                'departments_id' => $data['departments_id'] ?? '',
+                'permenant_address' => $data['permenant_address'] ?? '',
+                'mail_address' => $data['mail_address'] ?? '',
+                'profile_pic' => $profilePicPath,
+            ];
+
+            $this->staffModel->updateStaff($updateData);
+
+            $_SESSION['success'] = "Employee information updated successfully.";
+            header("Location: ../pages/staff.php");
+            exit();
+
+        } catch (Exception $e) {
+            $_SESSION['error'] = "Update failed: " . $e->getMessage();
+            header("Location: ../pages/esi.php?id=" . $data['id']);
+            exit();
         }
-        header("Location: staff.php?action=create&error=create_failed");
     }
 
-    public function edit(int $id): void
+    public function deleteStaff(int $id): void
     {
-        $staff = $this->staffModel->getStaffById($id);
-        if (!$staff) {
-            header("Location: staff.php?action=index&error=not_found");
-            return;
-        }
-        require_once __DIR__ . '/../pages/staff_edit.php';
-    }
-
-    public function update(int $id, array $data, array $files): void
-    {
-        $data = $this->sanitizeData($data);
-        if (!empty($files['profile_pic']['tmp_name'])) {
-            $data['profile_pic'] = $this->handleUpload($files);
+        try {
+            if ($this->staffModel->deleteStaff($id)) {
+                $_SESSION['success'] = "Staff deleted successfully.";
+            } else {
+                throw new Exception("Failed to delete staff.");
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = "Error deleting staff: " . $e->getMessage();
         }
 
-        if ($this->staffModel->updateStaff($id, $data)) {
-            header("Location: staff.php?action=index&success=updated");
-            return;
-        }
-        header("Location: staff.php?action=edit&id=$id&error=update_failed");
-    }
-
-    public function delete(int $id): void
-    {
-        if ($this->staffModel->deleteStaff($id)) {
-            header("Location: staff.php?action=index&success=deleted");
-            return;
-        }
-        header("Location: staff.php?action=index&error=delete_failed");
+        header("Location: ../pages/staff.php");
+        exit();
     }
 
     private function sanitizeData(array $data): array
     {
-        return [
-            'staff_no' => htmlspecialchars($data['staff_no'] ?? ''),
-            'name' => htmlspecialchars($data['name'] ?? ''),
-            'email' => filter_var($data['email'] ?? '', FILTER_SANITIZE_EMAIL),
-            'phone' => htmlspecialchars($data['phone'] ?? ''),
-            'department' => htmlspecialchars($data['department'] ?? ''),
-            'role' => htmlspecialchars($data['role'] ?? ''),
-            'profile_pic' => $data['profile_pic'] ?? 'assets/img/default-avatar.png',
-            'medical_leave_quota' => (int) ($data['medical_leave_quota'] ?? 14)
-        ];
-    }
-
-    private function handleUpload(array $files): string
-    {
-        if (isset($files['profile_pic']) && $files['profile_pic']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../assets/img/profiles/';
-            $filename = uniqid() . '_' . basename($files['profile_pic']['name']);
-            if (move_uploaded_file($files['profile_pic']['tmp_name'], $uploadDir . $filename)) {
-                return 'assets/img/profiles/' . $filename;
+        $sanitized = [];
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $sanitized[$key] = $this->sanitizeData($value);
+            } else {
+                $sanitized[$key] = htmlspecialchars(trim($value), ENT_QUOTES, 'UTF-8');
             }
         }
-        return 'assets/img/default-avatar.png';
+        return $sanitized;
     }
 }

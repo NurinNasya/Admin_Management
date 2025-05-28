@@ -155,28 +155,116 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <!-- Navbar Ends -->
     
     <!-- Content goes here -->
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Staff ID</th>
-                <th>Date</th>
-                <th>Description</th>
-                <th>Total Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php /*foreach ($forms as $form): ?>
-                <tr>
-                    <td><?= $form['id'] ?></td>
-                    <td><?= $form['staff_id'] ?></td>
-                    <td><?= $form['receipt_date'] ?></td>
-                    <td><?= $form['description'] ?></td>
-                    <td><?= $form['total_amount'] ?></td>
-                </tr>
-            <?php endforeach;*/ ?>
-        </tbody>
-    </table>
-  </main>
+    <div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="card mb-5">
+                <div class="card-header">
+                    <h2>Medical Forms History</h2>
+                    
+                    <?php if (isset($_GET['error'])): ?>
+                        <div class="alert alert-danger">
+                            There was an error processing your request.
+                        </div>
+                    <?php endif; ?>
+
+                    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#medicalFormModal">
+                        New Medical Form
+                    </button>
+
+                    <?php
+                    // Initialize $forms if not set
+                    $forms = $forms ?? [];
+                    ?>
+
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Amount (RM)</th>
+                                <th>Document</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($forms)): ?>
+                                <tr>
+                                    <td colspan="5" class="text-center">No medical forms found</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($forms as $form): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($form['receipt_data'] ?? 'N/A') ?></td>
+                                        <td><?= htmlspecialchars($form['description'] ?? '') ?></td>
+                                        <td><?= isset($form['total_amount']) ? number_format($form['total_amount'], 2) : '0.00' ?></td>
+                                        <td>
+                                            <?php if (!empty($form['document_name'])): ?>
+                                                <a href="uploads/<?= urlencode($form['document_name']) ?>" target="_blank">View</a>
+                                            <?php else: ?>
+                                                -
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?= htmlspecialchars($form['verify_status'] ?? 'Pending') ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="medicalFormModal" tabindex="-1" aria-labelledby="medicalFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" enctype="multipart/form-data" action="index.php?action=create_medical_form">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="medicalFormModalLabel">Submit Medical Form</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="staff_id" value="1">
+                    <input type="hidden" name="updated_by" value="admin">
+
+                    <div class="mb-3">
+                        <label for="receipt_data" class="form-label">Receipt Date:</label>
+                        <input type="date" id="receipt_data" name="receipt_data" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description:</label>
+                        <textarea id="description" name="description" class="form-control" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="total_amount" class="form-label">Total Amount (RM):</label>
+                        <input type="number" id="total_amount" name="total_amount" class="form-control" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="document" class="form-label">Upload Document (PDF/JPEG/PNG, max 5MB):</label>
+                        <input type="file" id="document" name="document" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="remark" class="form-label">Remark:</label>
+                        <textarea id="remark" name="remark" class="form-control"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

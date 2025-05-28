@@ -1,15 +1,31 @@
 <?php
 require_once '../db.php'; // adjust the path if needed
 
-class DepartModel {
+class Depart {
     private $conn;
 
     public function __construct() {
-        global $conn; // get the $conn from db.php
+        global $conn; // use the shared db connection
         $this->conn = $conn;
     }
 
-    public function getAllDepartments() {
+    // ✅ Use this for dropdowns and anywhere you need array of departments
+    public function getAllDepartments(): array {
+        $sql = "SELECT id, code, name FROM departments ORDER BY name ASC";
+        $result = $this->conn->query($sql);
+        $departments = [];
+
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $departments[] = $row;
+            }
+        }
+
+        return $departments;
+    }
+
+    // ✅ Use this for showing in department management table (your original style)
+    public function getAllRaw() {
         $sql = "SELECT * FROM departments ORDER BY id DESC";
         return mysqli_query($this->conn, $sql);
     }
@@ -38,4 +54,4 @@ class DepartModel {
         $result = mysqli_query($this->conn, $sql);
         return mysqli_fetch_assoc($result);
     }
-} 
+}

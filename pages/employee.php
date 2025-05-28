@@ -1,9 +1,10 @@
 <?php 
-require_once '../db.php';  // Ensure the file is included only once
-session_start(); // Start session to access session messages
+require_once '../db.php';  
+require_once '../Controller/departController.php';
+require_once '../model/Employee.php';
+$departModel = new Depart();
+$departments = $departModel->getAllDepartments(); // returns array of id, code, name
 ?>
-<?php require_once '../Controller/departController.php'; ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -269,173 +270,129 @@ session_start(); // Start session to access session messages
             </div>
             </nav>
 
+<!-- pages/employee.php -->
 <div class="container-fluid py-4">
-  <!-- Maklumat Peribadi -->
   <div class="row">
     <div class="col-12 mb-4">
       <div class="card">
         <div class="card-header pb-0">
-          <h5 class="mb-0">Maklumat Peribadi</h5>
+          <h5 class="mb-0">Add New Employee</h5>
         </div>
         <div class="card-body pt-0">
-          <form method="POST" action="index.php?action=save">
+          <form action="../controller/employeeController.php?action=save" method="POST" enctype="multipart/form-data">
             <div class="row">
-              <div class="col-md-4">
-                <label class="form-label">Kad Pengenalan <span class="text-danger">*</span></label>
-                <input type="text" name="noic" class="form-control" required>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Nama <span class="text-danger">*</span></label>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Name <span class="text-danger">*</span></label>
                 <input type="text" name="name" class="form-control" required>
               </div>
-              <div class="col-md-4">
-                <label class="form-label">Katalaluan <span class="text-danger">*</span></label>
-                <input type="password" name="pwd" class="form-control" required>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">IC Number <span class="text-danger">*</span></label>
+                <input type="text" name="noic" class="form-control" required>
               </div>
-            </div>
-
-            <div class="row mt-3">
-              <div class="col-md-4">
-                <label class="form-label">Emel <span class="text-danger">*</span></label>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Email <span class="text-danger">*</span></label>
                 <input type="email" name="email" class="form-control" required>
               </div>
-              <div class="col-md-4">
-                <label class="form-label">Status Perkahwinan <span class="text-danger">*</span></label>
-                <select name="status_martial" class="form-control" required>
-                  <option value="">-- Pilih --</option>
-                  <option value="1">Bujang</option>
-                  <option value="2">Berkahwin</option>
-                </select>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Password <span class="text-danger">*</span></label>
+                <input type="password" name="pwd" class="form-control" required>
               </div>
-              <div class="col-md-4">
-                <label class="form-label">Jantina <span class="text-danger">*</span></label>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                <input type="tel" name="phone" class="form-control" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Gender <span class="text-danger">*</span></label>
                 <select name="gender" class="form-control" required>
-                  <option value="">-- Pilih --</option>
-                  <option value="L">Lelaki</option>
-                  <option value="P">Perempuan</option>
+                  <option value="">-- Select --</option>
+                  <option value="M">Male</option>
+                  <option value="F">Female</option>
                 </select>
               </div>
-            </div>
-
-            <div class="row mt-3">
-              <div class="col-md-6">
-                <label class="form-label">Alamat Tetap <span class="text-danger">*</span></label>
-                <textarea name="permenant_address" class="form-control" required></textarea>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Marital Status <span class="text-danger">*</span></label>
+                <select name="status_marital" class="form-control" required>
+                  <option value="">-- Select --</option>
+                  <option value="1">Single</option>
+                  <option value="2">Married</option>
+                </select>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">Alamat Surat Menyurat <span class="text-danger">*</span></label>
-                <textarea name="mail_address" class="form-control" required></textarea>
-              </div>
-            </div>
-
-            <div class="row mt-3">
-              <div class="col-md-4">
-                <label class="form-label">Bilangan Tanggungan <span class="text-danger">*</span></label>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Dependent <span class="text-danger">*</span></label>
                 <input type="number" name="dependent" class="form-control" required>
               </div>
-            </div>
-
-            <hr class="my-4">
-
-            <!-- Maklumat Staf -->
-            <div class="card">
-              <div class="card-header pb-0">
-                <h5 class="mb-0">Maklumat Staf</h5>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Position <span class="text-danger">*</span></label>
+                <input type="text" name="roles" class="form-control" required>
               </div>
-              <div class="card-body pt-0">
-                <div class="row">
-                  <div class="col-md-4">
-                    <label class="form-label">No Staf <span class="text-danger">*</span></label>
-                    <input type="text" name="staff_no" class="form-control" required>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Jawatan <span class="text-danger">*</span></label>
-                    <input type="text" name="position" class="form-control" required>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Status Jawatan <span class="text-danger">*</span></label>
-                    <select name="position_status" class="form-control" required>
-                      <option value="">-- Pilih --</option>
-                      <option value="Tetap">Tetap</option>
-                      <option value="Kontrak">Kontrak</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="row mt-3">
-                  <div class="col-md-4">
-                    <label class="form-label">Bahagian (ID) <span class="text-danger">*</span></label>
-                    <input type="number" name="dept_id" class="form-control" required>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Syarikat (ID) <span class="text-danger">*</span></label>
-                    <input type="number" name="company_id" class="form-control" required>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Shift (ID) <span class="text-danger">*</span></label>
-                    <input type="number" name="shift_id" class="form-control" required>
-                  </div>
-                </div>
-
-                <div class="row mt-3">
-                  <div class="col-md-4">
-                    <label class="form-label">Kelulusan Cuti (ID)</label>
-                    <input type="number" name="leave_approval" class="form-control">
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Status Umum</label>
-                    <input type="number" name="status" class="form-control">
-                  </div>
-                </div>
-
-                <!-- Optional status fields -->
-                <div class="row mt-3">
-                  <div class="col-md-3">
-                    <label class="form-label">QR Code</label>
-                    <select name="status_qrcode" class="form-control">
-                      <option value="">-- Pilih --</option>
-                      <option value="1">Aktif</option>
-                      <option value="0">Tidak Aktif</option>
-                    </select>
-                  </div>
-                  <div class="col-md-3">
-                    <label class="form-label">Swafoto</label>
-                    <select name="status_swafoto" class="form-control">
-                      <option value="">-- Pilih --</option>
-                      <option value="1">Ya</option>
-                      <option value="0">Tidak</option>
-                    </select>
-                  </div>
-                  <div class="col-md-3">
-                    <label class="form-label">Monitor</label>
-                    <select name="status_monitor" class="form-control">
-                      <option value="">-- Pilih --</option>
-                      <option value="1">Ya</option>
-                      <option value="0">Tidak</option>
-                    </select>
-                  </div>
-                  <div class="col-md-3">
-                    <label class="form-label">Taraf Perkahwinan</label>
-                    <select name="status_martial" class="form-control">
-                      <option value="">-- Pilih --</option>
-                      <option value="1">Bujang</option>
-                      <option value="2">Berkahwin</option>
-                    </select>
-                  </div>
-                </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Employment Status <span class="text-danger">*</span></label>
+                <select name="roles_status" class="form-control" required>
+                  <option value="">-- Select --</option>
+                  <option value="Permanent">Permanent</option>
+                  <option value="Contract">Contract</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Staff Number <span class="text-danger">*</span></label>
+                <input type="text" name="staff_no" class="form-control" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Status <span class="text-danger">*</span></label>
+                <select name="status" class="form-control" required>
+                  <option value="">-- Select --</option>
+                  <option value="1">Active</option>
+                  <option value="2">Inactive</option>
+                </select>
+              </div>
+              <div class="col-md-12 mb-3">
+                <div class="form-group">
+                  <label class="form-label">Department <span class="text-danger">*</span></label>
+                  <select name="departments_id" class="form-control" required>
+                      <option value="">-- Select Department --</option>
+                      <?php 
+                      if (!empty($departments)): 
+                          foreach ($departments as $dept): 
+                      ?>
+                          <option value="<?= htmlspecialchars($dept['id']) ?>">
+                              <?= htmlspecialchars($dept['id'] . ' - ' . $dept['code'] . ' - ' . $dept['name']) ?>
+                          </option>
+                      <?php 
+                          endforeach;
+                      else:
+                      ?>
+                          <option value="" disabled>No departments available</option>
+                      <?php endif; ?>
+                  </select>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Permenant Address <span class="text-danger">*</span></label>
+                <textarea name="permenant_address" class="form-control" rows="3" required></textarea>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Mailing Address <span class="text-danger">*</span></label>
+                <textarea name="mail_address" class="form-control" rows="3" required></textarea>
               </div>
             </div>
 
-            <!-- Submit Buttons -->
+            <div class="row mt-3">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Profile Picture</label>
+                <input type="file" class="form-control" name="profile_pic" accept="image/*">
+              </div>
+            </div>
+
             <div class="mt-4 text-end">
-              <a href="staff.php" class="btn btn-secondary">Kembali</a>
-              <a href="staff.php" class="btn btn-primary">Seterusnya</a>
+              <a href="staff.php" class="btn btn-secondary">Back</a>
+              <button type="submit" name="save_and_next" class="btn btn-primary">Next</button>
             </div>
           </form>
         </div>
       </div>
     </div>
-  </div>
+  </div> 
 </div>
 </body>
 </head>

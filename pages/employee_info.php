@@ -1,7 +1,9 @@
 <?php 
-require_once '../db.php';  // Ensure the file is included only once
+require_once '../db.php';  
+session_start(); 
+require_once '../Model/employee.php';
+require_once '../Controller/departController.php';
 ?>
-<?php include_once '../Controller/medleaveController.php'; ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -55,7 +57,7 @@ require_once '../db.php';  // Ensure the file is included only once
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?php echo ($current_page == 'staff.php') ? 'active' : ''; ?>" href="../pages/staff.php">
+          <a class="nav-link " href="../pages/staff.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
@@ -147,17 +149,19 @@ require_once '../db.php';  // Ensure the file is included only once
         </div>
       </div>
     </div>
-  </aside> <!--smpai sini-->>
-    <main class="main-content position-relative border-radius-lg">
-            <!-- Navbar -->
+  </aside>
+
+<!--main content-->
+<main class="main-content position-relative border-radius-lg">
+  <!-- Navbar -->
             <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
             <div class="container-fluid py-1 px-3">
                 <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Settings</a></li>
-                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Work Shift</li>
+                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Department</li>
                 </ol>
-                <h6 class="font-weight-bolder text-white mb-0">Work Shift</h6>
+                <h6 class="font-weight-bolder text-white mb-0">Department</h6>
                 </nav>
                 <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
                 <div class="ms-md-auto pe-md-3 d-flex align-items-center">
@@ -264,173 +268,144 @@ require_once '../db.php';  // Ensure the file is included only once
                 </div>
             </div>
             </nav>
-            <!-- End Navbar -->
 
-<!-- Main content -->
-        <div class="container-fluid py-4">
+<!-- Main Form Section -->
+  <div class="container-fluid py-4">
+    <div class="row">
+      <div class="col-12 mb-4">
+        <div class="card">
+          <div class="card-header pb-0">
+            <h5 class="mb-0">Update Employee Information</h5>
+          </div>
+          <div class="card-body pt-0">
+            <form method="POST" action="../controller/employeeController.php?action=update" enctype="multipart/form-data">
+              <input type="hidden" name="edit_id" value="<?= htmlspecialchars($employee['id'] ?? '') ?>">
+
               <div class="row">
-                <div class="col-md-12">
-                  <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                      <h5>Individual Leave Quota List</h5>
-                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">Add Quota</button>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Name <span class="text-danger">*</span></label>
+                  <input type="text" name="edit_name" class="form-control" value="<?= htmlspecialchars($employee['name'] ?? '') ?>" required>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">IC Number <span class="text-danger">*</span></label>
+                  <input type="text" name="edit_noic" class="form-control" value="<?= htmlspecialchars($employee['noic'] ?? '') ?>" required>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Email <span class="text-danger">*</span></label>
+                  <input type="email" name="edit_email" class="form-control" value="<?= htmlspecialchars($employee['email'] ?? '') ?>" required>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Password</label>
+                  <input type="password" name="edit_pwd" class="form-control" placeholder="Leave blank to keep current password">
+                  <small class="text-muted">Minimum 8 characters</small>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                  <input type="tel" name="edit_phone" class="form-control" value="<?= htmlspecialchars($employee['phone'] ?? '') ?>" required>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Gender <span class="text-danger">*</span></label>
+                  <select name="edit_gender" class="form-control" required>
+                    <option value="">-- Select --</option>
+                    <option value="M" <?= ($employee['gender'] ?? '') == 'M' ? 'selected' : '' ?>>Male</option>
+                    <option value="F" <?= ($employee['gender'] ?? '') == 'F' ? 'selected' : '' ?>>Female</option>
+                  </select>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Martial Status <span class="text-danger">*</span></label>
+                  <select name="edit_status_martial" class="form-control" required>
+                    <option value="">-- Select --</option>
+                    <option value="1" <?= ($employee['status_martial'] ?? '') == '1' ? 'selected' : '' ?>>Single</option>
+                    <option value="2" <?= ($employee['status_martial'] ?? '') == '2' ? 'selected' : '' ?>>Married</option>
+                  </select>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Dependent <span class="text-danger">*</span></label>
+                  <input type="number" name="edit_dependent" class="form-control" value="<?= htmlspecialchars($employee['dependent'] ?? 0) ?>" required>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Position <span class="text-danger">*</span></label>
+                  <input type="text" name="edit_roles" class="form-control" value="<?= htmlspecialchars($employee['roles'] ?? '') ?>" required>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Employment Status <span class="text-danger">*</span></label>
+                  <select name="edit_roles_status" class="form-control" required>
+                    <option value="">-- Select --</option>
+                    <option value="Permanent" <?= ($employee['roles_status'] ?? '') == 'Permanent' ? 'selected' : '' ?>>Permanent</option>
+                    <option value="Contract" <?= ($employee['roles_status'] ?? '') == 'Contract' ? 'selected' : '' ?>>Contract</option>
+                  </select>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Staff Number <span class="text-danger">*</span></label>
+                  <input type="text" name="edit_staff_no" class="form-control" value="<?= htmlspecialchars($employee['staff_no'] ?? '') ?>" required>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Status <span class="text-danger">*</span></label>
+                  <select name="edit_status" class="form-control" required>
+                    <option value="">-- Select --</option>
+                    <option value="1" <?= ($employee['status'] ?? '') == '1' ? 'selected' : '' ?>>Active</option>
+                    <option value="2" <?= ($employee['status'] ?? '') == '2' ? 'selected' : '' ?>>Inactive</option>
+                  </select>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                  <label class="form-label">Department <span class="text-danger">*</span></label>
+                  <select name="edit_departments_id" class="form-control" required>
+                    <option value="">-- Select Department --</option>
+                    <?php foreach ($departments ?? [] as $dept): ?>
+                      <option value="<?= htmlspecialchars($dept['id']) ?>" <?= ($employee['departments_id'] ?? '') == $dept['id'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($dept['code'] . ' - ' . $dept['name']) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Permanent Address <span class="text-danger">*</span></label>
+                  <textarea name="edit_permenant_address" class="form-control" rows="3" required><?= htmlspecialchars($employee['permenant_address'] ?? '') ?></textarea>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Mailing Address <span class="text-danger">*</span></label>
+                  <textarea name="edit_mail_address" class="form-control" rows="3" required><?= htmlspecialchars($employee['mail_address'] ?? '') ?></textarea>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Profile Picture</label>
+                  <?php if (!empty($employee['profile_pic'])): ?>
+                    <div class="mb-2">
+                      <img src="<?= htmlspecialchars($employee['profile_pic']) ?>" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">
+                      <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" name="edit_remove_profile_pic" id="removeProfilePic">
+                        <label class="form-check-label" for="removeProfilePic">Remove current photo</label>
+                      </div>
                     </div>
-                <div class="card-body">
-            <table class="table table-bordered table-striped mt-3">
-              <thead class="table-dark">
-                <tr>
-                  <th>Leave Type</th>
-                  <th>Leave Quota</th>
-                  <th>Used</th>
-                  <th>Current Balance</th>
-                  <th>In Process</th>
-                  <th>Available Balance</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
+                  <?php endif; ?>
+                  <input type="file" class="form-control" name="edit_profile_pic" accept="image/*">
+                  <small class="text-muted">Max 2MB (JPEG, PNG)</small>
+                </div>
+              </div>
 
-              <tbody>
-                <!-- Expired Medical Leave -->
-                <tr>
-                  <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>
-                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                  </td>
-                </tr>
-
-                <!-- Expired Annual Leave -->
-                <tr>
-                  <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>
-                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                  </td>
-                </tr>
-
-                <!-- Section Header for Non-Quota Leaves -->
-                <tr class="table-secondary text-center">
-                  <td colspan="7"><strong></strong></td>
-                </tr>
-
-                <!-- Non-Quota Leave Rows -->
-                <tr>
-                  <td>Unpaid Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Paternity Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Maternity Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Compassionate Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Hospitalization Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Replacement Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-              </tbody>
-            </table>
-
-           <!-- <table class="table table-bordered table-striped mt-3">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Leave Type</th>
-                        <th>Leave Quota</th>
-                        <th>Used</th>
-                        <th>Current Balance</th>
-                        <th>In Process</th>
-                        <th>Available Balance</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                    <tbody>
-              <tr>
-                <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>
-                  <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                  <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-              </tr>
-              <tr>
-                <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>
-                  <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                  <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-              </tr>
-
-                <tbody>
-                <?php //if ($leaves && $leaves->num_rows > 0): ?>
-                    <?php //while($row = $leaves->fetch_assoc()): ?>
-                        <tr>
-                            <!--<td><?= htmlspecialchars($row['type']) ?></td>
-                            <td><?= htmlspecialchars($row['quota']) ?></td>
-                            <td><?= htmlspecialchars($row['used']) ?></td>
-                            <td><?= htmlspecialchars($row['balance']) ?></td>
-                            <td><?= htmlspecialchars($row['in_process']) ?></td>
-                            <td><?= htmlspecialchars($row['available']) ?></td>
-                            <td>
-                                <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                                <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                            </td>-->
-                        </tr>
-                    <?php //endwhile; ?>
-                <?php //else: ?>
-                    <tr>
-                        <!--<td colspan="7" class="text-center">No leave records found.</td>-->
-                    </tr>
-                <?php //endif; ?>
-                </tbody>
-
-              <!--<tr class="table-secondary text-center">
-                <td colspan="7"><strong>Details of Non-Quota Leave Types</strong></td>
-              </tr>
-
-              <tr><td>Unpaid Leave</td><td colspan="6"></td></tr>
-              <tr><td>Paternity Leave</td><td colspan="6"></td></tr>
-              <tr><td>Maternity Leave</td><td colspan="6"></td></tr>
-              <tr><td>Compassionate Leave</td><td colspan="6"></td></tr>
-              <tr><td>Hospitalization Leave</td><td colspan="6"></td></tr>
-              <tr><td>Replacement Leave</td><td colspan="6"></td></tr>
-
-            </tbody>
-          </table>
+              <div class="mt-4 text-end">
+                <a href="staff.php" class="btn btn-secondary">Cancel</a>
+                <button type="submit" name="update_info" class="btn btn-primary">Update Employee</button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
-            </table>
-</div>-->
 </body>
 </html>

@@ -1,6 +1,6 @@
 <?php
 require_once "../db.php";
-require_once "../model/medQuota.php";
+require_once "../Model/medQuota.php";
 
 $medQuota = new MedQuota($conn);
 
