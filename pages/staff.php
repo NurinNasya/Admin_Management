@@ -1,6 +1,25 @@
 <?php
-require_once '../db.php';                             // DB connection
-require_once '../Controller/employeeController.php';  // Load controller
+require_once '../db.php';
+require_once '../Model/Staff.php';
+
+// Initialize Staff Model
+$staffModel = new Staff();
+
+try {
+    // Fetch all staff with department and company codes
+    $allStaff = $staffModel->getAllStaff();
+    
+    // Check for success/error messages
+    $successMsg = $_SESSION['success'] ?? '';
+    $errorMsg = $_SESSION['error'] ?? '';
+    
+    // Clear the messages after displaying them
+    unset($_SESSION['success']);
+    unset($_SESSION['error']);
+    
+} catch (Exception $e) {
+    $errorMsg = "Error loading staff data: " . $e->getMessage();
+}
 ?>
 
 
@@ -301,46 +320,63 @@ require_once '../Controller/employeeController.php';  // Load controller
     </nav>
     <!-- End Navbar -->
 
-   <div class="container-fluid py-4">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center" style="margin-bottom: 5px;">
-            <h4 style="margin-bottom: 0;">Employee List</h4>
-                <a href="employee.php" class="btn btn-primary btn-sm">
-                  <i class="fas fa-plus me-1"></i> Add Employee
-                </a>
+       <div class="container-fluid py-4">
+      <?php if (!empty($successMsg)): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <?= htmlspecialchars($successMsg) ?>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <?php endif; ?>
+      
+      <?php if (!empty($errorMsg)): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <?= htmlspecialchars($errorMsg) ?>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <?php endif; ?>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center" style="margin-bottom: 5px;">
+              <h4 style="margin-bottom: 0;">Employee List</h4>
+              <a href="add_staff.php" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i> Add Employee
+              </a>
             </div>
             <div class="card-body px-0 pt-0 pb-2">
               <div class="table-responsive p-0">
-                <table id="employeeTable" class="table align-items-center mb-0 display nowrap" style="width:100%">
-            <thead class="thead-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>PROFILE</th>
-                    <th>NAME</th>
-                    <th>POSITION</th>
-                    <th>DEPARTMENT</th>
-                    <th>PHONE</th>
-                    <th>ACTION</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($allStaff)): ?>
-                    <?php foreach ($allStaff as $staff): ?>
+                <table id="employeeTable" class="table align-items-center mb-0 display" style="width:100%">
+                  <thead class="thead-dark">
+                    <tr>
+                      <th>ID</th>
+                      <th>PROFILE</th>
+                      <th>NAME</th>
+                      <th>POSITION</th>
+                      <th>DEPARTMENT</th>
+                      <th>COMPANY</th>
+                      <th>PHONE</th>
+                      <th>ACTION</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php if (!empty($allStaff)): ?>
+                      <?php foreach ($allStaff as $staff): ?>
                         <tr>
-                            <td><?= htmlspecialchars($staff['id']) ?></td>
-                            <td>
+                          <td><?= htmlspecialchars($staff['id'] ?? '') ?></td>
+                          <td>
                             <div>
-                              <img src="<?= $staff['profile_pic'] ?: '../assets/img/default-avatar.png' ?>"
-                                class="avatar avatar-sm me-3" alt="user1">
+                              <img src="<?= !empty($staff['profile_pic']) ? '../uploads/' . htmlspecialchars($staff['profile_pic']) : '../assets/img/default-avatar.png' ?>" 
+                                   class="avatar avatar-sm me-3" 
+                                   alt="Profile Picture of <?= htmlspecialchars($staff['name'] ?? 'Staff') ?>">
                             </div>
                           </td>
-                            <td><?= htmlspecialchars($staff['name']) ?></td>
-                            <td><?= htmlspecialchars($staff['roles']) ?></td>
-                            <td><?= htmlspecialchars($staff['departments_id']) ?></td>
-                            <td><?= htmlspecialchars($staff['phone']) ?></td>
-                            <td class="align-middle">
+                          <td><?= htmlspecialchars($staff['name'] ?? '') ?></td>
+                          <td><?= htmlspecialchars($staff['roles'] ?? '') ?></td>
+                          <td><?= htmlspecialchars($staff['departments_code'] ?? '') ?></td>
+                          <td><?= htmlspecialchars($staff['company_code'] ?? '') ?></td>
+                          <td><?= htmlspecialchars($staff['phone'] ?? '') ?></td>
+                          <td class="align-middle">
                             <div class="dropdown">
                               <button class="btn btn-sm btn-icon-only text-light" type="button" data-bs-toggle="dropdown"
                                 aria-expanded="false">
@@ -348,24 +384,25 @@ require_once '../Controller/employeeController.php';  // Load controller
                               </button>
                               <ul class="dropdown-menu dropdown-menu-end px-2 py-3">
                                 <li>
-                                  <a class="dropdown-item border-radius-md" href="employee_info.php">
+                                  <a class="dropdown-item border-radius-md" href="edit_staff.php?id=<?= $staff['id'] ?>">
                                     <i class="fas fa-pen me-2"></i> Edit
                                   </a>
                                 </li>
                                 <li>
-                                  <a class="dropdown-item border-radius-md" href="medleavehr.php">
-                                    <i class="fas fa-file-medical me-2"></i> Medical Claim
+                                  <a class="dropdown-item border-radius-md" href="claim.php?id=<?= $staff['id'] ?>">
+                                    <i class="fas fa-file-medical me-2"></i> Claim
                                   </a>
                                 </li>
                                 <li>
-                                  <a class="dropdown-item border-radius-md" href="leave_quota.php">
-                                    <i class="fas fa-file-medical me-2"></i> Leave Quota
+                                  <a class="dropdown-item border-radius-md" href="leave.php?id=<?= $staff['id'] ?>">
+                                    <i class="fas fa-file-medical me-2"></i> Leave
                                   </a>
                                 </li>
                                 <li>
                                   <form method="POST" action="../Controller/staffController.php"
                                     onsubmit="return confirm('Are you sure you want to delete this staff?');">
-                                    <input type= "hidden" name="staff_id" value="<?= $staff['id'] ?>">
+                                    <input type="hidden" name="staff_id" value="<?= $staff['id'] ?>">
+                                    <input type="hidden" name="action" value="delete">
                                     <button type="submit" name="delete_staff"
                                       class="dropdown-item border-radius-md text-danger">
                                       <i class="fas fa-trash me-2"></i> Delete
@@ -376,23 +413,54 @@ require_once '../Controller/employeeController.php';  // Load controller
                             </div>
                           </td>
                         </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="7">Tiada data staf dijumpai.</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                      <?php endforeach; ?>
+                    <?php else: ?>
+                      <tr>
+                        <td colspan="8" class="text-center">No Staff Records Found</td>
+                      </tr>
+                    <?php endif; ?>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- DataTables JS -->
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
-    
-    <script>
+  </main>
 
+  <!-- Required Scripts -->
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- DataTables JS -->
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+  
+  <script>
+    $(document).ready(function() {
+      // Initialize DataTable
+      $('#employeeTable').DataTable({
+        responsive: true,
+        columnDefs: [
+          { responsivePriority: 1, targets: 2 }, // Name
+          { responsivePriority: 2, targets: 7 }, // Actions
+          { orderable: false, targets: [1, 7] } // Disable sorting on profile pic and actions
+        ],
+        language: {
+          search: "_INPUT_",
+          searchPlaceholder: "Search employees...",
+          lengthMenu: "Show _MENU_ entries per page",
+          zeroRecords: "No matching employees found",
+          info: "Showing _START_ to _END_ of _TOTAL_ employees",
+          infoEmpty: "No employees available",
+          infoFiltered: "(filtered from _MAX_ total employees)"
+        }
+      });
+      
+      // Auto-dismiss alerts after 5 seconds
+      setTimeout(function() {
+        $('.alert').alert('close');
+      }, 5000);
+    });
+  </script>
 </body>
 </html>

@@ -20,7 +20,7 @@ class Depart {
                 $departments[] = $row;
             }
         }
-
+ 
         return $departments;
     }
 

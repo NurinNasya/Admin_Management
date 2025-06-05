@@ -1,5 +1,4 @@
 <?php
-
 require_once '../db.php';
 
 class Staff
@@ -8,90 +7,176 @@ class Staff
 
     public function __construct()
     {
-        $db = new db();
-        $this->conn = $db->getConnection();
+        global $conn;
+        $this->conn = $conn;
+    }
+
+    public function getAllStaff(): array
+    {
+        $sql = "SELECT s.*, d.code AS departments_code, c.code AS company_code
+                FROM staff s
+                LEFT JOIN departments d ON s.departments_id = d.id
+                LEFT JOIN companies c ON s.company_id = c.id
+                ORDER BY s.id DESC";
+
+        $result = $this->conn->query($sql);
+        $staffList = [];
+
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $staffList[] = $row;
+            }
+        }
+
+        return $staffList;
+    }
+
+    // Get max numeric suffix of staff_no for a given year prefix (e.g. "25")
+    public function getMaxStaffNumberSuffixForYear(string $yearPrefix): int
+    {
+        $yearPrefix = $this->conn->real_escape_string($yearPrefix);
+        $sql = "SELECT MAX(CAST(SUBSTRING_INDEX(staff_no, '/', -1) AS UNSIGNED)) AS max_suffix
+                FROM staff
+                WHERE staff_no LIKE '{$yearPrefix}/%'";
+
+        $result = $this->conn->query($sql);
+        if ($result && $row = $result->fetch_assoc()) {
+            return (int)$row['max_suffix'];
+        }
+        return 0;
+    }
+
+    // Generate staff_no for display (e.g. when showing the add form)
+    public function generateStaffNoForDisplay(): string
+    {
+        $yearPrefix = date('y'); // last two digits of current year
+        $maxSuffix = $this->getMaxStaffNumberSuffixForYear($yearPrefix);
+        $nextNumber = $maxSuffix > 0 ? $maxSuffix + 1 : 1000;
+
+        return $yearPrefix . '/' . $nextNumber;
+    }
+
+    // Private method to generate staff_no for insert (internal use)
+    private function generateStaffNoForInsert(): string
+    {
+        return $this->generateStaffNoForDisplay();
+    }
+
+    // Insert new staff record with auto-generated staff_no
+    public function insertStaff(array $data): bool
+    {
+        $escaped = [];
+        foreach ($data as $key => $value) {
+            $escaped[$key] = $this->conn->real_escape_string($value ?? '');
+        }
+
+        // Hash password if provided
+        if (!empty($escaped['pwd'])) {
+            $escaped['pwd'] = password_hash($escaped['pwd'], PASSWORD_DEFAULT);
+        }
+
+        // Generate staff_no here, ignoring any staff_no from $data
+        $staff_no = $this->generateStaffNoForInsert();
+
+        $sql = "INSERT INTO staff (
+            noic, name, pwd, email, phone, gender, status_marital, dependent, staff_no,
+            permanent_address, mail_address, roles, roles_status, profile_pic, departments_id, company_id
+        ) VALUES (
+            '{$escaped['noic']}', '{$escaped['name']}', '{$escaped['pwd']}', '{$escaped['email']}',
+            '{$escaped['phone']}', '{$escaped['gender']}', '{$escaped['status_marital']}',
+            '{$escaped['dependent']}', '$staff_no', '{$escaped['permanent_address']}',
+            '{$escaped['mail_address']}', '{$escaped['roles']}', '{$escaped['roles_status']}',
+            '{$escaped['profile_pic']}', '{$escaped['departments_id']}', '{$escaped['company_id']}'
+        )";
+
+        return $this->conn->query($sql);
     }
 
     public function getStaffById($id)
     {
-        $id = mysqli_real_escape_string($this->conn, $id);
-        $query = "SELECT * FROM staff WHERE id = '$id'";
-        $result = mysqli_query($this->conn, $query);
-        return mysqli_fetch_assoc($result);
+        $id = $this->conn->real_escape_string($id);
+        $sql = "SELECT s.*, d.code AS departments_code, c.code AS company_code
+                FROM staff s
+                LEFT JOIN departments d ON s.departments_id = d.id
+                LEFT JOIN companies c ON s.company_id = c.id
+                WHERE s.id = $id
+                LIMIT 1";
+
+        $result = $this->conn->query($sql);
+        return $result->fetch_assoc();
     }
 
-    public function getAllStaff()
+    public function getDepartments(): array
     {
-        $query = "SELECT * FROM staff";
-        $result = mysqli_query($this->conn, $query);
-        $data = [];
-        while ($row = mysqli_fetch_assoc($result)) {
-            $data[] = $row;
+        $result = $this->conn->query("SELECT * FROM departments");
+        $departments = [];
+        while ($row = $result->fetch_assoc()) {
+            $departments[] = $row;
         }
-        return $data;
+        return $departments;
     }
 
-    public function findDuplicate($noic, $email, $id)
+    public function getCompanies(): array
     {
-        $noic = mysqli_real_escape_string($this->conn, $noic);
-        $email = mysqli_real_escape_string($this->conn, $email);
-        $id = mysqli_real_escape_string($this->conn, $id);
-
-        $query = "SELECT * FROM staff WHERE (noic = '$noic' OR email = '$email') AND id != '$id'";
-        return mysqli_query($this->conn, $query);
+        $result = $this->conn->query("SELECT * FROM companies");
+        $companies = [];
+        while ($row = $result->fetch_assoc()) {
+            $companies[] = $row;
+        }
+        return $companies;
     }
 
-    public function updateStaff($data)
+    public function checkDuplicate($noic, $email, $excludeId = null): bool
     {
-        $id = mysqli_real_escape_string($this->conn, $data['id']);
-        $name = mysqli_real_escape_string($this->conn, $data['name']);
-        $noic = mysqli_real_escape_string($this->conn, $data['noic']);
-        $email = mysqli_real_escape_string($this->conn, $data['email']);
-        $phone = mysqli_real_escape_string($this->conn, $data['phone']);
-        $gender = mysqli_real_escape_string($this->conn, $data['gender']);
-        $status_marital = mysqli_real_escape_string($this->conn, $data['status_marital']);
-        $dependent = mysqli_real_escape_string($this->conn, $data['dependent']);
-        $roles = mysqli_real_escape_string($this->conn, $data['roles']);
-        $roles_status = mysqli_real_escape_string($this->conn, $data['roles_status']);
-        $staff_no = mysqli_real_escape_string($this->conn, $data['staff_no']);
-        $status = mysqli_real_escape_string($this->conn, $data['status']);
-        $departments_id = mysqli_real_escape_string($this->conn, $data['departments_id']);
-        $permenant_address = mysqli_real_escape_string($this->conn, $data['permenant_address']);
-        $mail_address = mysqli_real_escape_string($this->conn, $data['mail_address']);
-        $profile_pic = mysqli_real_escape_string($this->conn, $data['profile_pic'] ?? '');
+        $noic = $this->conn->real_escape_string($noic);
+        $email = $this->conn->real_escape_string($email);
 
-        $setPassword = '';
-        if (!empty($data['pwd'])) {
-            $password = password_hash($data['pwd'], PASSWORD_DEFAULT);
-            $setPassword = ", pwd = '$password'";
+        $sql = "SELECT COUNT(*) as count FROM staff 
+                WHERE (noic = '$noic' OR email = '$email')";
+
+        if ($excludeId) {
+            $excludeId = $this->conn->real_escape_string($excludeId);
+            $sql .= " AND id != '$excludeId'";
         }
 
-        $removePic = '';
-        if (!empty($data['remove_profile_pic'])) {
-            $profile_pic = '';
+        $result = $this->conn->query($sql);
+        $row = $result->fetch_assoc();
+
+        return $row['count'] > 0;
+    }
+
+    // Update staff info - staff_no is NOT updated here
+    public function updateStaff(array $data): bool
+    {
+        $escaped = [];
+        foreach ($data as $key => $value) {
+            $escaped[$key] = $this->conn->real_escape_string($value ?? '');
         }
 
-        $updateQuery = "
-            UPDATE staff SET 
-                name = '$name',
-                noic = '$noic',
-                email = '$email',
-                phone = '$phone',
-                gender = '$gender',
-                status_marital= '$status_marital',
-                dependent = '$dependent',
-                roles = '$roles',
-                roles_status = '$roles_status',
-                staff_no = '$staff_no',
-                status = '$status',
-                departments_id = '$departments_id',
-                permenant_address = '$permenant_address',
-                mail_address = '$mail_address',
-                profile_pic = '$profile_pic'
-                $setPassword
-            WHERE id = '$id'
-        ";
+        $sql = "UPDATE staff SET
+                name = '{$escaped['name']}',
+                noic = '{$escaped['noic']}',
+                email = '{$escaped['email']}',
+                phone = '{$escaped['phone']}',
+                gender = '{$escaped['gender']}',
+                status_marital = '{$escaped['status_marital']}',
+                dependent = '{$escaped['dependent']}',
+                roles = '{$escaped['roles']}',
+                roles_status = '{$escaped['roles_status']}',
+                status = '{$escaped['status']}',
+                departments_id = '{$escaped['departments_id']}',
+                company_id = '{$escaped['company_id']}',
+                permanent_address = '{$escaped['permanent_address']}',
+                mail_address = '{$escaped['mail_address']}',
+                profile_pic = '{$escaped['profile_pic']}'";
 
-        return mysqli_query($this->conn, $updateQuery);
+        if (!empty($escaped['pwd'])) {
+            $hashed_pwd = password_hash($escaped['pwd'], PASSWORD_DEFAULT);
+            $sql .= ", pwd = '$hashed_pwd'";
+        }
+
+        $sql .= " WHERE id = '{$escaped['id']}'";
+
+        return $this->conn->query($sql);
     }
 }

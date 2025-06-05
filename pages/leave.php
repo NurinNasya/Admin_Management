@@ -1,10 +1,26 @@
 <?php 
-require_once '../db.php';  // Ensure the file is included only once
-session_start(); // Start session to access session messages
-require_once '../Controller/compController.php';
-$compModel = new comp();
-$companies = $compModel->getAllRaw();
+session_start();
+require_once '../db.php';
+require_once '../Model/leave.php';
+require_once '../Model/Staff.php';
+
+$leaveModel = new Leave($conn);
+
+if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $staff_id = (int)$_GET['id'];
+    $staffModel = new Staff($conn);
+    $staff = $staffModel->getStaffById($staff_id);
+} else {
+    header("Location: staff.php");
+    exit();
+}
+
+// Display error message if present
+if (isset($_GET['error'])) {
+    $error_message = htmlspecialchars($_GET['error']);
+}
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -58,11 +74,11 @@ $companies = $compModel->getAllRaw();
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/billing.html">
+          <a class="nav-link <?php echo ($current_page == 'staff.php') ? 'active' : ''; ?>" href="../pages/staff.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
-            <span class="nav-link-text ms-1">Billing</span>
+            <span class="nav-link-text ms-1">Staff</span>
           </a>
         </li>
         <li class="nav-item">
@@ -150,19 +166,17 @@ $companies = $compModel->getAllRaw();
         </div>
       </div>
     </div>
-  </aside>
-
-<!-- Main Content -->
- <main class="main-content position-relative border-radius-lg">
-  <!-- Navbar -->
+  </aside> <!--smpai sini-->>
+    <main class="main-content position-relative border-radius-lg">
+            <!-- Navbar -->
             <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
             <div class="container-fluid py-1 px-3">
                 <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Settings</a></li>
-                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Company</li>
+                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Work Shift</li>
                 </ol>
-                <h6 class="font-weight-bolder text-white mb-0">Company</h6>
+                <h6 class="font-weight-bolder text-white mb-0">Work Shift</h6>
                 </nav>
                 <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
                 <div class="ms-md-auto pe-md-3 d-flex align-items-center">
@@ -269,188 +283,294 @@ $companies = $compModel->getAllRaw();
                 </div>
             </div>
             </nav>
-    <!--start main content-->        
-    <div class="container-fluid py-4">
+            <!-- End Navbar -->
+
+<!-- Main content -->
+  <div class="container-fluid py-4">
     <div class="row">
       <div class="col-md-12">
         <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center" style="margin-bottom: 5px;">
-            <h5 style="margin-bottom: 0;">Company Management</h5>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCompanyModal" style="margin-top: 0;">Add Company</button>
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h5>Leave > Quota Configuration</h5>
+            <!-- Updated New Leave button -->
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLeaveModal">New Leave</button>
           </div>
-          <div class="card-body" style="padding-top: 10px;">
+          
+          <div class="card-body">
+            <h5 class="card-title">Employee Info</h5>
+            <?php if ($staff): ?>
+              <p class="card-text"><strong>Name:</strong> <?= htmlspecialchars($staff['name']) ?></p>
+              <p class="card-text"><strong>IC:</strong> <?= htmlspecialchars($staff['noic']) ?></p>
+              <p class="card-text"><strong>Company:</strong> <?= htmlspecialchars($staff['company_code']) ?></p>
+              <p class="card-text"><strong>Department:</strong> <?= htmlspecialchars($staff['departments_code']) ?></p>
+            <?php else: ?>
+              <div class="alert alert-warning">Employee data not found.</div>
+            <?php endif; ?>
+            
+              <!-- Label outside the table -->
+              <div class="mb-3 p-2 bg-secondary text-start text-white rounded">
+                <strong>Individual Leave Quota List</strong>
+              </div>
+                <div class="card-body">
 
-      <!-- Alert Messages -->
-            <?php if (isset($_SESSION['success_message']) || isset($_SESSION['error_message'])): ?>
-            <div class="w-50">
-              <?php if (isset($_SESSION['success_message'])): ?>
-                <div class="alert alert-success alert-dismissible fade show auto-dismiss text-white" role="alert">
-                  <?= htmlspecialchars($_SESSION['success_message']) ?>
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+            <table class="table table-bordered table-striped mt-3">
+              <thead class="table-dark">
+                <tr>
+                  <th>Leave Type</th>
+                  <th>Leave Quota</th>
+                  <th>Used</th>
+                  <th>Current Balance</th>
+                  <th>In Process</th>
+                  <th>Available Balance</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <!-- Expired Medical Leave -->
+                <tr>
+                  <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
+                  <td>10</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>
+                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                  </td>
+                </tr>
+
+                <!-- Expired Annual Leave -->
+                <tr>
+                  <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
+                  <td>15</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>
+                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
+                  </td>
+                </tr>
+
+                <!-- Section Header for Non-Quota Leaves -->
+                <tr class="table-secondary text-center">
+                  <td colspan="7"><strong></strong></td>
+                </tr>
+
+                <!-- Non-Quota Leave Rows -->
+                <tr>
+                  <td>Unpaid Leave</td>
+                  <td>-None-</td><td>0</td><td>-None-</td><td>0</td><td>-None-</td><td></td>
+                </tr>
+                <tr>
+                  <td>Paternity Leave</td>
+                  <td>-None-</td><td>0</td><td>-None-</td><td>0</td><td>-None-</td><td></td>
+                </tr>
+                <tr>
+                  <td>Maternity Leave</td>
+                  <td>-None-</td><td>0</td><td>-None-</td><td>0</td><td>-None-</td><td></td>
+                </tr>
+                <tr>
+                  <td>Compassionate Leave</td>
+                  <td>-None-</td><td>0</td><td>-None-</td><td>0</td><td>-None-</td><td></td>
+                </tr>
+                <tr>
+                  <td>Hospitalization Leave</td>
+                  <td>-None-</td><td>0</td><td>-None-</td><td>0</td><td>-None-</td><td></td>
+                </tr>
+                <tr>
+                  <td>Replacement Leave</td>
+                  <td>-None-</td><td>0</td><td>-None-</td><td>0</td><td>-None-</td><td></td>
+                </tr>
+              </tbody>
+            </table>
+
+  <!-- New Leave Modal -->
+  <div class="modal fade" id="addLeaveModal" tabindex="-1" aria-labelledby="addLeaveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="addLeaveModalLabel">Apply New Leave</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Tabs -->
+          <ul class="nav nav-tabs" id="leaveTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="medical-tab" data-bs-toggle="tab" data-bs-target="#medical" type="button" role="tab">Medical Leave</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#other" type="button" role="tab">Other Leave</button>
+            </li>
+          </ul>
+
+          <!-- Tab Content -->
+          <div class="tab-content pt-3" id="leaveTabContent">
+            <!-- Medical Leave Form -->
+            <div class="tab-pane fade show active" id="medical" role="tabpanel">
+              <form action="../Controller/leaveController.php?action=add" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="staff_id" value="<?= $staff_id ?>">
+                <input type="hidden" name="created_by" value="<?= $_SESSION['user_id'] ?? 1 ?>">
+                <input type="hidden" name="leave_type" value="Medical Leave">
+
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="start_date_med" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date_med" name="start_date" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="end_date_med" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date_med" name="end_date" required>
+                  </div>
                 </div>
-                <?php unset($_SESSION['success_message']); ?>
-              <?php elseif (isset($_SESSION['error_message'])): ?>
-                <div class="alert alert-danger alert-dismissible fade show auto-dismiss text-white" role="alert">
-                  <?= htmlspecialchars($_SESSION['error_message']) ?>
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="total_days_med" class="form-label">Total Days</label>
+                    <input type="number" class="form-control" id="total_days_med" name="total_days" step="0.5" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="leave_document" class="form-label">Medical Certificate</label>
+                    <input type="file" class="form-control" id="leave_document" name="leave_document" accept=".pdf,.jpg,.jpeg,.png">
+                  </div>
                 </div>
-                <?php unset($_SESSION['error_message']); ?>
-              <?php endif; ?>
+
+                <div class="mb-3">
+                  <label for="reason_med" class="form-label">Reason</label>
+                  <textarea class="form-control" id="reason_med" name="reason" rows="3" required></textarea>
+                </div>
+
+                <div class="modal-footer px-0">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Submit Medical Leave</button>
+                </div>
+              </form>
             </div>
-          <?php endif; ?>
 
+            <!-- Other Leave Form -->
+            <div class="tab-pane fade" id="other" role="tabpanel">
+              <form action="../Controller/leaveController.php?action=add" method="post">
+                <input type="hidden" name="staff_id" value="<?= $staff_id ?>">
+                <input type="hidden" name="created_by" value="<?= $_SESSION['user_id'] ?? 1 ?>">
 
-            <div class="card-body">
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="leave_type_other" class="form-label">Leave Type</label>
+                    <select class="form-select" id="leave_type_other" name="leave_type" required>
+                      <option value="" disabled selected>Select leave type</option>
+                      <option value="Annual Leave">Annual Leave</option>
+                      <option value="Unpaid Leave">Unpaid Leave</option>
+                      <option value="Maternity Leave">Maternity Leave</option>
+                      <option value="Paternity Leave">Paternity Leave</option>
+                      <option value="Compassionate Leave">Compassionate Leave</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="total_days_other" class="form-label">Total Days</label>
+                    <input type="number" class="form-control" id="total_days_other" name="total_days" step="0.5" required>
+                  </div>
+                </div>
 
-                <?php if ($companyList && $companyList->num_rows > 0): ?>
-        <?php $counter = 1; ?>
-        <?php while ($row = $companyList->fetch_assoc()): ?>
-          <?php 
-            $id = $row['id'];
-            $code = htmlspecialchars($row['code']);
-            $name = htmlspecialchars($row['name']);
-            $raw_status = $row['status'];
-            $statusBadge = $raw_status
-              ? '<span class="badge border border-success text-success px-3 py-2">Active</span>'
-              : '<span class="badge border border-danger text-danger px-3 py-2">Inactive</span>';
-          ?>
-          <tr>
-            <td><?= $counter++ ?></td>
-            <td><?= $code ?></td>
-            <td><?= $name ?></td>
-            <td><?= $statusBadge ?></td>
-            <td>
-              <a href="#" class="text-primary me-5 edit-company-btn"
-                data-id="<?= $id ?>"
-                data-code="<?= $code ?>"
-                data-name="<?= $name ?>"
-                data-status="<?= $raw_status ?>"
-                data-bs-toggle="modal"
-                data-bs-target="#editCompanyModal"
-                title="Edit">
-                <i class="bi bi-pencil-square fs-4"></i>
-              </a>
-              <a href="../Controller/compController.php?delete_id=<?= $id ?>" 
-                class="text-danger" 
-                onclick="return confirm('Are you sure you want to delete this company?');"
-                title="Delete">
-                <i class="bi bi-trash-fill fs-4"></i>
-              </a>
-            </td>
-          </tr>
-        <?php endwhile; ?>
-      <?php else: ?>
-        <tr>
-          <td colspan="5" class="text-center">No companies found.</td>
-        </tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
-</div>
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="start_date_other" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date_other" name="start_date" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="end_date_other" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date_other" name="end_date" required>
+                  </div>
+                </div>
 
+                <div class="mb-3">
+                  <label for="reason_other" class="form-label">Reason</label>
+                  <textarea class="form-control" id="reason_other" name="reason" rows="3" required></textarea>
+                </div>
 
-    <!-- Add Company Modal -->
-    <div class="modal fade" id="addCompanyModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <form action="crudCompany.php" method="POST" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Add New Company</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="company-code" class="form-label">Company Code <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="company-code" name="code" required>
-            </div>
-            <div class="mb-3">
-              <label for="company-name" class="form-label">Company Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="company-name" name="name" required>
-            </div>
-            <div class="mb-3">
-              <label for="company-status" class="form-label">Status</label>
-              <select class="form-select" id="company-status" name="status">
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-              </select>
+                <div class="modal-footer px-0">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Submit Other Leave</button>
+                </div>
+              </form>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="submit" name="add_company" class="btn btn-primary">Save</button>
-          </div>
-        </form>
+        </div>
+
       </div>
     </div>
+  </div>
 
-    <!-- Edit Company Modal -->
-    <div class="modal fade" id="editCompanyModal" tabindex="-1">
-      <div class="modal-dialog">
-        <form action="crudCompany.php" method="POST" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Edit Company</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" name="edit_id" id="edit_id">
-            <div class="mb-3">
-              <label for="edit_code" class="form-label">Company Code <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="edit_code" id="edit_code" required>
-            </div>
-            <div class="mb-3">
-              <label for="edit_name" class="form-label">Company Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="edit_name" id="edit_name" required>
-            </div>
-            <div class="mb-3">
-              <label for="edit_status" class="form-label">Status</label>
-              <select class="form-select" name="edit_status" id="edit_status">
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" name="update_company" class="btn btn-primary">Update</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </main>
 
-  <!-- JS Scripts -->
-  <script src="../assets/js/core/bootstrap.bundle.min.js"></script>
+  <!-- Required JavaScript -->
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
   <script>
-    // Fill edit modal with selected data
-    document.querySelectorAll('.edit-company-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        document.getElementById('edit_id').value = button.dataset.id;
-        document.getElementById('edit_code').value = button.dataset.code;
-        document.getElementById('edit_name').value = button.dataset.name;
-        document.getElementById('edit_status').value = button.dataset.status;
+    document.addEventListener('DOMContentLoaded', function () {
+      const today = new Date().toISOString().split('T')[0];
+
+      const forms = [
+        {
+          startDate: document.getElementById('start_date_med'),
+          endDate: document.getElementById('end_date_med'),
+          totalDays: document.getElementById('total_days_med')
+        },
+        {
+          startDate: document.getElementById('start_date_other'),
+          endDate: document.getElementById('end_date_other'),
+          totalDays: document.getElementById('total_days_other')
+        }
+      ];
+
+      forms.forEach(({ startDate, endDate, totalDays }) => {
+        // Set min value to today
+        startDate.min = today;
+        endDate.min = today;
+
+        // Auto-fill today if empty
+        if (!startDate.value) startDate.value = today;
+
+        const calculateDays = () => {
+          if (startDate.value && endDate.value) {
+            const start = new Date(startDate.value);
+            const end = new Date(endDate.value);
+            const diff = (end - start) / (1000 * 60 * 60 * 24) + 1;
+
+            if (diff >= 0 && (totalDays.value === '' || parseFloat(totalDays.value) === diff)) {
+              totalDays.value = diff;
+            }
+          }
+        };
+
+        startDate.addEventListener('change', () => {
+          endDate.min = startDate.value;
+          if (endDate.value && endDate.value < startDate.value) {
+            endDate.value = '';
+            totalDays.value = '';
+          }
+          calculateDays();
+        });
+
+        endDate.addEventListener('change', () => {
+          calculateDays();
+        });
+
+        totalDays.addEventListener('focus', () => {
+          totalDays.placeholder = "E.g., 1.5 for 1 and a half days";
+        });
+
+        totalDays.addEventListener('input', () => {
+          if (!/^\d*\.?\d*$/.test(totalDays.value)) {
+            totalDays.value = totalDays.value.replace(/[^\d.]/g, '');
+          }
+        });
       });
     });
-
-    
-  </script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <script>
-    setTimeout(function () {
-      var alert = document.querySelector('.alert');
-      if (alert) {
-        alert.classList.remove('show');
-        alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 500);
-      }
-    }, 3000);
   </script>
 </body>
 </html>

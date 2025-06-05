@@ -30,9 +30,17 @@ class DepartController
         }
     }
 
-    public function getAllDepartments()
-    {
-        return $this->departModel->getAllDepartments();
+    function getAllDepartments() {
+        global $conn;
+        
+        $result = $conn->query("SELECT * FROM departments");
+        $departments = [];
+        
+        while ($row = $result->fetch_assoc()) {
+            $departments[] = $row;
+        }
+        
+        return $departments;
     }
 
     public function getDepartmentById($id)

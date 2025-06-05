@@ -9,7 +9,22 @@ class Company {
         $this->conn = $conn;
     }
 
-    public function getAllCompanies() {
+    public function getAllCompanies(): array {
+        $sql = "SELECT id, code, name FROM companies";
+        $result = $this->conn->query($sql);
+        $companies = [];
+
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $companies[] = $row;
+            }
+        }
+
+        return $companies;
+    }
+
+        // ✅ Use this for showing in department management table (your original style)
+    public function getAllRaw() {
         $sql = "SELECT * FROM companies ORDER BY id DESC";
         return mysqli_query($this->conn, $sql);
     }

@@ -1,8 +1,12 @@
 <?php 
 require_once '../db.php';  
-session_start(); 
-require_once '../Model/employee.php';
 require_once '../Controller/departController.php';
+require_once '../Controller/compController.php';
+require_once '../model/Staff.php';
+$departModel = new Depart();
+$compModel = new Company();
+$departments = $departModel->getAllDepartments(); // returns array of id, code, name
+$companies = $compModel->getAllCompanies(); // Assuming you have this method
 ?>
 
 <!DOCTYPE html>
@@ -269,143 +273,214 @@ require_once '../Controller/departController.php';
             </div>
             </nav>
 
-<!-- Main Form Section -->
-  <div class="container-fluid py-4">
-    <div class="row">
-      <div class="col-12 mb-4">
-        <div class="card">
-          <div class="card-header pb-0">
-            <h5 class="mb-0">Update Employee Information</h5>
-          </div>
-          <div class="card-body pt-0">
-            <form method="POST" action="../controller/employeeController.php?action=update" enctype="multipart/form-data">
-              <input type="hidden" name="edit_id" value="<?= htmlspecialchars($employee['id'] ?? '') ?>">
-
+<!-- pages/employee.php -->
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12 mb-4">
+      <div class="card">
+        <div class="card-header pb-0">
+          <h5 class="mb-0">Add New Employee</h5>
+        </div>
+        <div class="card-body pt-0">
+          <form action="../controller/employeeController.php?action=save" method="POST" enctype="multipart/form-data">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Name <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">IC Number <span class="text-danger">*</span></label>
+                <input type="text" name="noic" class="form-control" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                <input type="tel" name="phone" class="form-control" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" name="email" class="form-control" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Password <span class="text-danger">*</span></label>
+                <input type="text" name="pwd" id="passwordField" class="form-control" required>
+                <small class="text-muted">Will auto-generate from IC and phone number</small>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Gender <span class="text-danger">*</span></label>
+                <select name="gender" id="genderSelect" class="form-control" required>
+                  <option value="">-- Select --</option>  <!-- Keep this for validation -->
+                  <option value="M">Male</option>        <!-- Keep as fallback -->
+                  <option value="F">Female</option>      <!-- Keep as fallback -->
+                </select>
+                <small class="text-muted" id="genderFeedback">
+                  Will auto-detect from IC number
+                </small>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Marital Status <span class="text-danger">*</span></label>
+                <select name="status_marital" class="form-control" required>
+                  <option value="">-- Select --</option>
+                  <option value="1">Single</option>
+                  <option value="2">Married</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Dependent <span class="text-danger">*</span></label>
+                <input type="number" name="dependent" class="form-control" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Position <span class="text-danger">*</span></label>
+                <input type="text" name="roles" class="form-control" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Employment Status <span class="text-danger">*</span></label>
+                <select name="roles_status" class="form-control" required>
+                  <option value="">-- Select --</option>
+                  <option value="Permanent">Permanent</option>
+                  <option value="Contract">Contract</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Staff Number <span class="text-danger">*</span></label>
+                <input type="text" name="staff_no" class="form-control" required readonly value="<?= htmlspecialchars($generatedStaffNo ?? '') ?>">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Status</label>
+                <input type="text" class="form-control" value="Active" disabled>
+                <input type="hidden" name="status" value="1">
+              </div>
               <div class="row">
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Name <span class="text-danger">*</span></label>
-                  <input type="text" name="edit_name" class="form-control" value="<?= htmlspecialchars($employee['name'] ?? '') ?>" required>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">IC Number <span class="text-danger">*</span></label>
-                  <input type="text" name="edit_noic" class="form-control" value="<?= htmlspecialchars($employee['noic'] ?? '') ?>" required>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Email <span class="text-danger">*</span></label>
-                  <input type="email" name="edit_email" class="form-control" value="<?= htmlspecialchars($employee['email'] ?? '') ?>" required>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Password</label>
-                  <input type="password" name="edit_pwd" class="form-control" placeholder="Leave blank to keep current password">
-                  <small class="text-muted">Minimum 8 characters</small>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Phone Number <span class="text-danger">*</span></label>
-                  <input type="tel" name="edit_phone" class="form-control" value="<?= htmlspecialchars($employee['phone'] ?? '') ?>" required>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Gender <span class="text-danger">*</span></label>
-                  <select name="edit_gender" class="form-control" required>
-                    <option value="">-- Select --</option>
-                    <option value="M" <?= ($employee['gender'] ?? '') == 'M' ? 'selected' : '' ?>>Male</option>
-                    <option value="F" <?= ($employee['gender'] ?? '') == 'F' ? 'selected' : '' ?>>Female</option>
-                  </select>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Martial Status <span class="text-danger">*</span></label>
-                  <select name="edit_status_martial" class="form-control" required>
-                    <option value="">-- Select --</option>
-                    <option value="1" <?= ($employee['status_martial'] ?? '') == '1' ? 'selected' : '' ?>>Single</option>
-                    <option value="2" <?= ($employee['status_martial'] ?? '') == '2' ? 'selected' : '' ?>>Married</option>
-                  </select>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Dependent <span class="text-danger">*</span></label>
-                  <input type="number" name="edit_dependent" class="form-control" value="<?= htmlspecialchars($employee['dependent'] ?? 0) ?>" required>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Position <span class="text-danger">*</span></label>
-                  <input type="text" name="edit_roles" class="form-control" value="<?= htmlspecialchars($employee['roles'] ?? '') ?>" required>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Employment Status <span class="text-danger">*</span></label>
-                  <select name="edit_roles_status" class="form-control" required>
-                    <option value="">-- Select --</option>
-                    <option value="Permanent" <?= ($employee['roles_status'] ?? '') == 'Permanent' ? 'selected' : '' ?>>Permanent</option>
-                    <option value="Contract" <?= ($employee['roles_status'] ?? '') == 'Contract' ? 'selected' : '' ?>>Contract</option>
-                  </select>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Staff Number <span class="text-danger">*</span></label>
-                  <input type="text" name="edit_staff_no" class="form-control" value="<?= htmlspecialchars($employee['staff_no'] ?? '') ?>" required>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Status <span class="text-danger">*</span></label>
-                  <select name="edit_status" class="form-control" required>
-                    <option value="">-- Select --</option>
-                    <option value="1" <?= ($employee['status'] ?? '') == '1' ? 'selected' : '' ?>>Active</option>
-                    <option value="2" <?= ($employee['status'] ?? '') == '2' ? 'selected' : '' ?>>Inactive</option>
-                  </select>
-                </div>
-
-                <div class="col-md-12 mb-3">
-                  <label class="form-label">Department <span class="text-danger">*</span></label>
-                  <select name="edit_departments_id" class="form-control" required>
-                    <option value="">-- Select Department --</option>
-                    <?php foreach ($departments ?? [] as $dept): ?>
-                      <option value="<?= htmlspecialchars($dept['id']) ?>" <?= ($employee['departments_id'] ?? '') == $dept['id'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($dept['code'] . ' - ' . $dept['name']) ?>
-                      </option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Permanent Address <span class="text-danger">*</span></label>
-                  <textarea name="edit_permenant_address" class="form-control" rows="3" required><?= htmlspecialchars($employee['permenant_address'] ?? '') ?></textarea>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                  <label class="form-label">Mailing Address <span class="text-danger">*</span></label>
-                  <textarea name="edit_mail_address" class="form-control" rows="3" required><?= htmlspecialchars($employee['mail_address'] ?? '') ?></textarea>
-                </div>
-
-                <div class="col-md-4 mb-3">
-                  <label class="form-label">Profile Picture</label>
-                  <?php if (!empty($employee['profile_pic'])): ?>
-                    <div class="mb-2">
-                      <img src="<?= htmlspecialchars($employee['profile_pic']) ?>" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">
-                      <div class="form-check mt-2">
-                        <input class="form-check-input" type="checkbox" name="edit_remove_profile_pic" id="removeProfilePic">
-                        <label class="form-check-label" for="removeProfilePic">Remove current photo</label>
-                      </div>
-                    </div>
-                  <?php endif; ?>
-                  <input type="file" class="form-control" name="edit_profile_pic" accept="image/*">
-                  <small class="text-muted">Max 2MB (JPEG, PNG)</small>
-                </div>
+              <!-- Department Column -->
+              <div class="col-md-6 mb-3">
+                  <div class="form-group">
+                      <label class="form-label">Department <span class="text-danger">*</span></label>
+                      <select name="departments_id" class="form-control" required>
+                          <option value="">-- Select Department --</option>
+                          <?php 
+                          if (!empty($departments)): 
+                              foreach ($departments as $dept): 
+                          ?>
+                              <option value="<?= htmlspecialchars($dept['id']) ?>">
+                                  <?= htmlspecialchars($dept['code'] . ' - ' . $dept['name']) ?>
+                              </option>
+                          <?php 
+                              endforeach;
+                          else:
+                          ?>
+                              <option value="" disabled>No departments available</option>
+                          <?php endif; ?>
+                      </select>
+                  </div>
               </div>
-
-              <div class="mt-4 text-end">
-                <a href="staff.php" class="btn btn-secondary">Cancel</a>
-                <button type="submit" name="update_info" class="btn btn-primary">Update Employee</button>
+              
+              <!-- Company Column -->
+              <div class="col-md-6 mb-3">
+                  <div class="form-group">
+                      <label class="form-label">Company <span class="text-danger">*</span></label>
+                      <select name="companies_id" class="form-control" required>
+                          <option value="">-- Select Company --</option>
+                          <?php 
+                          if (!empty($companies)): 
+                              foreach ($companies as $comp): 
+                          ?>
+                              <option value="<?= htmlspecialchars($comp['id']) ?>">
+                                  <?= htmlspecialchars($comp['code'] . ' - ' . $comp['name']) ?>
+                              </option>
+                          <?php 
+                              endforeach;
+                          else:
+                          ?>
+                              <option value="" disabled>No companies available</option>
+                          <?php endif; ?>
+                      </select>
+                  </div>
               </div>
-            </form>
           </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Permanent Address <span class="text-danger">*</span></label>
+                <textarea name="permanent_address" class="form-control" rows="3" required></textarea>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Mailing Address <span class="text-danger">*</span></label>
+                <textarea name="mail_address" class="form-control" rows="3" required></textarea>
+              </div>
+            <div class="row mt-3">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Profile Picture</label>
+                <input type="file" class="form-control" name="profile_pic" accept="image/*">
+              </div>
+            </div>
+
+            <div class="mt-4 text-end">
+              <a href="staff.php" class="btn btn-secondary">Back</a>
+              <button type="submit" name="save_and_next" class="btn btn-primary">Next</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
-  </div>
+  </div> 
+</div>
+
+<!--script for auto generate gender-->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const icInput = document.querySelector('input[name="noic"]');
+    const genderSelect = document.getElementById('genderSelect');
+    const genderFeedback = document.getElementById('genderFeedback');
+
+    if (icInput && genderSelect) {
+      icInput.addEventListener('blur', function() {
+        const icNumber = this.value.replace(/\D/g, ''); // Remove non-digits
+        
+        if (/^\d{12}$/.test(icNumber)) {
+          const lastDigit = parseInt(icNumber.slice(-1));
+          const gender = lastDigit % 2 === 1 ? 'M' : 'F';
+          
+          // Auto-select but keep options available
+          genderSelect.value = gender;
+          genderFeedback.textContent = `Auto-detected as ${gender === 'M' ? 'Male' : 'Female'}`;
+          
+          // Visual highlight
+          genderSelect.classList.add('bg-light');
+          setTimeout(() => genderSelect.classList.remove('bg-light'), 2000);
+        }
+      });
+    }
+  });
+</script>
+
+<!--script for auto generate pwd-->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const icInput = document.querySelector('input[name="noic"]');
+    const phoneInput = document.querySelector('input[name="phone"]');
+    const passwordField = document.getElementById('passwordField');
+    
+    function generatePassword() {
+      if (icInput && phoneInput && passwordField) {
+        // Get last 6 digits of IC number (remove non-digits first)
+        const icDigits = icInput.value.replace(/\D/g, '').slice(-6);
+        
+        // Get last 4 digits of phone number
+        const phoneDigits = phoneInput.value.replace(/\D/g, '').slice(-4);
+        
+        // Only generate if we have enough digits
+        if (icDigits.length >= 6 && phoneDigits.length >= 4) {
+          const autoPassword = icDigits + '@' + phoneDigits;
+          passwordField.value = autoPassword;
+          
+          // Visual feedback
+          passwordField.classList.add('bg-light');
+          setTimeout(() => passwordField.classList.remove('bg-light'), 1000);
+        }
+      }
+    }
+    
+    // Generate when either field changes
+    if (icInput) icInput.addEventListener('blur', generatePassword);
+    if (phoneInput) phoneInput.addEventListener('blur', generatePassword);
+  });
+</script>
 </body>
-</html>
+</head>

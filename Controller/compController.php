@@ -18,7 +18,7 @@ if (isset($_POST['code']) && isset($_POST['name']) && !isset($_POST['update_comp
         if ($existing['code'] === $code && $existing['name'] === $name) {
             $_SESSION['error_message'] = "Code and Name already exist.";
         } elseif ($existing['code'] === $code) {
-            $_SESSION['error_message'] = "Code already exists.";
+            $_SESSION['error_message'] = "Code already exists.";  
         } elseif ($existing['name'] === $name) {
             $_SESSION['error_message'] = "Name already exists.";
         }
@@ -76,4 +76,11 @@ if (isset($_GET['delete_id'])) {
     }
     header("Location: ../pages/company.php");
     exit;
+
+}
+
+// Instantiate and handle the request if this file is accessed directly
+if (isset($_SERVER['REQUEST_METHOD']) && (isset($_POST['code']) || isset($_POST['update_department']) || isset($_GET['delete_id']))) {
+    $controller = new DepartController();
+    $controller->handleRequests();
 }

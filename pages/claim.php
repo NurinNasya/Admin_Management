@@ -1,7 +1,14 @@
 <?php 
 require_once '../db.php';  // Ensure the file is included only once
+require_once '../Model/Staff.php';
+$staffModel = new Staff();
+
+if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $staff = $staffModel->getStaffById((int)$_GET['id']);
+} else {
+    $staff = null;
+}
 ?>
-<?php include_once '../Controller/leaveQuotaController.php'; ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -55,7 +62,7 @@ require_once '../db.php';  // Ensure the file is included only once
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?php echo ($current_page == 'staff.php') ? 'active' : ''; ?>" href="../pages/staff.php">
+          <a class="nav-link " href="../pages/staff.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
@@ -267,170 +274,75 @@ require_once '../db.php';  // Ensure the file is included only once
             <!-- End Navbar -->
 
 <!-- Main content -->
-        <div class="container-fluid py-4">
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                      <h5>Individual Leave Quota List</h5>
-                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">Add Quota</button>
-                    </div>
-                <div class="card-body">
-            <table class="table table-bordered table-striped mt-3">
-              <thead class="table-dark">
-                <tr>
-                  <th>Leave Type</th>
-                  <th>Leave Quota</th>
-                  <th>Used</th>
-                  <th>Current Balance</th>
-                  <th>In Process</th>
-                  <th>Available Balance</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
+    <div class="container-fluid py-4">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5>Medical > Quota Configuration</h5>
+              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">Add Quota</button>
+            </div>
+            <div class="card-body">
 
-              <tbody>
-                <!-- Expired Medical Leave -->
-                <tr>
-                  <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
-                  <td>10</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>
-                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                  </td>
-                </tr>
+              <h5 class="card-title">Employee Info</h5>
 
-                <!-- Expired Annual Leave -->
-                <tr>
-                  <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
-                  <td>15</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>
-                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                  </td>
-                </tr>
+              <?php if ($staff): ?>
+                <p class="card-text"><strong>Name:</strong> <?= htmlspecialchars($staff['name']) ?></p>
+                <p class="card-text"><strong>IC:</strong> <?= htmlspecialchars($staff['noic']) ?></p>
+                <p class="card-text"><strong>Company:</strong> <?= htmlspecialchars($staff['company_code']) ?></p>
+                <p class="card-text"><strong>Department:</strong> <?= htmlspecialchars($staff['departments_code']) ?></p>
+              <?php else: ?>
+                <div class="alert alert-warning">Employee data not found.</div>
+              <?php endif; ?>
 
-                <!-- Section Header for Non-Quota Leaves -->
-                <tr class="table-secondary text-center">
-                  <td colspan="7"><strong></strong></td>
-                </tr>
+              <!-- Label outside the table -->
+              <div class="mb-3 p-2 bg-secondary text-start text-white rounded">
+                <strong>Individual Medical Claim Quota List</strong>
+              </div>
 
-                <!-- Non-Quota Leave Rows -->
-                <tr>
-                  <td>Unpaid Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Paternity Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Maternity Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Compassionate Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Hospitalization Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Replacement Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-              </tbody>
-            </table>
-
-           <!-- <table class="table table-bordered table-striped mt-3">
+              <table class="table table-bordered table-striped mt-3">
                 <thead class="table-dark">
-                    <tr>
-                        <th>Leave Type</th>
-                        <th>Leave Quota</th>
-                        <th>Used</th>
-                        <th>Current Balance</th>
-                        <th>In Process</th>
-                        <th>Available Balance</th>
-                        <th>Action</th>
-                    </tr>
+                  <tr>
+                    <th>Start/End</th>
+                    <th>Entitled</th>
+                    <th>Used</th>
+                    <th>Current</th>
+                    <th>Pending</th>
+                    <th>Available</th>
+                    <th>Action</th>
+                  </tr>
                 </thead>
-                    <tbody>
-              <tr>
-                <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>
-                  <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                  <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-              </tr>
-              <tr>
-                <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>
-                  <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                  <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-              </tr>
-
                 <tbody>
-                <?php //if ($leaves && $leaves->num_rows > 0): ?>
-                    <?php //while($row = $leaves->fetch_assoc()): ?>
-                        <tr>
-                            <!--<td><?= htmlspecialchars($row['type']) ?></td>
-                            <td><?= htmlspecialchars($row['quota']) ?></td>
-                            <td><?= htmlspecialchars($row['used']) ?></td>
-                            <td><?= htmlspecialchars($row['balance']) ?></td>
-                            <td><?= htmlspecialchars($row['in_process']) ?></td>
-                            <td><?= htmlspecialchars($row['available']) ?></td>
-                            <td>
-                                <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                                <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                            </td>-->
-                        </tr>
-                    <?php //endwhile; ?>
-                <?php //else: ?>
-                    <tr>
-                        <!--<td colspan="7" class="text-center">No leave records found.</td>-->
-                    </tr>
-                <?php //endif; ?>
+                  <!-- Expired Medical Leave -->
+                  <tr>
+                    <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td></td>
+                  </tr>
+
+                  <!-- Expired Annual Leave -->
+                  <tr>
+                    <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td></td>
+                  </tr>
                 </tbody>
+              </table>
 
-              <!--<tr class="table-secondary text-center">
-                <td colspan="7"><strong>Details of Non-Quota Leave Types</strong></td>
-              </tr>
+            </div> <!-- end card-body -->
+          </div> <!-- end card -->
+        </div> <!-- end col -->
+      </div> <!-- end row -->
+    </div> <!-- end container -->
 
-              <tr><td>Unpaid Leave</td><td colspan="6"></td></tr>
-              <tr><td>Paternity Leave</td><td colspan="6"></td></tr>
-              <tr><td>Maternity Leave</td><td colspan="6"></td></tr>
-              <tr><td>Compassionate Leave</td><td colspan="6"></td></tr>
-              <tr><td>Hospitalization Leave</td><td colspan="6"></td></tr>
-              <tr><td>Replacement Leave</td><td colspan="6"></td></tr>
-
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-            </table>
-</div>-->
+<script src="../assets/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
