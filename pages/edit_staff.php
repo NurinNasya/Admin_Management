@@ -1,7 +1,22 @@
 <?php 
-require_once '../db.php';  // Ensure the file is included only once
+require_once '../db.php';  
+
+// Check if we're coming from the controller
+if (!isset($staff) && isset($_GET['id'])) {
+    require_once '../Model/Staff.php';
+    require_once '../Controller/staffController.php';
+    
+    $staffModel = new Staff();
+    $staff = $staffModel->getStaffById((int)$_GET['id']);
+    $departments = $staffModel->getDepartments();
+    $companies = $this->staffModel->getCompanies(); // Assuming you have this method
+
+}
+
+// Initialize with empty array if not set
+$staff = $staff ?? [];
+$departments = $departments ?? [];
 ?>
-<?php include_once '../Controller/medleaveController.php'; ?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -55,7 +70,7 @@ require_once '../db.php';  // Ensure the file is included only once
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/medleave.php">
+          <a class="nav-link " href="../pages/staff.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
@@ -147,17 +162,19 @@ require_once '../db.php';  // Ensure the file is included only once
         </div>
       </div>
     </div>
-  </aside> <!--smpai sini-->>
-    <main class="main-content position-relative border-radius-lg">
-            <!-- Navbar -->
+  </aside>
+
+<!--main content-->
+<main class="main-content position-relative border-radius-lg">
+  <!-- Navbar -->
             <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
             <div class="container-fluid py-1 px-3">
                 <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Settings</a></li>
-                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Work Shift</li>
+                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Department</li>
                 </ol>
-                <h6 class="font-weight-bolder text-white mb-0">Work Shift</h6>
+                <h6 class="font-weight-bolder text-white mb-0">Department</h6>
                 </nav>
                 <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
                 <div class="ms-md-auto pe-md-3 d-flex align-items-center">
@@ -264,69 +281,185 @@ require_once '../db.php';  // Ensure the file is included only once
                 </div>
             </div>
             </nav>
-            <!-- End Navbar -->
 
-<!-- Main content -->
-        <div class="container-fluid py-4">
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                      <h5>Medical > Quota Configuration</h5>
-                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">Add Quota</button>
-                    </div>
-                <div class="card-body">
-              <h5 class="card-title">Employee Info</h5>
-              <p class="card-text"><strong>Name:</strong> Aiman Hakim</p>
-              <p class="card-text"><strong>IC:</strong> 920101-10-1234</p>
-              <p class="card-text"><strong>Company:</strong> Tech Solutions Sdn Bhd</p>
-              <p class="card-text"><strong>Department:</strong> IT Department</p>
-                      <!-- Label outside the table -->
-          <div class="mb-3 p-2 bg-secondary text-start text-white rounded">
-            <strong>Individual Medical Claim Quota List</strong>
+<!-- Main Form Section -->
+  <div class="container-fluid py-4">
+    <div class="row">
+      <div class="col-12 mb-4">
+        <div class="card">
+          <div class="card-header pb-0">
+            <h5 class="mb-0">Update Employee Information</h5>
           </div>
+      <div class="card-body pt-0">
+    <form method="POST" action="../Controller/staffController.php?action=update" enctype="multipart/form-data">
+        <input type="hidden" name="edit_id" value="<?= isset($staff['id']) ? htmlspecialchars($staff['id']) : '' ?>">
 
-            <table class="table table-bordered table-striped mt-3">
-              <thead class="table-dark">
-                <tr>
-                  <th>Start/End</th>
-                  <th>Entitled</th>
-                  <th>Used</th>
-                  <th>Current</th>
-                  <th>Pending</th>
-                  <th>Available</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
+        <div class="row">
+            <!-- Personal Information Section -->
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Name <span class="text-danger">*</span></label>
+                <input type="text" name="edit_name" class="form-control" 
+                       value="<?= isset($staff['name']) ? htmlspecialchars($staff['name']) : '' ?>" required>
+            </div>
 
-              <tbody>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">IC Number <span class="text-danger">*</span></label>
+                <input type="text" name="edit_noic" class="form-control" 
+                       value="<?= isset($staff['noic']) ? htmlspecialchars($staff['noic']) : '' ?>" required>
+            </div>
 
-                <!-- Expired Medical Leave -->
-                <tr>
-                  <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>
-                    <!--<a href="#" class="btn btn-sm btn-primary">Edit</a>
-                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                  </td>-->
-                </tr>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" name="edit_email" class="form-control" 
+                       value="<?= isset($staff['email']) ? htmlspecialchars($staff['email']) : '' ?>" required>
+            </div>
 
-                <!-- Expired Annual Leave -->
-                <tr>
-                  <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>
-                    <!--<a href="#" class="btn btn-sm btn-primary">Edit</a>
-                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                  </td>-->
-                </tr>
+            <!-- Account Section -->
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" name="edit_pwd" class="form-control" 
+                       placeholder="Leave blank to keep current password">
+                <small class="text-muted">Minimum 8 characters</small>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                <input type="tel" name="edit_phone" class="form-control" 
+                       value="<?= isset($staff['phone']) ? htmlspecialchars($staff['phone']) : '' ?>" required>
+            </div>
+
+            <!-- Gender -->
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Gender <span class="text-danger">*</span></label>
+              <select name="edit_gender" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="M" <?= (isset($staff['gender']) && $staff['gender'] == 'M') ? 'selected' : '' ?>>Male</option>
+                <option value="F" <?= (isset($staff['gender']) && $staff['gender'] == 'F') ? 'selected' : '' ?>>Female</option>
+              </select>
+            </div>
+
+            <!-- Marital Status -->
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Marital Status <span class="text-danger">*</span></label>
+              <select name="edit_status_marital" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="0" <?= (isset($staff['status_marital']) && (int)$staff['status_marital'] === 0) ? 'selected' : '' ?>>Single</option>
+                <option value="1" <?= (isset($staff['status_marital']) && (int)$staff['status_marital'] === 1) ? 'selected' : '' ?>>Married</option>
+              </select>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Dependents <span class="text-danger">*</span></label>
+                <input type="number" name="edit_dependent" class="form-control" 
+                       value="<?= isset($staff['dependent']) ? htmlspecialchars($staff['dependent']) : 0 ?>" min="0" required>
+            </div>
+
+            <!-- Employment Information -->
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Position <span class="text-danger">*</span></label>
+                <input type="text" name="edit_roles" class="form-control" 
+                       value="<?= isset($staff['roles']) ? htmlspecialchars($staff['roles']) : '' ?>" required>
+            </div>
+
+            <!-- Employment Type -->
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Employment Type <span class="text-danger">*</span></label>
+              <select name="edit_roles_status" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="Permanent" <?= (isset($staff['roles_status']) && $staff['roles_status'] == 'Permanent') ? 'selected' : '' ?>>Permanent</option>
+                <option value="Contract" <?= (isset($staff['roles_status']) && $staff['roles_status'] == 'Contract') ? 'selected' : '' ?>>Contract</option>
+              </select>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Staff Number <span class="text-danger">*</span></label>
+                <input type="text" name="edit_staff_no" class="form-control" 
+                       value="<?= isset($staff['staff_no']) ? htmlspecialchars($staff['staff_no']) : '' ?>" required>
+            </div>
+
+            <!-- Status -->
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Status <span class="text-danger">*</span></label>
+              <select name="edit_status" class="form-select" required>
+                <option value="">-- Select --</option>
+                <option value="1" <?= (isset($staff['status']) && (int)$staff['status'] === 1) ? 'selected' : '' ?>>Active</option>
+                <option value="0" <?= (isset($staff['status']) && (int)$staff['status'] === 0) ? 'selected' : '' ?>>Inactive</option>
+              </select>
+            </div>
+
+            <!-- Department and Company side-by-side -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Department <span class="text-danger">*</span></label>
+              <select name="edit_departments_id" class="form-select" required>
+                <option value="">-- Select Department --</option>
+                <?php foreach ($departments as $dept): ?>
+                  <option value="<?= htmlspecialchars($dept['id']) ?>"
+                    <?= (isset($staff['departments_id']) && $staff['departments_id'] == $dept['id']) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($dept['code'] . ' - ' . $dept['name']) ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Company <span class="text-danger">*</span></label>
+              <select name="edit_company_id" class="form-select" required>
+                <option value="">-- Select Company --</option>
+                <?php foreach ($companies as $comp): ?>
+                  <option value="<?= htmlspecialchars($comp['id']) ?>"
+                    <?= (isset($staff['company_id']) && $staff['company_id'] == $comp['id']) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($comp['code'] . ' - ' . $comp['name']) ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <!-- Address Information -->
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Permanent Address <span class="text-danger">*</span></label>
+                <textarea name="edit_permanent_address" class="form-control" rows="3" required><?= 
+                    isset($staff['permanent_address']) ? htmlspecialchars($staff['permanent_address']) : '' 
+                ?></textarea>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Mailing Address <span class="text-danger">*</span></label>
+                <textarea name="edit_mail_address" class="form-control" rows="3" required><?= 
+                    isset($staff['mail_address']) ? htmlspecialchars($staff['mail_address']) : '' 
+                ?></textarea>
+            </div>
+
+            <!-- Profile Picture -->
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Profile Picture</label>
+                <?php if (isset($staff['profile_pic']) && !empty($staff['profile_pic'])): ?>
+                    <div class="mb-2">
+                        <img src="<?= htmlspecialchars($staff['profile_pic']) ?>" 
+                             class="img-thumbnail" style="max-width: 150px;">
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="edit_remove_profile_pic" id="removeProfilePic">
+                            <label class="form-check-label" for="removeProfilePic">
+                                Remove current photo
+                            </label>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                <input type="file" class="form-control" name="edit_profile_pic" accept="image/jpeg,image/png">
+                <small class="text-muted">Max 2MB (JPEG, PNG only)</small>
+            </div>
+        </div>
+
+        <div class="mt-4 text-end">
+            <a href="../pages/staff.php" class="btn btn-secondary">Cancel</a>
+            <button type="submit" name="update_info" class="btn btn-primary">
+                <i class="fas fa-save me-2"></i>Update Staff
+            </button>
+        </div>
+    </form>
+</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

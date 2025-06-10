@@ -1,7 +1,27 @@
 <?php
-require_once '../db.php';  // Ensure the file is included only once
+require_once '../db.php';
+require_once '../Model/Staff.php';
+
+// Initialize Staff Model
+$staffModel = new Staff();
+
+try {
+    // Fetch all staff with department and company codes
+    $allStaff = $staffModel->getAllStaff();
+    
+    // Check for success/error messages
+    $successMsg = $_SESSION['success'] ?? '';
+    $errorMsg = $_SESSION['error'] ?? '';
+    
+    // Clear the messages after displaying them
+    unset($_SESSION['success']);
+    unset($_SESSION['error']);
+    
+} catch (Exception $e) {
+    $errorMsg = "Error loading staff data: " . $e->getMessage();
+}
 ?>
-<?php include_once '../Controller/staffController.php'; ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -82,7 +102,7 @@ require_once '../db.php';  // Ensure the file is included only once
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/medleave.php">
+          <a class="nav-link " href="../pages/staff.php">
             <div
               class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
@@ -112,8 +132,8 @@ require_once '../db.php';  // Ensure the file is included only once
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="../pages/roles.php">
-                  <span class="sidenav-normal">Roles</span>
+                <a class="nav-link" href="../pages/role.php">
+                  <span class="sidenav-normal">Role</span>
                 </a>
               </li>
               <li class="nav-item">
@@ -300,105 +320,62 @@ require_once '../db.php';  // Ensure the file is included only once
     </nav>
     <!-- End Navbar -->
 
-
-    <div class="container-fluid py-4">
-      <!-- Success/Error Messages -->
-      <?php if (isset($_GET['success'])): ?>
-        <?php if ($_GET['success'] === 'medical'): ?>
-          <div class="alert alert-success alert-dismissible fade show text-white" role="alert">
-            Medical leave applied successfully!
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        <?php elseif ($_GET['success'] === 'quota'): ?>
-          <div class="alert alert-success alert-dismissible fade show text-white" role="alert">
-            Medical leave quota updated successfully!
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        <?php endif; ?>
-      <?php elseif (isset($_GET['error'])): ?>
-        <?php if ($_GET['error'] === 'medical'): ?>
-          <div class="alert alert-danger alert-dismissible fade show text-white" role="alert">
-            Error applying medical leave!
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        <?php elseif ($_GET['error'] === 'quota'): ?>
-          <div class="alert alert-danger alert-dismissible fade show text-white" role="alert">
-            Error updating medical leave quota!
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        <?php endif; ?>
+       <div class="container-fluid py-4">
+      <?php if (!empty($successMsg)): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <?= htmlspecialchars($successMsg) ?>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <?php endif; ?>
+      
+      <?php if (!empty($errorMsg)): ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <?= htmlspecialchars($errorMsg) ?>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
       <?php endif; ?>
 
       <div class="row">
-        <div class="col-12">
-          <div class="card mb-4">
-            <div class="card-header pb-0">
-              <div class="d-flex justify-content-between align-items-center">
-                <h6>Employee List</h6>
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
-                  <i class="fas fa-plus me-1"></i> Add Employee
-                </button>
-              </div>
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center" style="margin-bottom: 5px;">
+              <h4 style="margin-bottom: 0;">Employee List</h4>
+              <a href="add_staff.php" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i> Add Employee
+              </a>
             </div>
             <div class="card-body px-0 pt-0 pb-2">
               <div class="table-responsive p-0">
-                <table id="employeeTable" class="table align-items-center mb-0 display nowrap" style="width:100%">
-                  <thead>
+                <table id="employeeTable" class="table align-items-center mb-0 display" style="width:100%">
+                  <thead class="thead-dark">
                     <tr>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">No</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Profile</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Employee Name</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Role</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Department</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Phone</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+                      <th>ID</th>
+                      <th>PROFILE</th>
+                      <th>NAME</th>
+                      <th>POSITION</th>
+                      <th>DEPARTMENT</th>
+                      <th>COMPANY</th>
+                      <th>PHONE</th>
+                      <th>ACTION</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <?php 
-                    // Create dummy data if no employees found
-                    if (empty($employees)) {
-                      $departments = ['HR', 'Finance', 'IT', 'Marketing', 'Operations'];
-                      $roles = ['Manager', 'Developer', 'Designer', 'Accountant', 'HR Specialist'];
-                      
-                      for ($i = 1; $i <= 50; $i++) {
-                        $employees[] = [
-                          'id' => $i,
-                          'profile_pic' => '../assets/img/default-avatar.png',
-                          'name' => 'Employee ' . $i,
-                          'role' => $roles[array_rand($roles)],
-                          'department' => $departments[array_rand($departments)],
-                          'phone' => '012-3456' . str_pad($i, 3, '0', STR_PAD_LEFT),
-                          'medical_leave_quota' => rand(5, 20)
-                        ];
-                      }
-                    }
-                    ?>
-                    
-                    <?php if (!empty($employees)): ?>
-                      <?php foreach ($employees as $index => $employee): ?>
+                    <?php if (!empty($allStaff)): ?>
+                      <?php foreach ($allStaff as $staff): ?>
                         <tr>
-                          <td class="ps-4">
-                            <p class="text-xs font-weight-bold mb-0"><?= $index + 1 ?></p>
-                          </td>
+                          <td><?= htmlspecialchars($staff['id'] ?? '') ?></td>
                           <td>
                             <div>
-                              <img src="<?= $employee['profile_pic'] ?: '../assets/img/default-avatar.png' ?>"
-                                class="avatar avatar-sm me-3" alt="user1">
+                              <img src="<?= !empty($staff['profile_pic']) ? '../uploads/' . htmlspecialchars($staff['profile_pic']) : '../assets/img/default-avatar.png' ?>" 
+                                   class="avatar avatar-sm me-3" 
+                                   alt="Profile Picture of <?= htmlspecialchars($staff['name'] ?? 'Staff') ?>">
                             </div>
                           </td>
-                          <td>
-                            <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($employee['name']) ?></p>
-                          </td>
-                          <td>
-                            <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($employee['role']) ?></p>
-                          </td>
-                          <td>
-                            <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($employee['department']) ?></p>
-                          </td>
-                          <td>
-                            <p class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($employee['phone']) ?></p>
-                          </td>
+                          <td><?= htmlspecialchars($staff['name'] ?? '') ?></td>
+                          <td><?= htmlspecialchars($staff['roles'] ?? '') ?></td>
+                          <td><?= htmlspecialchars($staff['departments_code'] ?? '') ?></td>
+                          <td><?= htmlspecialchars($staff['company_code'] ?? '') ?></td>
+                          <td><?= htmlspecialchars($staff['phone'] ?? '') ?></td>
                           <td class="align-middle">
                             <div class="dropdown">
                               <button class="btn btn-sm btn-icon-only text-light" type="button" data-bs-toggle="dropdown"
@@ -407,28 +384,26 @@ require_once '../db.php';  // Ensure the file is included only once
                               </button>
                               <ul class="dropdown-menu dropdown-menu-end px-2 py-3">
                                 <li>
-                                  <a class="dropdown-item border-radius-md" href="#" data-bs-toggle="modal"
-                                    data-bs-target="#editEmployeeModal<?= $employee['id'] ?>">
+                                  <a class="dropdown-item border-radius-md" href="edit_staff.php?id=<?= $staff['id'] ?>">
                                     <i class="fas fa-pen me-2"></i> Edit
                                   </a>
                                 </li>
                                 <li>
-                                  <a class="dropdown-item border-radius-md" href="#" data-bs-toggle="modal"
-                                    data-bs-target="#medicalLeaveModal<?= $employee['id'] ?>">
-                                    <i class="fas fa-file-medical me-2"></i> Medical Leave
+                                  <a class="dropdown-item border-radius-md" href="claim.php?id=<?= $staff['id'] ?>">
+                                    <i class="fas fa-file-medical me-2"></i> Claim
                                   </a>
                                 </li>
                                 <li>
-                                  <a class="dropdown-item border-radius-md" href="#" data-bs-toggle="modal"
-                                    data-bs-target="#quotaModal<?= $employee['id'] ?>">
-                                    <i class="fas fa-list-check me-2"></i> Medical Quota
+                                  <a class="dropdown-item border-radius-md" href="leave.php?id=<?= $staff['id'] ?>">
+                                    <i class="fas fa-file-medical me-2"></i> Leave
                                   </a>
                                 </li>
                                 <li>
-                                  <form method="POST" action="../Controller/employeeController.php"
-                                    onsubmit="return confirm('Are you sure you want to delete this employee?');">
-                                    <input type="hidden" name="employee_id" value="<?= $employee['id'] ?>">
-                                    <button type="submit" name="delete_employee"
+                                  <form method="POST" action="../Controller/staffController.php"
+                                    onsubmit="return confirm('Are you sure you want to delete this staff?');">
+                                    <input type="hidden" name="staff_id" value="<?= $staff['id'] ?>">
+                                    <input type="hidden" name="action" value="delete">
+                                    <button type="submit" name="delete_staff"
                                       class="dropdown-item border-radius-md text-danger">
                                       <i class="fas fa-trash me-2"></i> Delete
                                     </button>
@@ -438,143 +413,10 @@ require_once '../db.php';  // Ensure the file is included only once
                             </div>
                           </td>
                         </tr>
-
-                        <!-- Edit Employee Modal -->
-                        <div class="modal fade" id="editEmployeeModal<?= $employee['id'] ?>" tabindex="-1"
-                          aria-labelledby="editEmployeeModalLabel<?= $employee['id'] ?>" aria-hidden="true">
-                          <div class="modal-dialog">
-                            <div class="modal-content">
-                              <div class="modal-header">
-                                <h5 class="modal-title" id="editEmployeeModalLabel<?= $employee['id'] ?>">Edit Employee</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                              </div>
-                              <form method="POST" action="../Controller/employeeController.php"
-                                enctype="multipart/form-data">
-                                <div class="modal-body">
-                                  <input type="hidden" name="employee_id" value="<?= $employee['id'] ?>">
-                                  <div class="mb-3">
-                                    <label class="form-label">Nama Pekerja</label>
-                                    <input type="text" class="form-control" name="name"
-                                      value="<?= htmlspecialchars($employee['name']) ?>" required>
-                                  </div>
-                                  <div class="mb-3">
-                                    <label class="form-label">Kumpulan Peranan</label>
-                                    <input type="text" class="form-control" name="role"
-                                      value="<?= htmlspecialchars($employee['role']) ?>" required>
-                                  </div>
-                                  <div class="mb-3">
-                                    <label class="form-label">Bahagian</label>
-                                    <input type="text" class="form-control" name="department"
-                                      value="<?= htmlspecialchars($employee['department']) ?>" required>
-                                  </div>
-                                  <div class="mb-3">
-                                    <label class="form-label">No Talefon</label>
-                                    <input type="text" class="form-control" name="phone"
-                                      value="<?= htmlspecialchars($employee['phone']) ?>" required>
-                                  </div>
-                                  <div class="mb-3">
-                                    <label class="form-label">Gambar Profil</label>
-                                    <input type="file" class="form-control" name="profile_pic">
-                                  </div>
-                                </div>
-                                <div class="modal-footer">
-                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                  <button type="submit" name="update_employee" class="btn btn-primary">Save Changes</button>
-                                </div>
-                              </form>
-                            </div>
-                          </div>
-                        </div>
-
-                        <!-- Medical Leave Modal -->
-                        <div class="modal fade" id="medicalLeaveModal<?= $employee['id'] ?>" tabindex="-1"
-                          aria-labelledby="medicalLeaveModalLabel<?= $employee['id'] ?>" aria-hidden="true">
-                          <div class="modal-dialog">
-                            <div class="modal-content">
-                              <div class="modal-header">
-                                <h5 class="modal-title" id="medicalLeaveModalLabel<?= $employee['id'] ?>">Apply Medical
-                                  Leave</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                              </div>
-                              <form method="POST" action="../Controller/employeeController.php">
-                                <div class="modal-body">
-                                  <input type="hidden" name="employee_id" value="<?= $employee['id'] ?>">
-                                  <div class="mb-3">
-                                    <label class="form-label">Start Date</label>
-                                    <input type="date" class="form-control" name="start_date" required>
-                                  </div>
-                                  <div class="mb-3">
-                                    <label class="form-label">End Date</label>
-                                    <input type="date" class="form-control" name="end_date" required>
-                                  </div>
-                                  <div class="mb-3">
-                                    <label class="form-label">Reason</label>
-                                    <textarea class="form-control" name="reason" rows="3" required></textarea>
-                                  </div>
-                                </div>
-                                <div class="modal-footer">
-                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                  <button type="submit" name="medical_leave" class="btn btn-primary">Submit</button>
-                                </div>
-                              </form>
-                            </div>
-                          </div>
-                        </div>
-
-                        <!-- Quota Modal -->
-                        <div class="modal fade" id="quotaModal<?= $employee['id'] ?>" tabindex="-1"
-                          aria-labelledby="quotaModalLabel<?= $employee['id'] ?>" aria-hidden="true">
-                          <div class="modal-dialog">
-                            <div class="modal-content">
-                              <div class="modal-header">
-                                <h5 class="modal-title" id="quotaModalLabel<?= $employee['id'] ?>">Medical Leave Quota</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                              </div>
-                              <form method="POST" action="../Controller/staffController.php">
-                                <div class="modal-body">
-                                  <input type="hidden" name="employee_id" value="<?= $employee['id'] ?>">
-                                  <div class="mb-3">
-                                    <label class="form-label">Current Quota</label>
-                                    <input type="number" class="form-control" name="quota"
-                                      value="<?= $employee['medical_leave_quota'] ?? 0 ?>" required>
-                                  </div>
-                                  <div class="mb-3">
-                                    <label class="form-label">Leave History</label>
-                                    <ul class="list-group">
-                                      <?php
-                                      // For dummy data, we'll just show some random leave history
-                                      if (rand(0, 1)): ?>
-                                        <?php for ($j = 1; $j <= rand(1, 3); $j++): 
-                                          $start = date('d M Y', strtotime('-'.rand(1, 30).' days'));
-                                          $end = date('d M Y', strtotime($start.' +'.rand(1, 5).' days'));
-                                          $statuses = ['Approved', 'Pending', 'Rejected'];
-                                          $status = $statuses[array_rand($statuses)];
-                                        ?>
-                                          <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <?= $start ?> - <?= $end ?>
-                                            <span class="badge bg-<?= $status === 'Approved' ? 'success' : ($status === 'Rejected' ? 'danger' : 'warning') ?>">
-                                              <?= $status ?>
-                                            </span>
-                                          </li>
-                                        <?php endfor; ?>
-                                      <?php else: ?>
-                                        <li class="list-group-item">No medical leave records</li>
-                                      <?php endif; ?>
-                                    </ul>
-                                  </div>
-                                </div>
-                                <div class="modal-footer">
-                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                  <button type="submit" name="update_quota" class="btn btn-primary">Update Quota</button>
-                                </div>
-                              </form>
-                            </div>
-                          </div>
-                        </div>
                       <?php endforeach; ?>
                     <?php else: ?>
                       <tr>
-                        <td colspan="7" class="text-center py-4">No employees found</td>
+                        <td colspan="8" class="text-center">No Staff Records Found</td>
                       </tr>
                     <?php endif; ?>
                   </tbody>
@@ -585,83 +427,40 @@ require_once '../db.php';  // Ensure the file is included only once
         </div>
       </div>
     </div>
+  </main>
 
-    <!-- Add Employee Modal//PAGE hr isi nama pekerja tutup dulu -->  
-    <!-- <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="addEmployeeModalLabel">Add New Employee</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <form method="POST" action="../Controller/employeeController.php" enctype="multipart/form-data">
-            <div class="modal-body">
-              <div class="mb-3">
-                <label class="form-label">Employee Name</label>
-                <input type="text" class="form-control" name="name" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Role</label>
-                <input type="text" class="form-control" name="role" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Department</label>
-                <input type="text" class="form-control" name="department" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Phone</label>
-                <input type="text" class="form-control" name="phone" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Profile Picture</label>
-                <input type="file" class="form-control" name="profile_pic">
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              <button type="submit" name="add_employee" class="btn btn-primary">Add Employee</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- DataTables JS -->
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
-    
-    <script>
+  <!-- Required Scripts -->
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- DataTables JS -->
+  <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+  
+  <script>
+    $(document).ready(function() {
       // Initialize DataTable
-      $(document).ready(function() {
-        $('#employeeTable').DataTable({
-          scrollX: true,
-          responsive: true,
-          lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-          dom: '<"top"lf>rt<"bottom"ip>',
-          language: {
-            search: "_INPUT_",
-            searchPlaceholder: "Search employees...",
-            lengthMenu: "Show _MENU_ employees per page",
-            zeroRecords: "No matching employees found",
-            info: "Showing _START_ to _END_ of _TOTAL_ employees",
-            infoEmpty: "No employees available",
-            infoFiltered: "(filtered from _MAX_ total employees)"
-          }
-        });
+      $('#employeeTable').DataTable({
+        responsive: true,
+        columnDefs: [
+          { responsivePriority: 1, targets: 2 }, // Name
+          { responsivePriority: 2, targets: 7 }, // Actions
+          { orderable: false, targets: [1, 7] } // Disable sorting on profile pic and actions
+        ],
+        language: {
+          search: "_INPUT_",
+          searchPlaceholder: "Search employees...",
+          lengthMenu: "Show _MENU_ entries per page",
+          zeroRecords: "No matching employees found",
+          info: "Showing _START_ to _END_ of _TOTAL_ employees",
+          infoEmpty: "No employees available",
+          infoFiltered: "(filtered from _MAX_ total employees)"
+        }
       });
-
+      
       // Auto-dismiss alerts after 5 seconds
-      setTimeout(function () {
-        var alerts = document.querySelectorAll('.alert');
-        alerts.forEach(function (alert) {
-          var bsAlert = new bootstrap.Alert(alert);
-          bsAlert.close();
-        });
+      setTimeout(function() {
+        $('.alert').alert('close');
       }, 5000);
-    </script>
+    });
+  </script>
 </body>
-
 </html>

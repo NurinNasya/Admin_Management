@@ -1,7 +1,46 @@
 <?php 
-require_once '../db.php';  // Ensure the file is included only once
+/*require_once '../db.php';
+require_once '../Model/leave.php';
+require_once '../Controller/leaveController.php';
+
+session_start();
+
+// Initialize the controller
+$leaveController = new LeaveController();
+
+// Get leave requests (default to pending)
+$status = $_GET['status'] ?? 'pending';
+$leaveRequests = $leaveController->getLeaveRequests($status);
+
+// Check for messages
+$message = $_SESSION['message'] ?? '';
+$error = $_SESSION['error'] ?? '';
+unset($_SESSION['message'], $_SESSION['error']);*/
 ?>
-<?php include_once '../Controller/medleaveController.php'; ?>
+<?php
+require_once '../db.php';
+require_once '../Model/leave.php';
+require_once '../Controller/leaveController.php';
+
+// Initialize Staff Model
+$leaveModel = new Leave();
+
+try {
+    // Fetch all staff with department and company codes
+    $allLeaves = $leaveModel->getAllLeaves();
+    
+    // Check for success/error messages
+    $successMsg = $_SESSION['success'] ?? '';
+    $errorMsg = $_SESSION['error'] ?? '';
+    
+    // Clear the messages after displaying them
+    unset($_SESSION['success']);
+    unset($_SESSION['error']);
+    
+} catch (Exception $e) {
+    $errorMsg = "Error loading leave data: " . $e->getMessage();
+}
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -47,15 +86,15 @@ require_once '../db.php';  // Ensure the file is included only once
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/tables.html">
+          <a class="nav-link " href="../pages/approve.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-calendar-grid-58 text-dark text-sm opacity-10"></i>
             </div>
-            <span class="nav-link-text ms-1">Tables</span>
+            <span class="nav-link-text ms-1">Leaves</span>
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/medleave.php">
+          <a class="nav-link <?php echo ($current_page == 'staff.php') ? 'active' : ''; ?>" href="../pages/staff.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
@@ -243,7 +282,7 @@ require_once '../db.php';  // Ensure the file is included only once
                                         </g>
                                     </g>
                                     </g>
-                                </g>
+                                </g> 
                                 </svg>
                             </div>
                             <div class="d-flex flex-column justify-content-center">
@@ -267,162 +306,69 @@ require_once '../db.php';  // Ensure the file is included only once
             <!-- End Navbar -->
 
 <!-- Main content -->
-        <div class="container-fluid py-4">
-              <div class="row">
-                <div class="col-md-12">
-                  <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                      <h5>Individual Leave Quota List</h5>
-                      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">Add Quota</button>
-                    </div>
-                <div class="card-body">
-            <table class="table table-bordered table-striped mt-3">
-              <thead class="table-dark">
-                <tr>
-                  <th>Leave Type</th>
-                  <th>Leave Quota</th>
-                  <th>Used</th>
-                  <th>Current Balance</th>
-                  <th>In Process</th>
-                  <th>Available Balance</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
+    <div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5>Leave > Approval Panel</h5>
+        </div>
 
-              <tbody>
-                <!-- Expired Medical Leave -->
-                <tr>
-                  <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>
-                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                  </td>
-                </tr>
+        <div class="card-body">
+          <h5 class="card-title">Leave Requests</h5>
 
-                <!-- Expired Annual Leave -->
-                <tr>
-                  <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>0</td>
-                  <td>
-                    <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                    <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                  </td>
-                </tr>
-
-                <!-- Section Header for Non-Quota Leaves -->
-                <tr class="table-secondary text-center">
-                  <td colspan="7"><strong></strong></td>
-                </tr>
-
-                <!-- Non-Quota Leave Rows -->
-                <tr>
-                  <td>Unpaid Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Paternity Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Maternity Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Compassionate Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Hospitalization Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-                <tr>
-                  <td>Replacement Leave</td>
-                  <td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>
-              </tbody>
-            </table>
-
-           <!-- <table class="table table-bordered table-striped mt-3">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Leave Type</th>
-                        <th>Leave Quota</th>
-                        <th>Used</th>
-                        <th>Current Balance</th>
-                        <th>In Process</th>
-                        <th>Available Balance</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                    <tbody>
+          <table class="table table-bordered table-striped mt-3">
+            <thead class="table-dark">
               <tr>
-                <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>
-                  <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                  <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                </td>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Company</th>
+                <th>Application Date</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Total Days</th>
+                <th>Reason</th>
+                <th>Document</th>
+                <th>Action</th>
               </tr>
-              <tr>
-                <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td>
-                  <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                  <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                </td>
-              </tr>
-
-                <tbody>
-                <?php //if ($leaves && $leaves->num_rows > 0): ?>
-                    <?php //while($row = $leaves->fetch_assoc()): ?>
-                        <tr>
-                            <!--<td><?= htmlspecialchars($row['type']) ?></td>
-                            <td><?= htmlspecialchars($row['quota']) ?></td>
-                            <td><?= htmlspecialchars($row['used']) ?></td>
-                            <td><?= htmlspecialchars($row['balance']) ?></td>
-                            <td><?= htmlspecialchars($row['in_process']) ?></td>
-                            <td><?= htmlspecialchars($row['available']) ?></td>
-                            <td>
-                                <a href="#" class="btn btn-sm btn-primary">Edit</a>
-                                <a href="#" class="btn btn-sm btn-danger">Delete</a>
-                            </td>-->
-                        </tr>
-                    <?php //endwhile; ?>
-                <?php //else: ?>
-                    <tr>
-                        <!--<td colspan="7" class="text-center">No leave records found.</td>-->
-                    </tr>
-                <?php //endif; ?>
-                </tbody>
-
-              <!--<tr class="table-secondary text-center">
-                <td colspan="7"><strong>Details of Non-Quota Leave Types</strong></td>
-              </tr>
-
-              <tr><td>Unpaid Leave</td><td colspan="6"></td></tr>
-              <tr><td>Paternity Leave</td><td colspan="6"></td></tr>
-              <tr><td>Maternity Leave</td><td colspan="6"></td></tr>
-              <tr><td>Compassionate Leave</td><td colspan="6"></td></tr>
-              <tr><td>Hospitalization Leave</td><td colspan="6"></td></tr>
-              <tr><td>Replacement Leave</td><td colspan="6"></td></tr>
-
+            </thead>
+            <tbody>
+              <?php if (!empty($leaveRequests)): ?>
+                <?php foreach ($leaveRequests as $request): ?>
+                  <tr>
+                    <td><?= htmlspecialchars($request['staff_name'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($request['departments_code'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($request['company_code'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($request['applied_date'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($request['start_date'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($request['end_date'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($request['total_days'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars($request['reason'] ?? 'N/A') ?></td>
+                    <td>
+                      <?php if (!empty($request['attachment'])): ?>
+                        <a href="../uploads/<?= htmlspecialchars($request['attachment']) ?>" target="_blank">View</a>
+                      <?php else: ?>
+                        <span class="text-muted">No document</span>
+                      <?php endif; ?>
+                    </td>
+                    <td>
+                      <?php if (($request['status'] ?? '') === 'pending'): ?>
+                        <form method="post" action="../controller/handle_leave.php">
+                          <input type="hidden" name="leave_id" value="<?= $request['id'] ?>">
+                          <button type="submit" name="action" value="approve" class="btn btn-sm btn-success">Approve</button>
+                          <button type="submit" name="action" value="reject" class="btn btn-sm btn-danger">Reject</button>
+                        </form>
+                      <?php else: ?>
+                        <span class="text-muted">Processed</span>
+                      <?php endif; ?>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              <?php else: ?>
+                <tr>
+                  <td colspan="10" class="text-center text-muted">No leave requests found.</td>
+                </tr>
+              <?php endif; ?>
             </tbody>
           </table>
         </div>
@@ -430,7 +376,5 @@ require_once '../db.php';  // Ensure the file is included only once
     </div>
   </div>
 </div>
-            </table>
-</div>-->
 </body>
 </html>

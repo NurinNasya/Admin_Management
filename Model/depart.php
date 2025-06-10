@@ -1,60 +1,57 @@
 <?php
-require_once '../db.php';
+require_once '../db.php'; // adjust the path if needed
 
-class DepartModel {
+class Depart {
     private $conn;
 
-    public function __construct($conn) {
+    public function __construct() {
+        global $conn; // use the shared db connection
         $this->conn = $conn;
     }
 
-    /*public function getAllDepartments() {
-        $query = "SELECT * FROM departments ORDER BY id DESC";
-        $result = $this->conn->query($query);
+    // ✅ Use this for dropdowns and anywhere you need array of departments
+    public function getAllDepartments(): array {
+        $sql = "SELECT id, code, name FROM departments ORDER BY name ASC";
+        $result = $this->conn->query($sql);
+        $departments = [];
 
-        $departmentList = [];
-        while ($row = $result->fetch_assoc()) {
-            $departmentList[] = $row;
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $departments[] = $row;
+            }
         }
+ 
+        return $departments;
+    }
 
-        return $departmentList;
-    }*/
-
-    public function getAllDepartments() {
-    $stmt = $this->conn->prepare("SELECT * FROM departments ORDER BY id DESC");
-    $stmt->execute();
-    return $stmt->get_result(); // returns result object, not array
-}
-
-
-    public function findDuplicate($code, $name, $excludeId = null) {
-        if ($excludeId) {
-            $stmt = $this->conn->prepare("SELECT * FROM departments WHERE (code = ? OR name = ?) AND id != ?");
-            $stmt->bind_param("ssi", $code, $name, $excludeId);
-        } else {
-            $stmt = $this->conn->prepare("SELECT * FROM departments WHERE code = ? OR name = ?");
-            $stmt->bind_param("ss", $code, $name);
-        }
-
-        $stmt->execute();
-        return $stmt->get_result();
+    // ✅ Use this for showing in department management table (your original style)
+    public function getAllRaw() {
+        $sql = "SELECT * FROM departments ORDER BY id DESC";
+        return mysqli_query($this->conn, $sql);
     }
 
     public function insert($code, $name, $status) {
-        $stmt = $this->conn->prepare("INSERT INTO departments (code, name, status) VALUES (?, ?, ?)");
-        $stmt->bind_param("ssi", $code, $name, $status);
-        return $stmt->execute();
+        $sql = "INSERT INTO departments (code, name, status) VALUES ('$code', '$name', '$status')";
+        return mysqli_query($this->conn, $sql);
     }
 
     public function update($id, $code, $name, $status) {
-        $stmt = $this->conn->prepare("UPDATE departments SET code = ?, name = ?, status = ? WHERE id = ?");
-        $stmt->bind_param("ssii", $code, $name, $status, $id);
-        return $stmt->execute();
+        $sql = "UPDATE departments SET code='$code', name='$name', status='$status' WHERE id='$id'";
+        return mysqli_query($this->conn, $sql);
     }
 
     public function delete($id) {
-        $stmt = $this->conn->prepare("DELETE FROM departments WHERE id = ?");
-        $stmt->bind_param("i", $id);
-        return $stmt->execute();
+        $sql = "DELETE FROM departments WHERE id='$id'";
+        return mysqli_query($this->conn, $sql);
+    }
+
+    public function findDuplicate($code, $name, $excludeId = null) {
+        $condition = "code = '$code' OR name = '$name'";
+        if ($excludeId !== null) {
+            $condition .= " AND id != '$excludeId'";
+        }
+        $sql = "SELECT * FROM departments WHERE $condition LIMIT 1";
+        $result = mysqli_query($this->conn, $sql);
+        return mysqli_fetch_assoc($result);
     }
 }

@@ -1,9 +1,13 @@
 <?php 
-require_once '../db.php';  // Ensure the file is included only once
-session_start(); // Start session to access session messages
+require_once '../db.php';  
+require_once '../Controller/departController.php';
+require_once '../Controller/compController.php';
+require_once '../model/Staff.php';
+$departModel = new Depart();
+$compModel = new Company();
+$departments = $departModel->getAllDepartments(); // returns array of id, code, name
+$companies = $compModel->getAllCompanies(); // Assuming you have this method
 ?>
-<?php require_once '../Controller/departController.php'; ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -57,7 +61,7 @@ session_start(); // Start session to access session messages
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/employee.php">
+          <a class="nav-link " href="../pages/staff.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
@@ -269,171 +273,214 @@ session_start(); // Start session to access session messages
             </div>
             </nav>
 
+<!-- pages/employee.php -->
 <div class="container-fluid py-4">
-  <!-- Maklumat Peribadi -->
   <div class="row">
     <div class="col-12 mb-4">
       <div class="card">
         <div class="card-header pb-0">
-          <h5 class="mb-0">Maklumat Peribadi</h5>
+          <h5 class="mb-0">Add New Employee</h5>
         </div>
         <div class="card-body pt-0">
-          <form method="POST" action="index.php?action=save">
+          <form action="../controller/employeeController.php?action=save" method="POST" enctype="multipart/form-data">
             <div class="row">
-              <div class="col-md-4">
-                <label class="form-label">Kad Pengenalan <span class="text-danger">*</span></label>
-                <input type="text" name="noic" class="form-control" required>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Nama <span class="text-danger">*</span></label>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Name <span class="text-danger">*</span></label>
                 <input type="text" name="name" class="form-control" required>
               </div>
-              <div class="col-md-4">
-                <label class="form-label">Katalaluan <span class="text-danger">*</span></label>
-                <input type="password" name="pwd" class="form-control" required>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">IC Number <span class="text-danger">*</span></label>
+                <input type="text" name="noic" class="form-control" required>
               </div>
-            </div>
-
-            <div class="row mt-3">
-              <div class="col-md-4">
-                <label class="form-label">Emel <span class="text-danger">*</span></label>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                <input type="tel" name="phone" class="form-control" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Email <span class="text-danger">*</span></label>
                 <input type="email" name="email" class="form-control" required>
               </div>
-              <div class="col-md-4">
-                <label class="form-label">Status Perkahwinan <span class="text-danger">*</span></label>
-                <select name="status_martial" class="form-control" required>
-                  <option value="">-- Pilih --</option>
-                  <option value="1">Bujang</option>
-                  <option value="2">Berkahwin</option>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Password <span class="text-danger">*</span></label>
+                <input type="text" name="pwd" id="passwordField" class="form-control" required>
+                <small class="text-muted">Will auto-generate from IC and phone number</small>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Gender <span class="text-danger">*</span></label>
+                <select name="gender" id="genderSelect" class="form-control" required>
+                  <option value="">-- Select --</option>  <!-- Keep this for validation -->
+                  <option value="M">Male</option>        <!-- Keep as fallback -->
+                  <option value="F">Female</option>      <!-- Keep as fallback -->
+                </select>
+                <small class="text-muted" id="genderFeedback">
+                  Will auto-detect from IC number
+                </small>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Marital Status <span class="text-danger">*</span></label>
+                <select name="status_marital" class="form-control" required>
+                  <option value="">-- Select --</option>
+                  <option value="1">Single</option>
+                  <option value="2">Married</option>
                 </select>
               </div>
-              <div class="col-md-4">
-                <label class="form-label">Jantina <span class="text-danger">*</span></label>
-                <select name="gender" class="form-control" required>
-                  <option value="">-- Pilih --</option>
-                  <option value="L">Lelaki</option>
-                  <option value="P">Perempuan</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="row mt-3">
-              <div class="col-md-6">
-                <label class="form-label">Alamat Tetap <span class="text-danger">*</span></label>
-                <textarea name="permenant_address" class="form-control" required></textarea>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Alamat Surat Menyurat <span class="text-danger">*</span></label>
-                <textarea name="mail_address" class="form-control" required></textarea>
-              </div>
-            </div>
-
-            <div class="row mt-3">
-              <div class="col-md-4">
-                <label class="form-label">Bilangan Tanggungan <span class="text-danger">*</span></label>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Dependent <span class="text-danger">*</span></label>
                 <input type="number" name="dependent" class="form-control" required>
               </div>
-            </div>
-
-            <hr class="my-4">
-
-            <!-- Maklumat Staf -->
-            <div class="card">
-              <div class="card-header pb-0">
-                <h5 class="mb-0">Maklumat Staf</h5>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Position <span class="text-danger">*</span></label>
+                <input type="text" name="roles" class="form-control" required>
               </div>
-              <div class="card-body pt-0">
-                <div class="row">
-                  <div class="col-md-4">
-                    <label class="form-label">No Staf <span class="text-danger">*</span></label>
-                    <input type="text" name="staff_no" class="form-control" required>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Employment Status <span class="text-danger">*</span></label>
+                <select name="roles_status" class="form-control" required>
+                  <option value="">-- Select --</option>
+                  <option value="Permanent">Permanent</option>
+                  <option value="Contract">Contract</option>
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Staff Number <span class="text-danger">*</span></label>
+                <input type="text" name="staff_no" class="form-control" required readonly value="<?= htmlspecialchars($generatedStaffNo ?? '') ?>">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Status</label>
+                <input type="text" class="form-control" value="Active" disabled>
+                <input type="hidden" name="status" value="1">
+              </div>
+              <div class="row">
+              <!-- Department Column -->
+              <div class="col-md-6 mb-3">
+                  <div class="form-group">
+                      <label class="form-label">Department <span class="text-danger">*</span></label>
+                      <select name="departments_id" class="form-control" required>
+                          <option value="">-- Select Department --</option>
+                          <?php 
+                          if (!empty($departments)): 
+                              foreach ($departments as $dept): 
+                          ?>
+                              <option value="<?= htmlspecialchars($dept['id']) ?>">
+                                  <?= htmlspecialchars($dept['code'] . ' - ' . $dept['name']) ?>
+                              </option>
+                          <?php 
+                              endforeach;
+                          else:
+                          ?>
+                              <option value="" disabled>No departments available</option>
+                          <?php endif; ?>
+                      </select>
                   </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Jawatan <span class="text-danger">*</span></label>
-                    <input type="text" name="position" class="form-control" required>
+              </div>
+              
+              <!-- Company Column -->
+              <div class="col-md-6 mb-3">
+                  <div class="form-group">
+                      <label class="form-label">Company <span class="text-danger">*</span></label>
+                      <select name="companies_id" class="form-control" required>
+                          <option value="">-- Select Company --</option>
+                          <?php 
+                          if (!empty($companies)): 
+                              foreach ($companies as $comp): 
+                          ?>
+                              <option value="<?= htmlspecialchars($comp['id']) ?>">
+                                  <?= htmlspecialchars($comp['code'] . ' - ' . $comp['name']) ?>
+                              </option>
+                          <?php 
+                              endforeach;
+                          else:
+                          ?>
+                              <option value="" disabled>No companies available</option>
+                          <?php endif; ?>
+                      </select>
                   </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Status Jawatan <span class="text-danger">*</span></label>
-                    <select name="position_status" class="form-control" required>
-                      <option value="">-- Pilih --</option>
-                      <option value="Tetap">Tetap</option>
-                      <option value="Kontrak">Kontrak</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="row mt-3">
-                  <div class="col-md-4">
-                    <label class="form-label">Bahagian (ID) <span class="text-danger">*</span></label>
-                    <input type="number" name="dept_id" class="form-control" required>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Syarikat (ID) <span class="text-danger">*</span></label>
-                    <input type="number" name="company_id" class="form-control" required>
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Shift (ID) <span class="text-danger">*</span></label>
-                    <input type="number" name="shift_id" class="form-control" required>
-                  </div>
-                </div>
-
-                <div class="row mt-3">
-                  <div class="col-md-4">
-                    <label class="form-label">Kelulusan Cuti (ID)</label>
-                    <input type="number" name="leave_approval" class="form-control">
-                  </div>
-                  <div class="col-md-4">
-                    <label class="form-label">Status Umum</label>
-                    <input type="number" name="status" class="form-control">
-                  </div>
-                </div>
-
-                <!-- Optional status fields -->
-                <div class="row mt-3">
-                  <div class="col-md-3">
-                    <label class="form-label">QR Code</label>
-                    <select name="status_qrcode" class="form-control">
-                      <option value="">-- Pilih --</option>
-                      <option value="1">Aktif</option>
-                      <option value="0">Tidak Aktif</option>
-                    </select>
-                  </div>
-                  <div class="col-md-3">
-                    <label class="form-label">Swafoto</label>
-                    <select name="status_swafoto" class="form-control">
-                      <option value="">-- Pilih --</option>
-                      <option value="1">Ya</option>
-                      <option value="0">Tidak</option>
-                    </select>
-                  </div>
-                  <div class="col-md-3">
-                    <label class="form-label">Monitor</label>
-                    <select name="status_monitor" class="form-control">
-                      <option value="">-- Pilih --</option>
-                      <option value="1">Ya</option>
-                      <option value="0">Tidak</option>
-                    </select>
-                  </div>
-                  <div class="col-md-3">
-                    <label class="form-label">Taraf Perkahwinan</label>
-                    <select name="status_martial" class="form-control">
-                      <option value="">-- Pilih --</option>
-                      <option value="1">Bujang</option>
-                      <option value="2">Berkahwin</option>
-                    </select>
-                  </div>
-                </div>
+              </div>
+          </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Permanent Address <span class="text-danger">*</span></label>
+                <textarea name="permanent_address" class="form-control" rows="3" required></textarea>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Mailing Address <span class="text-danger">*</span></label>
+                <textarea name="mail_address" class="form-control" rows="3" required></textarea>
+              </div>
+            <div class="row mt-3">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Profile Picture</label>
+                <input type="file" class="form-control" name="profile_pic" accept="image/*">
               </div>
             </div>
 
-            <!-- Submit Buttons -->
             <div class="mt-4 text-end">
-              <a href="#" class="btn btn-secondary">Kembali</a>
-              <button type="submit" class="btn btn-primary">Seterusnya</button>
+              <a href="staff.php" class="btn btn-secondary">Back</a>
+              <button type="submit" name="save_and_next" class="btn btn-primary">Next</button>
             </div>
           </form>
         </div>
       </div>
     </div>
-  </div>
+  </div> 
 </div>
+
+<!--script for auto generate gender-->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const icInput = document.querySelector('input[name="noic"]');
+    const genderSelect = document.getElementById('genderSelect');
+    const genderFeedback = document.getElementById('genderFeedback');
+
+    if (icInput && genderSelect) {
+      icInput.addEventListener('blur', function() {
+        const icNumber = this.value.replace(/\D/g, ''); // Remove non-digits
+        
+        if (/^\d{12}$/.test(icNumber)) {
+          const lastDigit = parseInt(icNumber.slice(-1));
+          const gender = lastDigit % 2 === 1 ? 'M' : 'F';
+          
+          // Auto-select but keep options available
+          genderSelect.value = gender;
+          genderFeedback.textContent = `Auto-detected as ${gender === 'M' ? 'Male' : 'Female'}`;
+          
+          // Visual highlight
+          genderSelect.classList.add('bg-light');
+          setTimeout(() => genderSelect.classList.remove('bg-light'), 2000);
+        }
+      });
+    }
+  });
+</script>
+
+<!--script for auto generate pwd-->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const icInput = document.querySelector('input[name="noic"]');
+    const phoneInput = document.querySelector('input[name="phone"]');
+    const passwordField = document.getElementById('passwordField');
+    
+    function generatePassword() {
+      if (icInput && phoneInput && passwordField) {
+        // Get last 6 digits of IC number (remove non-digits first)
+        const icDigits = icInput.value.replace(/\D/g, '').slice(-6);
+        
+        // Get last 4 digits of phone number
+        const phoneDigits = phoneInput.value.replace(/\D/g, '').slice(-4);
+        
+        // Only generate if we have enough digits
+        if (icDigits.length >= 6 && phoneDigits.length >= 4) {
+          const autoPassword = icDigits + '@' + phoneDigits;
+          passwordField.value = autoPassword;
+          
+          // Visual feedback
+          passwordField.classList.add('bg-light');
+          setTimeout(() => passwordField.classList.remove('bg-light'), 1000);
+        }
+      }
+    }
+    
+    // Generate when either field changes
+    if (icInput) icInput.addEventListener('blur', generatePassword);
+    if (phoneInput) phoneInput.addEventListener('blur', generatePassword);
+  });
+</script>
+</body>
+</head>
