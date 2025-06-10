@@ -1,12 +1,14 @@
 <?php
-include_once '../db.php';
-session_start();
+require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../Controller/roleController.php';
+require_once __DIR__ . '/../Model/Role.php';
 
-// Fetch all roles ordered by ID in descending order (newest first)
-$sql = "SELECT * FROM roles ORDER BY id DESC";
-$result = $conn->query($sql);
+//session_start();
 
-// Generate CSRF token for security
+$roleController = new RoleController($conn);
+$roles = $roleController->getAllRoles();
+
+// Generate CSRF token
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
@@ -212,10 +214,10 @@ if (empty($_SESSION['csrf_token'])) {
                   </tr>
                 </thead>
                 <tbody>
-                  <?php if ($result && $result->num_rows > 0): ?>
+                 <?php if (!empty($roles)): ?>
                     <?php 
-                    $counter = 1;
-                    while ($row = $result->fetch_assoc()): 
+                      $counter = 1;
+                      foreach ($roles as $row): 
                     ?>
                       <tr>
                         <td><?= $counter++ ?></td>
@@ -229,30 +231,31 @@ if (empty($_SESSION['csrf_token'])) {
                         </td>
                         <td>
                           <a href="#" class="text-primary me-3 edit-role-btn"
-                             data-id="<?= $row['id'] ?>"
-                             data-name="<?= htmlspecialchars($row['name']) ?>"
-                             data-status="<?= $row['status'] ?>"
-                             data-bs-toggle="modal"
-                             data-bs-target="#editRoleModal"
-                             title="Edit">
+                            data-id="<?= $row['id'] ?>"
+                            data-name="<?= htmlspecialchars($row['name']) ?>"
+                            data-status="<?= $row['status'] ?>"
+                            data-bs-toggle="modal"
+                            data-bs-target="#editRoleModal"
+                            title="Edit">
                             <i class="bi bi-pencil-square fs-4"></i>
                           </a>
                           <a href="#" class="text-danger delete-role-btn"
-                             data-id="<?= $row['id'] ?>"
-                             data-name="<?= htmlspecialchars($row['name']) ?>"
-                             data-bs-toggle="modal"
-                             data-bs-target="#deleteRoleModal"
-                             title="Delete">
+                            data-id="<?= $row['id'] ?>"
+                            data-name="<?= htmlspecialchars($row['name']) ?>"
+                            data-bs-toggle="modal"
+                            data-bs-target="#deleteRoleModal"
+                            title="Delete">
                             <i class="bi bi-trash-fill fs-4"></i>
                           </a>
                         </td>
                       </tr>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                   <?php else: ?>
                     <tr>
                       <td colspan="4" class="text-center">No roles found.</td>
                     </tr>
                   <?php endif; ?>
+
                 </tbody>
               </table>
             </div>
