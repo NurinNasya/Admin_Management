@@ -30,21 +30,21 @@ class StaffController {
         }
     }
 
-    // Show add staff form with generated staff_no
     public function create(): void {
-        $yearPrefix = date('y'); // e.g., "25"
-        $maxSuffix = $this->staffModel->getMaxStaffNumberSuffixForYear($yearPrefix);
-        $nextNumber = $maxSuffix > 0 ? $maxSuffix + 1 : 1000;
-        $generatedStaffNo = $yearPrefix . '/' . $nextNumber;
+        try {
+            $generatedStaffNo = $this->staffModel->generateStaffNoForDisplay();
+            $departments = $this->departModel->getAllDepartments();
+            $companies = $this->staffModel->getCompanies();
+            $roles = $this->staffModel->getRoles(); // ✅ Get roles
 
-        $departments = $this->departModel->getAllDepartments();
-        $companies = $this->staffModel->getCompanies();
-
-        // Pass $generatedStaffNo to view for display (readonly)
-        include '../pages/add_staff.php';
+            include '../pages/add_staff.php';
+        } catch (Exception $e) {
+            $_SESSION['error'] = "Error preparing staff form: " . $e->getMessage();
+            header("Location: ../pages/staff.php");
+            exit();
+        }
     }
 
-    // Show edit staff form
     public function show(int $id): void {
         try {
             $staff = $this->staffModel->getStaffById($id);
@@ -54,6 +54,7 @@ class StaffController {
 
             $departments = $this->departModel->getAllDepartments();
             $companies = $this->staffModel->getCompanies();
+            $roles = $this->staffModel->getRoles(); // ✅ Get roles
 
             include '../pages/edit_staff.php';
         } catch (Exception $e) {
@@ -63,7 +64,6 @@ class StaffController {
         }
     }
 
-    // Handle add staff form submission
     public function store(): void {
         try {
             $profilePicName = $this->handleFileUpload('profile_pic');
@@ -77,10 +77,9 @@ class StaffController {
                 'gender' => $_POST['gender'] ?? '',
                 'status_marital' => $_POST['status_marital'] ?? '',
                 'dependent' => $_POST['dependent'] ?? 0,
-                // staff_no is auto-generated inside the model insertStaff method
                 'permanent_address' => $_POST['permanent_address'] ?? '',
                 'mail_address' => $_POST['mail_address'] ?? '',
-                'roles' => $_POST['roles'] ?? '',
+                'roles_id' => $_POST['roles_id'] ?? '',
                 'roles_status' => $_POST['roles_status'] ?? '',
                 'profile_pic' => $profilePicName,
                 'departments_id' => (int)($_POST['departments_id'] ?? 0),
@@ -88,7 +87,7 @@ class StaffController {
             ];
 
             if ($this->staffModel->insertStaff($data)) {
-                $_SESSION['success'] = "Staff added successfully!";
+                $_SESSION['success'] = "Staff added successfully with staff number: " . $this->staffModel->generateStaffNoForDisplay();
             } else {
                 throw new Exception("Failed to add staff");
             }
@@ -102,7 +101,6 @@ class StaffController {
         }
     }
 
-    // Handle edit staff form submission
     public function update(): void {
         try {
             $id = (int)($_POST['edit_id'] ?? 0);
@@ -114,7 +112,6 @@ class StaffController {
 
             $profilePicName = $this->handleFileUpload('edit_profile_pic', $staff['profile_pic']);
 
-            // Note: staff_no should NOT be updated here, so omit it from $data
             $data = [
                 'id' => $id,
                 'noic' => $_POST['edit_noic'] ?? '',
@@ -126,13 +123,13 @@ class StaffController {
                 'dependent' => (int)($_POST['edit_dependent'] ?? 0),
                 'permanent_address' => $_POST['edit_permanent_address'] ?? '',
                 'mail_address' => $_POST['edit_mail_address'] ?? '',
-                'roles' => $_POST['edit_roles'] ?? '',
+                'roles_id' => $_POST['edit_roles_id'] ?? '',
                 'roles_status' => $_POST['edit_roles_status'] ?? '',
                 'profile_pic' => $profilePicName,
                 'departments_id' => (int)($_POST['edit_departments_id'] ?? 0),
                 'company_id' => (int)($_POST['edit_company_id'] ?? 0),
                 'status' => $_POST['edit_status'] ?? 'Active',
-                'pwd' => $_POST['edit_pwd'] ?? '',  // password optional for update
+                'pwd' => $_POST['edit_pwd'] ?? '',
             ];
 
             if ($this->staffModel->updateStaff($data)) {
@@ -150,9 +147,7 @@ class StaffController {
         }
     }
 
-    // Helper for file uploads, with optional old file removal
-    private function handleFileUpload(string $inputName, string $existingFile = ''): string
-    {
+    private function handleFileUpload(string $inputName, string $existingFile = ''): string {
         if (isset($_FILES[$inputName]) && $_FILES[$inputName]['error'] === UPLOAD_ERR_OK) {
             $fileTmpPath = $_FILES[$inputName]['tmp_name'];
             $fileName = basename($_FILES[$inputName]['name']);
@@ -176,16 +171,48 @@ class StaffController {
                 throw new Exception("Failed to move uploaded file");
             }
 
-            // Delete old file if exists
             if ($existingFile && file_exists($uploadDir . $existingFile)) {
                 unlink($uploadDir . $existingFile);
             }
 
             return $newFileName;
         } elseif ($existingFile) {
-            return $existingFile; // keep old file if no new upload
+            return $existingFile;
         } else {
-            return ''; // no file uploaded
+            return '';
         }
     }
+}
+
+// Handle actions
+if (isset($_GET['action'])) {
+    $controller = new StaffController();
+    $action = $_GET['action'];
+
+    try {
+        switch ($action) {
+            case 'create':
+                $controller->create();
+                break;
+            case 'show':
+                $id = (int)($_GET['id'] ?? 0);
+                $controller->show($id);
+                break;
+            case 'save':
+                $controller->store();
+                break;
+            case 'update':
+                $controller->update();
+                break;
+            default:
+                $controller->index();
+        }
+    } catch (Exception $e) {
+        $_SESSION['error'] = "Error: " . $e->getMessage();
+        header("Location: ../pages/staff.php");
+        exit();
+    }
+} else {
+    $controller = new StaffController();
+    $controller->index();
 }
