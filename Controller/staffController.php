@@ -1,218 +1,153 @@
 <?php
-session_start();
-require_once '../Model/Staff.php';
-require_once '../Model/Depart.php';
-require_once '../db.php';
+require_once '../model/Staff.php';
+require_once '../model/Role.php';
+require_once '../model/Depart.php';
+require_once '../model/Comp.php';
+require_once '../model/Shift.php';
 
 class StaffController {
     private $staffModel;
+    private $roleModel;
     private $departModel;
+    private $compModel;
+    private $shiftModel;
 
     public function __construct() {
         $this->staffModel = new Staff();
+        $this->roleModel = new Role();
         $this->departModel = new Depart();
+        $this->compModel = new Company();
+        $this->shiftModel = new Shift();
     }
 
-    public function index(): void {
+    public function index() {
         try {
-            $staffs = $this->staffModel->getAllStaff();
-            $departments = $this->departModel->getAllDepartments();
-
-            if (empty($staffs)) {
-                $_SESSION['warning'] = "No staff records found";
+            // Get all staff data from the model
+            $staffData = $this->staffModel->getAllStaff();
+            
+            if ($staffData === false) {
+                error_log("Failed to fetch staff data");
+                return false;
             }
-
-            include '../pages/staff.php';
+            
+            return $staffData;
         } catch (Exception $e) {
-            $_SESSION['error'] = "Error loading staff data: " . $e->getMessage();
-            header("Location: error.php");
-            exit();
+            error_log("Error in StaffController::index(): " . $e->getMessage());
+            return false;
         }
     }
 
-    public function create(): void {
-        try {
-            $generatedStaffNo = $this->staffModel->generateStaffNoForDisplay();
-            $departments = $this->departModel->getAllDepartments();
-            $companies = $this->staffModel->getCompanies();
-            $roles = $this->staffModel->getRoles(); // ✅ Get roles
+    public function create() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
-            include '../pages/add_staff.php';
-        } catch (Exception $e) {
-            $_SESSION['error'] = "Error preparing staff form: " . $e->getMessage();
-            header("Location: ../pages/staff.php");
-            exit();
-        }
-    }
+                $noic = trim($_POST['noic']);
+                $phone = trim($_POST['phone']);
+                $gender = '';
+                $pwd = '';
 
-    public function show(int $id): void {
-        try {
-            $staff = $this->staffModel->getStaffById($id);
-            if (!$staff) {
-                throw new Exception("Staff not found");
+                if (strlen($noic) === 12) {
+                    $lastDigit = (int)substr($noic, -1);
+                    $gender = ($lastDigit % 2 === 0) ? 'F' : 'M';
+                }
+
+                if (strlen($noic) === 12 && strlen($phone) === 11) {
+                    $icLast6 = substr($noic, -6);
+                    $phoneLast4 = substr($phone, -4);
+                    $pwd = $icLast6 . '@' . $phoneLast4;
+                }
+
+                $data = [
+                    //'staff_no' => $this->staffModel->generateStaffNumber(),
+                    'noic' => $noic,
+                    'pwd' => $pwd,
+                    'name' => trim($_POST['name']),
+                    'email' => trim($_POST['email']),
+                    'phone' => $phone,
+                    'roles' => trim($_POST['roles']),
+                    'roles_status' => trim($_POST['status']),
+                    'departments_id' => trim($_POST['departments_id']),
+                    'company_id' => trim($_POST['company_id']),
+                    'status' => trim($_POST['status']),
+                    'gender' => $gender,
+                    'shift_id' => trim($_POST['shift_id']),
+                    'leave_approval' => trim($_POST['leave_approval']),
+                    'permanent_address' => trim($_POST['permanent_address']),
+                    'mail_address' => trim($_POST['mail_address']),
+                    'status_qrcode' => trim($_POST['status_qrcode']),
+                    'status_swafoto' => trim($_POST['status_swafoto']),
+                    'status_monitor' => trim($_POST['status_monitor']),
+                    'status_marital' => trim($_POST['status_marital']),
+                    'dependent' => trim($_POST['dependent']),
+                    'document_name' => '',
+                    'document_size' => 0,
+                    'created_by' => $_POST['created_by'] ?? 0,
+                    'updated_by' => $_POST['created_by'] ?? 0,
+                    'profile_pic' => ''
+                ];
+
+                if (!empty($_FILES['profile_pic']['tmp_name'])) {
+                    $targetDir = "../uploads/";
+                    if (!is_dir($targetDir)) mkdir($targetDir, 0755, true);
+                    $filename = basename($_FILES['profile_pic']['name']);
+                    $targetFile = $targetDir . $filename;
+
+                    if (move_uploaded_file($_FILES['profile_pic']['tmp_name'], $targetFile)) {
+                        $data['profile_pic'] = $filename;
+                    }
+                }
+
+                if ($this->staffModel->create($data)) {
+                    $_SESSION['success'] = "Staff created successfully!";
+                    $this->redirect('pages/staff.php');
+                } else {
+                    $_SESSION['error'] = "Failed to create staff";
+                    $this->redirect('pages/staff_info.php');
+                }
+            } catch (Exception $e) {
+                $_SESSION['error'] = "Error: " . $e->getMessage();
+                $this->redirect('pages/staff_info.php');
             }
-
-            $departments = $this->departModel->getAllDepartments();
-            $companies = $this->staffModel->getCompanies();
-            $roles = $this->staffModel->getRoles(); // ✅ Get roles
-
-            include '../pages/edit_staff.php';
-        } catch (Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
-            header("Location: ../pages/staff.php");
-            exit();
-        }
-    }
-
-    public function store(): void {
-        try {
-            $profilePicName = $this->handleFileUpload('profile_pic');
-
-            $data = [
-                'noic' => $_POST['noic'] ?? '',
-                'name' => $_POST['name'] ?? '',
-                'pwd' => $_POST['pwd'] ?? '',
-                'email' => $_POST['email'] ?? '',
-                'phone' => $_POST['phone'] ?? '',
-                'gender' => $_POST['gender'] ?? '',
-                'status_marital' => $_POST['status_marital'] ?? '',
-                'dependent' => $_POST['dependent'] ?? 0,
-                'permanent_address' => $_POST['permanent_address'] ?? '',
-                'mail_address' => $_POST['mail_address'] ?? '',
-                'roles_id' => $_POST['roles_id'] ?? '',
-                'roles_status' => $_POST['roles_status'] ?? '',
-                'profile_pic' => $profilePicName,
-                'departments_id' => (int)($_POST['departments_id'] ?? 0),
-                'company_id' => (int)($_POST['company_id'] ?? 0),
-            ];
-
-            if ($this->staffModel->insertStaff($data)) {
-                $_SESSION['success'] = "Staff added successfully with staff number: " . $this->staffModel->generateStaffNoForDisplay();
-            } else {
-                throw new Exception("Failed to add staff");
-            }
-
-            header("Location: ../pages/staff.php");
-            exit();
-        } catch (Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
-            header("Location: ../pages/add_staff.php");
-            exit();
-        }
-    }
-
-    public function update(): void {
-        try {
-            $id = (int)($_POST['edit_id'] ?? 0);
-            $staff = $this->staffModel->getStaffById($id);
-
-            if (!$staff) {
-                throw new Exception("Staff not found");
-            }
-
-            $profilePicName = $this->handleFileUpload('edit_profile_pic', $staff['profile_pic']);
-
-            $data = [
-                'id' => $id,
-                'noic' => $_POST['edit_noic'] ?? '',
-                'name' => $_POST['edit_name'] ?? '',
-                'email' => $_POST['edit_email'] ?? '',
-                'phone' => $_POST['edit_phone'] ?? '',
-                'gender' => $_POST['edit_gender'] ?? '',
-                'status_marital' => $_POST['edit_status_marital'] ?? '',
-                'dependent' => (int)($_POST['edit_dependent'] ?? 0),
-                'permanent_address' => $_POST['edit_permanent_address'] ?? '',
-                'mail_address' => $_POST['edit_mail_address'] ?? '',
-                'roles_id' => $_POST['edit_roles_id'] ?? '',
-                'roles_status' => $_POST['edit_roles_status'] ?? '',
-                'profile_pic' => $profilePicName,
-                'departments_id' => (int)($_POST['edit_departments_id'] ?? 0),
-                'company_id' => (int)($_POST['edit_company_id'] ?? 0),
-                'status' => $_POST['edit_status'] ?? 'Active',
-                'pwd' => $_POST['edit_pwd'] ?? '',
-            ];
-
-            if ($this->staffModel->updateStaff($data)) {
-                $_SESSION['success'] = "Staff updated successfully!";
-            } else {
-                throw new Exception("Failed to update staff");
-            }
-
-            header("Location: ../pages/staff.php");
-            exit();
-        } catch (Exception $e) {
-            $_SESSION['error'] = $e->getMessage();
-            header("Location: ../pages/edit_staff.php?id=$id");
-            exit();
-        }
-    }
-
-    private function handleFileUpload(string $inputName, string $existingFile = ''): string {
-        if (isset($_FILES[$inputName]) && $_FILES[$inputName]['error'] === UPLOAD_ERR_OK) {
-            $fileTmpPath = $_FILES[$inputName]['tmp_name'];
-            $fileName = basename($_FILES[$inputName]['name']);
-            $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-            $allowedExt = ['jpg', 'jpeg', 'png', 'gif'];
-
-            if (!in_array($fileExt, $allowedExt)) {
-                throw new Exception("Invalid file type for profile picture");
-            }
-
-            $newFileName = uniqid('profile_', true) . '.' . $fileExt;
-            $uploadDir = '../assets/uploads/';
-
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-
-            $destPath = $uploadDir . $newFileName;
-
-            if (!move_uploaded_file($fileTmpPath, $destPath)) {
-                throw new Exception("Failed to move uploaded file");
-            }
-
-            if ($existingFile && file_exists($uploadDir . $existingFile)) {
-                unlink($uploadDir . $existingFile);
-            }
-
-            return $newFileName;
-        } elseif ($existingFile) {
-            return $existingFile;
         } else {
-            return '';
+            $roles = $this->roleModel->getAllRoles();
+            $departments = $this->departModel->getAllDepartments();
+            $companies = $this->compModel->getAllCompanies();
+            $shifts = $this->shiftModel->getAllShifts();
+            $staff = $this->staffModel->getAllStaff();
+            $generatedStaffNo = $this->staffModel->generateStaffNumber();
+
+            require_once '../pages/staff_info.php';
         }
+    }
+
+    private function redirect($path) {
+        $base_url = "http://" . $_SERVER['HTTP_HOST'] . "/Admin_Management";
+        header("Location: " . $base_url . "/" . ltrim($path, '/'));
+        exit();
     }
 }
 
-// Handle actions
-if (isset($_GET['action'])) {
-    $controller = new StaffController();
-    $action = $_GET['action'];
+// Handle the request
+session_start();
 
-    try {
-        switch ($action) {
-            case 'create':
-                $controller->create();
-                break;
-            case 'show':
-                $id = (int)($_GET['id'] ?? 0);
-                $controller->show($id);
-                break;
-            case 'save':
-                $controller->store();
-                break;
-            case 'update':
-                $controller->update();
-                break;
-            default:
-                $controller->index();
-        }
-    } catch (Exception $e) {
-        $_SESSION['error'] = "Error: " . $e->getMessage();
-        header("Location: ../pages/staff.php");
-        exit();
-    }
-} else {
-    $controller = new StaffController();
-    $controller->index();
+$controller = new StaffController();
+$action = $_GET['action'] ?? 'index';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $action = $_POST['action'];
+}
+
+switch ($action) {
+    case 'create':
+        $controller->create();
+        break;
+    case 'delete':
+        $id = $_GET['id'] ?? $_POST['id'] ?? null;
+        if ($id) $controller->delete($id);
+        break;
+    case 'index':
+    default:
+        $controller->index();
+        break;
 }

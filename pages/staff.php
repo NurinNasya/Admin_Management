@@ -320,7 +320,7 @@ try {
     </nav>
     <!-- End Navbar -->
 
-       <div class="container-fluid py-4">
+<div class="container-fluid py-4">
       <?php if (!empty($successMsg)): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
           <?= htmlspecialchars($successMsg) ?>
@@ -352,9 +352,9 @@ try {
                       <th>ID</th>
                       <th>PROFILE</th>
                       <th>NAME</th>
-                      <th>POSITION</th>
                       <th>DEPARTMENT</th>
                       <th>COMPANY</th>
+                      <th>POSITION</th>
                       <th>PHONE</th>
                       <th>ACTION</th>
                     </tr>
@@ -363,7 +363,7 @@ try {
                     <?php if (!empty($allStaff)): ?>
                       <?php foreach ($allStaff as $staff): ?>
                         <tr>
-                          <td><?= htmlspecialchars($staff['id'] ?? '') ?></td>
+                          <td><?= htmlspecialchars($staff['id'] ?? 'N/A') ?></td>
                           <td>
                             <div>
                               <img src="<?= !empty($staff['profile_pic']) ? '../uploads/' . htmlspecialchars($staff['profile_pic']) : '../assets/img/default-avatar.png' ?>" 
@@ -371,11 +371,11 @@ try {
                                    alt="Profile Picture of <?= htmlspecialchars($staff['name'] ?? 'Staff') ?>">
                             </div>
                           </td>
-                          <td><?= htmlspecialchars($staff['name'] ?? '') ?></td>
-                          <td><?= htmlspecialchars($staff['roles'] ?? '') ?></td>
-                          <td><?= htmlspecialchars($staff['departments_code'] ?? '') ?></td>
-                          <td><?= htmlspecialchars($staff['company_code'] ?? '') ?></td>
-                          <td><?= htmlspecialchars($staff['phone'] ?? '') ?></td>
+                          <td><?= htmlspecialchars($staff['name'] ?? 'N/A') ?></td>
+                          <td><?= htmlspecialchars($staff['department_name'] ?? ($staff['departments_code'] ?? 'N/A')) ?></td>
+                          <td><?= htmlspecialchars($staff['company_name'] ?? ($staff['company_code'] ?? 'N/A')) ?></td>
+                          <td><?= htmlspecialchars($staff['position'] ?? ($staff['roles'] ?? 'N/A')) ?></td>
+                          <td><?= htmlspecialchars($staff['phone'] ?? 'N/A') ?></td>
                           <td class="align-middle">
                             <div class="dropdown">
                               <button class="btn btn-sm btn-icon-only text-light" type="button" data-bs-toggle="dropdown"
@@ -386,16 +386,6 @@ try {
                                 <li>
                                   <a class="dropdown-item border-radius-md" href="edit_staff.php?id=<?= $staff['id'] ?>">
                                     <i class="fas fa-pen me-2"></i> Edit
-                                  </a>
-                                </li>
-                                <li>
-                                  <a class="dropdown-item border-radius-md" href="claim.php?id=<?= $staff['id'] ?>">
-                                    <i class="fas fa-file-medical me-2"></i> Claim
-                                  </a>
-                                </li>
-                                <li>
-                                  <a class="dropdown-item border-radius-md" href="leave.php?id=<?= $staff['id'] ?>">
-                                    <i class="fas fa-file-medical me-2"></i> Leave
                                   </a>
                                 </li>
                                 <li>
@@ -416,7 +406,7 @@ try {
                       <?php endforeach; ?>
                     <?php else: ?>
                       <tr>
-                        <td colspan="8" class="text-center">No Staff Records Found</td>
+                        <td colspan="9" class="text-center">No Staff Records Found</td>
                       </tr>
                     <?php endif; ?>
                   </tbody>
@@ -442,8 +432,8 @@ try {
         responsive: true,
         columnDefs: [
           { responsivePriority: 1, targets: 2 }, // Name
-          { responsivePriority: 2, targets: 7 }, // Actions
-          { orderable: false, targets: [1, 7] } // Disable sorting on profile pic and actions
+          { responsivePriority: 2, targets: 8 }, // Actions
+          { orderable: false, targets: [1, 8] } // Disable sorting on profile pic and actions
         ],
         language: {
           search: "_INPUT_",

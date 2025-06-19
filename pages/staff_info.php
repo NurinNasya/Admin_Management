@@ -3,18 +3,27 @@ require_once '../db.php';
 require_once '../Controller/departController.php';
 require_once '../Controller/compController.php';
 require_once '../model/Staff.php';
-require_once '../model/Role.php'; // Add this line
-require_once '../model/Branch.php';// Add this line
+require_once '../model/Role.php';
+//require_once '../model/Branch.php';
+require_once '../model/Shift.php';
+
+session_start();
 
 $departModel = new Depart();
 $compModel = new Company();
 $roleModel = new Role();
-$branchModel = new Branch();
+//$branchModel = new Branch();
+$shiftModel = new Shift();
 
-$departments = $departModel->getAllDepartments(); // returns array of id, code, name
-$companies = $compModel->getAllCompanies(); // Assuming you have this method
+$departments = $departModel->getAllDepartments();
+$companies = $compModel->getAllCompanies();
 $roles = $roleModel->getAllRoles();
-$branches = $branchModel->getAllBranches();
+//$branches = $branchModel->getAllBranches();
+$shifts = $shiftModel->getAllShifts();
+
+$staffModel = new Staff();
+$staff = $staffModel->getAllStaff();
+//$generatedStaffNo = $staffModel->generateStaffNumber();
 ?>
 
 <?php if (isset($_SESSION['error'])): ?>
@@ -296,266 +305,165 @@ $branches = $branchModel->getAllBranches();
               <h6>Personal Information</h6>
             </div>
             <div class="card-body">
-              <form method="POST" action="">
+              <form method="POST" action="/Admin_Management/Controller/staffController.php?action=create" enctype="multipart/form-data">
                 <div class="row">
-                  <div class="col-md-3">
-                    <div class="form-group">
-                      <label class="form-control-label">Identification Number <span class="text-danger">*</span></label>
-                      <input type="text" name="id_number" class="form-control" required>
-                    </div>
-                  </div>
-                  <div class="col-md-5">
-                    <div class="form-group">
-                      <label class="form-control-label">Name <span class="text-danger">*</span></label>
-                      <input type="text" name="name" class="form-control" required>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">Date of Birth <span class="text-danger">*</span></label>
-                      <input type="date" name="birth_date" class="form-control" required>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">Age</label>
-                      <input type="number" name="age" class="form-control" readonly>
-                    </div>
-                  </div>
-                </div>
+                 <!--<div class="col-md-3">
+                    <label>Staff Number</label>
+                    <input type="text" name="staff_no" class="form-control" value="<?= $generatedStaffNo ?? '' ?>" readonly>
+                  </div>-->
 
-                <div class="row mt-3">
                   <div class="col-md-3">
-                    <div class="form-group">
-                      <label class="form-control-label">Phone Number <span class="text-danger">*</span></label>
-                      <div class="input-group">
-                        <span class="input-group-text">+60</span>
-                        <input type="text" name="phone" class="form-control" required>
-                      </div>
-                    </div>
+                    <label>Full Name</label>
+                    <input type="text" name="name" class="form-control" required>
                   </div>
-                  <div class="col-md-3">
-                    <div class="form-group">
-                      <label class="form-control-label">Email <span class="text-danger">*</span></label>
-                      <input type="email" name="email" class="form-control" required>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">Marital Status</label>
-                      <select name="status" class="form-control">
-                        <option value="SINGLE">SINGLE</option>
-                        <option value="MARRIED">MARRIED</option>
-                        <option value="DIVORCED">DIVORCED</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">Gender <span class="text-danger">*</span></label>
-                      <select name="gender" class="form-control" required>
-                        <option value="">SELECT</option>
-                        <option value="MALE">MALE</option>
-                        <option value="FEMALE">FEMALE</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">Dependents</label>
-                      <input type="number" name="dependents" class="form-control">
-                    </div>
-                  </div>
-                </div>
 
-                <div class="row mt-3">
+                  <div class="col-md-3">
+                    <label>IC Number</label>
+                    <input type="text" name="noic" id="noic" maxlength="12" pattern="\d*" class="form-control" required>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label>Phone</label>
+                    <input type="text" name="phone" id="phone" maxlength="11" pattern="\d*" class="form-control" required>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control">
+                  </div>
+
+                  <div class="col-md-3">
+                    <label>Password</label>
+                    <input type="text" name="pwd" id="pwd" class="form-control" readonly required>
+                  </div>
+                 
+                  <div class="col-md-3">
+                    <label>Marital Status</label>
+                    <select name="status_marital" class="form-control">
+                      <option value="1">Single</option>
+                      <option value="2">Married</option>
+                      <option value="3">Divorced</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label>Number of Dependents</label>
+                    <input type="number" name="dependent" class="form-control" required>
+                  </div>
+
                   <div class="col-md-6">
-                    <div class="form-group">
-                      <label class="form-control-label">Permanent Address</label>
-                      <textarea name="permanent_address" class="form-control" rows="2"></textarea>
-                    </div>
+                    <label>Permanent Address</label>
+                    <textarea name="permanent_address" class="form-control" rows="2"></textarea>
                   </div>
+
                   <div class="col-md-6">
-                    <div class="form-group">
-                      <label class="form-control-label">Mailing Address</label>
-                      <textarea name="mailing_address" class="form-control" rows="2"></textarea>
-                    </div>
+                    <label>Mailing Address</label>
+                    <textarea name="mail_address" class="form-control" rows="2"></textarea>
                   </div>
-                </div>
-              </form>
-            </div>
-          </div>
 
-          <!-- Staff Information Card -->
-          <div class="card mb-4">
-            <div class="card-header pb-0">
-              <h6>Staff Information</h6>
-            </div>
-            <div class="card-body">
-              <form method="POST" action="">
-                <div class="row">
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">Staff Number</label>
-                      <input type="text" class="form-control" value="1022/0001" readonly>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">User ID <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control" name="user_id" required>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">Role <span class="text-danger">*</span></label>
-                      <select class="form-control" name="role" required>
-                        <option value="">-- Select --</option>
-                        <?php foreach ($roles as $role): ?>
-                          <option value="<?= $role['id'] ?>"><?= htmlspecialchars($role['name']) ?></option>
-                        <?php endforeach; ?>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">Department <span class="text-danger">*</span></label>
-                      <select class="form-control" name="department" required>
-                        <option value="">-- Select --</option>
-                        <?php foreach ($departments as $dept): ?>
-                          <option value="<?= $dept['id'] ?>"><?= htmlspecialchars($dept['name']) ?></option>
-                        <?php endforeach; ?>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">Branch <span class="text-danger">*</span></label>
-                      <select class="form-control" name="branch_name" required>
-                        <option value="">-- Select --</option>
-                        <?php foreach ($branches as $branch): ?>
-                          <option value="<?= $branch['id'] ?>"><?= htmlspecialchars($branch['branch_name']) ?></option>
-                        <?php endforeach; ?>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">Company <span class="text-danger">*</span></label>
-                      <select class="form-control" name="company" required>
-                        <option value="">-- Select --</option>
-                        <?php foreach ($companies as $comp): ?>
-                          <option value="<?= $comp['id'] ?>"><?= htmlspecialchars($comp['name']) ?></option>
-                        <?php endforeach; ?>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="row mt-3">
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">Work Hours <span class="text-danger">*</span></label>
-                      <input type="time" class="form-control" name="work_hours" value="08:00:00" required>
-                    </div>
-                  </div>
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">Break Hours <span class="text-danger">*</span></label>
-                      <input type="time" class="form-control" name="break_hours" value="01:00:00" required>
-                    </div>
-                  </div>
                   <div class="col-md-3">
-                    <div class="form-group">
-                      <label class="form-control-label">Start Date <span class="text-danger">*</span></label>
-                      <input type="date" class="form-control" name="start_date" value="<?= date('Y-m-d') ?>" required>
-                    </div>
+                    <label>Role</label>
+                    <select name="roles" class="form-control">
+                      <?php foreach ($roles as $r): ?>
+                        <option value="<?= $r['name'] ?>"><?= $r['name'] ?></option>
+                      <?php endforeach; ?>
+                    </select>
                   </div>
+
                   <div class="col-md-3">
-                    <div class="form-group">
-                      <label class="form-control-label">End Date</label>
-                      <input type="date" class="form-control" name="end_date">
-                    </div>
+                    <label>Role Status</label>
+                    <select name="status" class="form-control">
+                      <option value="1">Contract</option>
+                      <option value="0">Permanent</option>
+                    </select>
                   </div>
-                  <div class="col-md-2">
-                    <div class="form-group">
-                      <label class="form-control-label">Employment Status <span class="text-danger">*</span></label>
-                      <select class="form-control" name="employment_status" required>
-                        <option value="WORKING">WORKING</option>
-                        <option value="RESIGNED">RESIGNED</option>
-                        <option value="TERMINATED">TERMINATED</option>
-                      </select>
-                    </div>
+
+                  <div class="col-md-3">
+                    <label>Department</label>
+                    <select name="departments_id" class="form-control">
+                      <?php foreach ($departments as $d): ?>
+                        <option value="<?= $d['id'] ?>"><?= $d['name'] ?></option>
+                      <?php endforeach; ?>
+                    </select>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label>Company</label>
+                    <select name="company_id" class="form-control">
+                      <?php foreach ($companies as $c): ?>
+                        <option value="<?= $c['id'] ?>"><?= $c['name'] ?></option>
+                      <?php endforeach; ?>
+                    </select>
+                  </div>
+                  
+                  <div class="col-md-3">
+                    <label>Status</label>
+                    <select name="status" class="form-control">
+                      <option value="1">Active</option>
+                      <option value="0">Inactive</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label>Gender</label>
+                    <input type="text" name="gender" id="gender" class="form-control" readonly placeholder="Auto-detected">
+                  </div>
+
+                  <div class="col-md-3">
+                    <label>Shift</label>
+                    <select name="shift_id" class="form-control">
+                      <?php foreach ($shifts as $shift): ?>
+                        <option value="<?= $shift['id'] ?>"><?= $shift['description'] ?></option>
+                      <?php endforeach; ?>
+                    </select>
+                  </div>
+
+                  <!--<div class="col-md-3">
+                    <label>Leave Approval (Staff ID)</label>
+                    <select name="leave_approval" class="form-control">
+                      <?php foreach ($staff as $s): ?>
+                        <option value="<?= $s['id'] ?>"><?= $s['name'] ?> (<?= $s['staff_no'] ?>)</option>
+                      <?php endforeach; ?>
+                    </select>
+                  </div>-->
+
+                  <div class="col-md-3">
+                    <label>QR Code Status</label>
+                    <select name="status_qrcode" class="form-control">
+                      <option value="1">Enable</option>
+                      <option value="0">Disable</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label>Selfie Status</label>
+                    <select name="status_swafoto" class="form-control">
+                      <option value="1">Enable</option>
+                      <option value="0">Disable</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label>Monitoring Status</label>
+                    <select name="status_monitor" class="form-control">
+                      <option value="1">Enable</option>
+                      <option value="0">Disable</option>
+                    </select>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label>Profile Picture</label>
+                    <input type="file" name="profile_pic" class="form-control">
                   </div>
                 </div>
 
-                <div class="row mt-3">
-                  <div class="col-md-4">
-                    <div class="form-group">
-                      <label class="form-control-label">Position Level</label>
-                      <input type="text" class="form-control" name="position_level">
-                    </div>
+                <!-- You may add user session ID as created_by -->
+                <input type="hidden" name="created_by" value="<?= $_SESSION['user_id'] ?? 0 ?>">
+
+                <div class="row mt-4">
+                  <div class="col-md-12 text-end">
+                    <button type="submit" class="btn btn-primary">Submit</button>
                   </div>
-                  <div class="col-md-2">
-                    <div class="form-group">
-                        <label class="form-control-label">Attendance Tracking</label>
-                        <div class="d-flex">
-                        <div class="form-check me-3">
-                            <input class="form-check-input" type="radio" name="attendance_tracking" id="attendance_yes" value="YES" checked>
-                            <label class="form-check-label" for="attendance_yes">YES</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="attendance_tracking" id="attendance_no" value="NO">
-                            <label class="form-check-label" for="attendance_no">NO</label>
-                        </div>
-                        </div>
-                    </div>
-                    </div>
-                    <div class="col-md-2">
-                    <div class="form-group">
-                        <label class="form-control-label">QR Status</label>
-                        <div class="d-flex">
-                        <div class="form-check me-3">
-                            <input class="form-check-input" type="radio" name="qr_status" id="qr_yes" value="YES">
-                            <label class="form-check-label" for="qr_yes">YES</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="qr_status" id="qr_no" value="NO" checked>
-                            <label class="form-check-label" for="qr_no">NO</label>
-                        </div>
-                        </div>
-                    </div>
-                    </div>
-                    <div class="col-md-2">
-                    <div class="form-group">
-                        <label class="form-control-label">Selfie Status</label>
-                        <div class="d-flex">
-                        <div class="form-check me-3">
-                            <input class="form-check-input" type="radio" name="selfie_status" id="selfie_yes" value="YES" checked>
-                            <label class="form-check-label" for="selfie_yes">YES</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="selfie_status" id="selfie_no" value="NO">
-                            <label class="form-check-label" for="selfie_no">NO</label>
-                        </div>
-                        </div>
-                    </div>
-                    </div>
-                    <div class="col-md-2">
-                    <div class="form-group">
-                        <label class="form-control-label">Tag Status</label>
-                        <div class="d-flex">
-                        <div class="form-check me-3">
-                            <input class="form-check-input" type="radio" name="tag_status" id="tag_yes" value="YES">
-                            <label class="form-check-label" for="tag_yes">YES</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="tag_status" id="tag_no" value="NO" checked>
-                            <label class="form-check-label" for="tag_no">NO</label>
-                        </div>
-                        </div>
-                    </div>
-                    </div>
                 </div>
               </form>
             </div>
@@ -860,6 +768,47 @@ $branches = $branchModel->getAllBranches();
   <!-- Bootstrap JS Bundle with Popper -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const icInput = document.querySelector('input[name="noic"]');
+      const phoneInput = document.querySelector('input[name="phone"]');
+      const genderInput = document.getElementById('gender');
+      const pwdInput = document.querySelector('input[name="pwd"]');
+
+      function updateGenderAndPassword() {
+        const ic = icInput.value.trim();
+        const phone = phoneInput.value.trim();
+
+        // Auto-detect gender (last digit of IC)
+        if (ic.length === 12) {
+          const lastDigit = parseInt(ic[ic.length - 1]);
+          genderInput.value = (lastDigit % 2 === 0) ? 'F' : 'M';
+        } else {
+          genderInput.value = '';
+        }
+
+        // Generate password: last 6 of IC + '@' + last 4 of phone
+        if (ic.length === 12 && phone.length === 11) {
+          const icLast6 = ic.slice(-6);
+          const phoneLast4 = phone.slice(-4);
+          pwdInput.value = `${icLast6}@${phoneLast4}`;
+        } else {
+          pwdInput.value = '';
+        }
+      }
+
+      icInput.addEventListener('input', function (e) {
+        this.value = this.value.replace(/\D/g, '').slice(0, 12); // Only digits, max 12
+        updateGenderAndPassword();
+      });
+
+      phoneInput.addEventListener('input', function (e) {
+        this.value = this.value.replace(/\D/g, '').slice(0, 11); // Only digits, max 11
+        updateGenderAndPassword();
+      });
+    });
+  </script>
+
   <script>
     // These functions would be connected to your backend in a real application
     function saveEducation() {

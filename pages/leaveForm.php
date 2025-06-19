@@ -1,3 +1,32 @@
+<?php
+session_start();
+require_once '../db.php';
+require_once '../Model/LeaveForm.php';
+
+// Initialize variables
+$staff_id = $_SESSION['staff_id'] ?? 1; // Default or get from session
+$current_page = basename($_SERVER['PHP_SELF']);
+$user_id = $_SESSION['user_id'] ?? 1;
+$user_name = $_SESSION['user_name'] ?? 'User';
+
+// Initialize LeaveForm model
+$leaveForm = new LeaveForm($conn);
+
+// Get all leaves for current staff
+$leaves = $leaveForm->getAllLeaves($staff_id);
+
+// Handle messages
+$message = '';
+$error = '';
+if (isset($_GET['msg'])) {
+    $message = urldecode($_GET['msg']);
+}
+if (isset($_GET['error'])) {
+    $error = urldecode($_GET['error']);
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -18,10 +47,46 @@
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
   <!-- CSS Files -->
   <link id="pagestyle" href="../assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" />
+  <!-- Custom CSS untuk notifikasi -->
+  <style>
+    /* Style untuk notifikasi */
+    .alert {
+    width: 100%;
+    max-width: 100%;
+    font-size: 12px;
+}
+    .alert-text {
+     white-space: normal;
+    word-wrap: break-word;
+}
+    /* tak boh beri dok tertutup  sidebar */
+    .sidenav {
+      z-index: 10;
+    }
+    
+    /*  untuk ukuran font dasar */
+    body {
+      font-size: 16px;
+
+
+      .card-header {
+      background-color: #f8f9fa; /* Warna background untuk header card */
+    }
+    .alert {
+      font-size: 14px !important; /* Pastikan saiz font konsisten */
+    }
+    }
+</style>
 </head>
 
-<body class="g-sidenav-show   bg-gray-100">
+
+<!-- ini bahagian notifikasi nak ubah butang -->
+  <body class="g-sidenav-show bg-gray-100">
+  
+  <!-- Notifikasi baru (posisi di bawah header) -->
+
   <div class="min-height-300 bg-dark position-absolute w-100"></div>
+  
   <aside class="sidenav bg-white navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-4 " id="sidenav-main">
     <div class="sidenav-header">
       <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
@@ -89,14 +154,7 @@
           </ul>
         </div>
       </li>
-        <!--<li class="nav-item">
-          <a class="nav-link " href="../pages/virtual-reality.html">
-            <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
-              <i class="ni ni-app text-dark text-sm opacity-10"></i>
-            </div>
-            <span class="nav-link-text ms-1">Virtual Reality</span>
-          </a>
-        </li>-->
+        
         <li class="nav-item">
           <a class="nav-link " href="../pages/rtl.html">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
@@ -121,7 +179,7 @@
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-single-copy-04 text-dark text-sm opacity-10"></i>
             </div>
-            <span class="nav-link-text ms-1">Sign In</span>
+            <!--<span class="nav-link-text ms-1">Sign In</span>-->
           </a>
         </li>
         <li class="nav-item">
@@ -144,148 +202,125 @@
     </div>
   </aside> <!--smpai sini-->>
     <main class="main-content position-relative border-radius-lg">
+            
             <!-- Navbar -->
-            <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
-            <div class="container-fluid py-1 px-3">
-                <nav aria-label="breadcrumb">
-                <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
-                    <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Settings</a></li>
-                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Work Shift</li>
-                </ol>
-                <h6 class="font-weight-bolder text-white mb-0">Work Shift</h6>
-                </nav>
-                <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
-                <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-                    <div class="input-group">
-                    <span class="input-group-text text-body"><i class="fas fa-search" aria-hidden="true"></i></span>
-                    <input type="text" class="form-control" placeholder="Type here...">
-                    </div>
-                </div>
-                <ul class="navbar-nav  justify-content-end">
-                    <li class="nav-item d-flex align-items-center">
-                    <a href="javascript:;" class="nav-link text-white font-weight-bold px-0">
-                        <i class="fa fa-user me-sm-1"></i>
-                        <span class="d-sm-inline d-none">Sign In</span>
-                    </a>
-                    </li>
-                    <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
+<nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl" id="navbarBlur" data-scroll="false">
+    <div class="container-fluid py-1 px-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
+                <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Settings</a></li>
+                <li class="breadcrumb-item text-sm text-white active" aria-current="page">Work Shift</li>
+            </ol>
+            <h6 class="font-weight-bolder text-white mb-0">Leave Application</h6>
+        </nav>
+        <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
+            <div class="ms-md-auto pe-md-3 d-flex align-items-center">
+                <!-- Ruang kosong untuk nak tambah apa2 elemen tambahan di masa depan -->
+            </div>
+            <ul class="navbar-nav justify-content-end">
+                <li class="nav-item d-xl-none ps-3 d-flex align-items-center">
                     <a href="javascript:;" class="nav-link text-white p-0" id="iconNavbarSidenav">
                         <div class="sidenav-toggler-inner">
-                        <i class="sidenav-toggler-line bg-white"></i>
-                        <i class="sidenav-toggler-line bg-white"></i>
-                        <i class="sidenav-toggler-line bg-white"></i>
+                            <i class="sidenav-toggler-line bg-white"></i>
+                            <i class="sidenav-toggler-line bg-white"></i>
+                            <i class="sidenav-toggler-line bg-white"></i>
                         </div>
                     </a>
-                    </li>
-                    <li class="nav-item px-3 d-flex align-items-center">
+                </li>
+                <li class="nav-item px-3 d-flex align-items-center">
                     <a href="javascript:;" class="nav-link text-white p-0">
                         <i class="fa fa-cog fixed-plugin-button-nav cursor-pointer"></i>
                     </a>
-                    </li>
-                    <li class="nav-item dropdown pe-2 d-flex align-items-center">
-                    <a href="javascript:;" class="nav-link text-white p-0" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fa fa-bell cursor-pointer"></i>
-                    </a>
-                    <ul class="dropdown-menu  dropdown-menu-end  px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButton">
-                        <li class="mb-2">
-                        <a class="dropdown-item border-radius-md" href="javascript:;">
-                            <div class="d-flex py-1">
-                            <div class="my-auto">
-                                <img src="../assets/img/team-2.jpg" class="avatar avatar-sm  me-3 ">
-                            </div>
-                            <div class="d-flex flex-column justify-content-center">
-                                <h6 class="text-sm font-weight-normal mb-1">
-                                <span class="font-weight-bold">New message</span> from Laur
-                                </h6>
-                                <p class="text-xs text-secondary mb-0">
-                                <i class="fa fa-clock me-1"></i>
-                                13 minutes ago
-                                </p>
-                            </div>
-                            </div>
-                        </a>
-                        </li>
-                        <li class="mb-2">
-                        <a class="dropdown-item border-radius-md" href="javascript:;">
-                            <div class="d-flex py-1">
-                            <div class="my-auto">
-                                <img src="../assets/img/small-logos/logo-spotify.svg" class="avatar avatar-sm bg-gradient-dark  me-3 ">
-                            </div>
-                            <div class="d-flex flex-column justify-content-center">
-                                <h6 class="text-sm font-weight-normal mb-1">
-                                <span class="font-weight-bold">New album</span> by Travis Scott
-                                </h6>
-                                <p class="text-xs text-secondary mb-0">
-                                <i class="fa fa-clock me-1"></i>
-                                1 day
-                                </p>
-                            </div>
-                            </div>
-                        </a>
-                        </li>
-                        <li>
-                        <a class="dropdown-item border-radius-md" href="javascript:;">
-                            <div class="d-flex py-1">
-                            <div class="avatar avatar-sm bg-gradient-secondary  me-3  my-auto">
-                                <svg width="12px" height="12px" viewBox="0 0 43 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-                                <title>credit-card</title>
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <g transform="translate(-2169.000000, -745.000000)" fill="#FFFFFF" fill-rule="nonzero">
-                                    <g transform="translate(1716.000000, 291.000000)">
-                                        <g transform="translate(453.000000, 454.000000)">
-                                        <path class="color-background" d="M43,10.7482083 L43,3.58333333 C43,1.60354167 41.3964583,0 39.4166667,0 L3.58333333,0 C1.60354167,0 0,1.60354167 0,3.58333333 L0,10.7482083 L43,10.7482083 Z" opacity="0.593633743"></path>
-                                        <path class="color-background" d="M0,16.125 L0,32.25 C0,34.2297917 1.60354167,35.8333333 3.58333333,35.8333333 L39.4166667,35.8333333 C41.3964583,35.8333333 43,34.2297917 43,32.25 L43,16.125 L0,16.125 Z M19.7083333,26.875 L7.16666667,26.875 L7.16666667,23.2916667 L19.7083333,23.2916667 L19.7083333,26.875 Z M35.8333333,26.875 L28.6666667,26.875 L28.6666667,23.2916667 L35.8333333,23.2916667 L35.8333333,26.875 Z"></path>
-                                        </g>
-                                    </g>
-                                    </g>
-                                </g>
-                                </svg>
-                            </div>
-                            <div class="d-flex flex-column justify-content-center">
-                                <h6 class="text-sm font-weight-normal mb-1">
-                                Payment successfully completed
-                                </h6>
-                                <p class="text-xs text-secondary mb-0">
-                                <i class="fa fa-clock me-1"></i>
-                                2 days
-                                </p>
-                            </div>
-                            </div>
-                        </a>
-                        </li>
-                    </ul>
-                    </li>
-                </ul>
-                </div>
-            </div>
-            </nav>
+                </li>
+               <li class="nav-item pe-2 d-flex align-items-center">
+    <a href="javascript:;" class="nav-link text-white p-0">
+        <i class="fa fa-bell cursor-pointer"></i>
+    </a>
+</li>
+            </ul>
+        </div>
+    </div>
+</nav>
             <!-- End Navbar -->
 
  <div class="container-fluid py-4">
       <div class="row">
         <div class="col-12">
           <div class="card mb-4">
-            <div class="card-header pb-0 d-flex justify-content-between align-items-center">
-              <h6>Leave Applications</h6>
-              <button class="btn btn-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#addLeaveModal">
-                <i class="ni ni-fat-add"></i> Apply Leave
-              </button>
-            </div>
+           <div class="card-header pb-0">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h5 class="mb-2">Leave Applications</h5>
+      
+      <!-- Notifikasi Alert (KIRI) -->
+      <div class="d-flex flex-column w-100"> <!-- Ubah width ke 100% -->
+        <?php if ($message): ?>
+        <div class="alert alert-success alert-dismissible fade show mb-2" role="alert" style="font-size: 14px;">
+          <span class="alert-text"><?= $message ?></span>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <?php endif; ?>
+        
+        <?php if ($error): ?>
+        <div class="alert alert-danger alert-dismissible fade show mb-2" role="alert" style="font-size: 14px;">
+          <span class="alert-text"><?= $error ?></span>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <?php endif; ?>
+      </div>
+      
+      <!-- Text "Total leaves" -->
+      <p class="text-dark mb-0" style="font-size: 14px; font-weight: 500;">Total leaves: <?= count($leaves) ?></p>
+    </div>
+    
+    <div>
+      <button class="btn btn-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#addLeaveModal">
+        <i class="ni ni-fat-add"></i> Apply Leave
+      </button>
+    </div>
+  </div>
+</div>
             <div class="card-body px-0 pt-0 pb-2">
               <div class="table-responsive p-0">
+                <!--kita masukkkan benda baru dekat sini sb nak kasi interface display testing2  -->
                 <table class="table align-items-center mb-0 leave-table">
-                  <thead>
-                    <tr>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Leave Type</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Start Date</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">End Date</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Total Days</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Application Date</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
-                    </tr>
-                  </thead>
-                </table>
+                <thead>
+                <tr>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Leave Type</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Start Date</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">End Date</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Total Days</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Application Date</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($leaves as $leave): ?>
+                <tr>
+        <td class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($leave['leave_type']) ?></td>
+        <td class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($leave['start_date']) ?></td>
+        <td class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($leave['end_date']) ?></td>
+        <td class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($leave['total_days']) ?></td>
+        <td class="text-xs font-weight-bold mb-0"><?= htmlspecialchars($leave['application_date']) ?></td>
+        <td class="text-xs font-weight-bold mb-0">
+        <span class="badge badge-sm bg-gradient-<?= 
+          $leave['status'] === 'Approved' ? 'success' : 
+          ($leave['status'] === 'Rejected' ? 'danger' : 'warning') 
+        ?>">
+          <?= htmlspecialchars($leave['status']) ?>
+        </span>
+      </td>
+      <td class="text-xs font-weight-bold mb-0">
+        <a href="#" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editLeaveModal" 
+           onclick="editLeave(<?= $leave['id'] ?>)">Edit</a>
+        <a href="../Controller/LeaveFormController.php?action=delete&id=<?= $leave['id'] ?>" 
+           class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+      </td>
+    </tr>
+    <?php endforeach; ?>
+  </tbody>
+</table>
               </div>
             </div>
           </div>
@@ -303,7 +338,7 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form action="../Controller/leaveController.php?action=add" method="post" enctype="multipart/form-data">
+          <form action="../Controller/LeaveFormController.php?action=add" method="post" enctype="multipart/form-data">
             <input type="hidden" name="staff_id" value="<?= $staff_id ?>">
             <input type="hidden" name="created_by" value="<?= $_SESSION['user_id'] ?? 1 ?>">
 
@@ -366,35 +401,172 @@
     </div>
   </div>
 
-  <!--   Core JS Files   -->
+   <!-- ni butang edit model -->
+<div class="modal fade" id="editLeaveModal" tabindex="-1" aria-labelledby="editLeaveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="editLeaveModalLabel">Edit Leave Application</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="../Controller/LeaveFormController.php?action=edit" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="id" id="edit_id">
+                    <input type="hidden" name="existing_document" id="existing_document">
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit_leave_type" class="form-label">Leave Type</label>
+                            <select class="form-select" id="edit_leave_type" name="leave_type" required>
+                                <option value="" disabled>Select leave type</option>
+                                <option value="Medical Leave">Medical Leave</option>
+                                <option value="Annual Leave">Annual Leave</option>
+                                <option value="Unpaid Leave">Unpaid Leave</option>
+                                <option value="Maternity Leave">Maternity Leave</option>
+                                <option value="Paternity Leave">Paternity Leave</option>
+                                <option value="Compassionate Leave">Compassionate Leave</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_application_date" class="form-label">Application Date</label>
+                            <input type="date" class="form-control" id="edit_application_date" name="application_date" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit_start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="edit_start_date" name="start_date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="edit_end_date" name="end_date" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="edit_total_days" class="form-label">Total Days</label>
+                            <input type="number" class="form-control" id="edit_total_days" name="total_days" step="0.5" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Current Document</label>
+                            <div id="current_document"></div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3" id="edit_document_upload_container" style="display: none;">
+                        <div class="col-md-12">
+                            <label for="edit_leave_document" class="form-label">Upload New Document</label>
+                            <input type="file" class="form-control" id="edit_leave_document" name="leave_document" accept=".pdf,.jpg,.jpeg,.png">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_reason" class="form-label">Reason</label>
+                        <textarea class="form-control" id="edit_reason" name="reason" rows="3" required></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-info">Update Leave</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- mesej nok hilang notifikasi selepas 3 saat  -->
+<script>
+  setTimeout(() => {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+      alert.remove();
+    });
+  }, 3000);
+</script>
+
+    <!--   Core JS Files   -->
   <script src="../assets/js/core/popper.min.js"></script>
   <script src="../assets/js/core/bootstrap.min.js"></script>
   <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
   <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
-  <script>
-    // Show document upload only for Medical Leave
-    document.getElementById('leave_type').addEventListener('change', function() {
-      const docContainer = document.getElementById('document_upload_container');
-      docContainer.style.display = this.value === 'Medical Leave' ? 'block' : 'none';
-      
-      // Make document required only for Medical Leave
-      document.getElementById('leave_document').required = this.value === 'Medical Leave';
-    });
+ <script>
+  // Show document upload only for Medical Leave
+  document.getElementById('leave_type').addEventListener('change', function() {
+    const docContainer = document.getElementById('document_upload_container');
+    docContainer.style.display = this.value === 'Medical Leave' ? 'block' : 'none';
+    
+    document.getElementById('leave_document').required = this.value === 'Medical Leave';
+  });
 
-    // Calculate total days when dates change
-    document.getElementById('start_date').addEventListener('change', calculateDays);
-    document.getElementById('end_date').addEventListener('change', calculateDays);
+  document.getElementById('start_date').addEventListener('change', calculateDays);
+  document.getElementById('end_date').addEventListener('change', calculateDays);
 
-    function calculateDays() {
-      const startDate = new Date(document.getElementById('start_date').value);
-      const endDate = new Date(document.getElementById('end_date').value);
-      
-      if (startDate && endDate && endDate >= startDate) {
+  function calculateDays() {
+    const startDate = new Date(document.getElementById('start_date').value);
+    const endDate = new Date(document.getElementById('end_date').value);
+    
+    if (startDate && endDate && endDate >= startDate) {
+      const diffTime = Math.abs(endDate - startDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      document.getElementById('total_days').value = diffDays;
+    }
+  }
+
+  // ini adalah function nak edit leave form tuuu
+  function editLeave(id) {
+    // Fetch leave details via AJAX
+    fetch(`../Controller/LeaveFormController.php?action=getLeave&id=${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data) {
+                // Populate the form with the retrieved data
+                document.getElementById('edit_id').value = data.id;
+                document.getElementById('edit_leave_type').value = data.leave_type;
+                document.getElementById('edit_start_date').value = data.start_date;
+                document.getElementById('edit_end_date').value = data.end_date;
+                document.getElementById('edit_total_days').value = data.total_days;
+                document.getElementById('edit_application_date').value = data.application_date;
+                document.getElementById('edit_reason').value = data.reason;
+                
+                // Handle document display
+                if (data.leave_document) {
+                    document.getElementById('existing_document').value = data.leave_document;
+                    document.getElementById('current_document').innerHTML = 
+                        `<a href="../uploads/leave_documents/${data.leave_document}" target="_blank">View Current Document</a>`;
+                } else {
+                    document.getElementById('current_document').innerHTML = 'No document uploaded';
+                }
+                
+                // Show document upload if medical leave
+                const docContainer = document.getElementById('edit_document_upload_container');
+                docContainer.style.display = data.leave_type === 'Medical Leave' ? 'block' : 'none';
+                
+                // Add event listener for leave type change
+                document.getElementById('edit_leave_type').addEventListener('change', function() {
+                    docContainer.style.display = this.value === 'Medical Leave' ? 'block' : 'none';
+                });
+                
+                // Add event listeners for date changes to calculate days
+                document.getElementById('edit_start_date').addEventListener('change', editCalculateDays);
+                document.getElementById('edit_end_date').addEventListener('change', editCalculateDays);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+  }
+
+  function editCalculateDays() {
+    const startDate = new Date(document.getElementById('edit_start_date').value);
+    const endDate = new Date(document.getElementById('edit_end_date').value);
+    
+    if (startDate && endDate && endDate >= startDate) {
         const diffTime = Math.abs(endDate - startDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-        document.getElementById('total_days').value = diffDays;
-      }
+        document.getElementById('edit_total_days').value = diffDays;
     }
-  </script>
+  }
+</script>
 </body>
 </html>
