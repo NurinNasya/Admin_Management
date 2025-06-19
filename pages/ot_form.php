@@ -1,6 +1,3 @@
-<?php include '../Controller/medicalClaimController.php'; ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -53,7 +50,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link <?php echo ($current_page == 'staff.php') ? 'active' : ''; ?>" href="../pages/staff.php">
+          <a class="nav-link " href="../pages/staff.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
@@ -145,17 +142,19 @@
         </div>
       </div>
     </div>
-  </aside> <!--smpai sini-->>
-    <main class="main-content position-relative border-radius-lg">
-            <!-- Navbar -->
+  </aside>
+
+<!--main content-->
+<main class="main-content position-relative border-radius-lg">
+  <!-- Navbar -->
             <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
             <div class="container-fluid py-1 px-3">
                 <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Settings</a></li>
-                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Work Shift</li>
+                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">  Overtime</li>
                 </ol>
-                <h6 class="font-weight-bolder text-white mb-0">Work Shift</h6>
+                <h6 class="font-weight-bolder text-white mb-0">Overtime</h6>
                 </nav>
                 <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
                 <div class="ms-md-auto pe-md-3 d-flex align-items-center">
@@ -261,326 +260,70 @@
                 </ul>
                 </div>
             </div>
-            </nav>
-            <!-- End Navbar -->
+          </nav>
 
-<div class="container-fluid py-4">
+  <div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12 mb-4">
       <div class="card">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-          <h3 class="mb-0">Medical Claims</h3>
-          <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#medicalClaimModal">
-            <i class="fas fa-plus-circle me-2"></i>Add Claim
-          </button>
+        <div class="card-header pb-0">
+          <h5 class="mb-0">Overtime Submission Form</h5>
         </div>
-        
         <div class="card-body">
-          <table class="table table-bordered table-striped mt-3">
-            <thead class="table-dark">
-              <tr>
-                <th>Period (Start-End)</th>
-                <th>Entitled Balance</th>
-                <th>Used</th>
-                <th>Current Balance</th>
-                <th>Pending Approval</th>
-                <th>Available Balance</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="claimsTableBody"></tbody>
-          </table>
-        </div>
-        <nav aria-label="Current claims pagination">
-                <ul class="pagination justify-content-center" id="currentClaimsPagination">
-                    <!-- Pagination will be inserted here by JavaScript -->
-                </ul>
-            </nav>
-      </div>
-    </div>
-
-    <!-- Medical Claim Modal -->
-    <div class="modal fade" id="medicalClaimModal" tabindex="-1" aria-labelledby="medicalClaimModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="medicalClaimModalLabel">Add Medical Claim</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="reminder-box alert alert-info">
-              <h6><i class="fas fa-exclamation-circle me-2"></i>Reminder</h6>
-              <ol>
-                <li>Please attach supporting documents</li>
-                <li>The form must be verified by human resource department</li>
-                <li>Claims will be deducted from your available balance</li>
-              </ol>
+          <form action="submit_ot_form.php" method="POST" enctype="multipart/form-data">
+            <div class="row mb-3">
+              <div class="col">
+                <label class="form-label">OT Date ID</label>
+                <input type="text" name="ot_date_id" class="form-control" placeholder="Enter OT Date ID" required>
+              </div>
+              <div class="col">
+                <label class="form-label">OT Permission ID</label>
+                <input type="text" name="ot_permission_id" class="form-control" placeholder="Enter Permission ID" required>
+              </div>
             </div>
 
-            <form id="medicalClaimForm" method="POST" enctype="multipart/form-data" action="../Controller/medicalClaimController.php">
-
-
-              <h6 class="mb-3">Medical Claim Form</h6>
-              
               <div class="row mb-3">
-                <div class="col-md-6">
-                  <label for="startDate" class="form-label">Start Date <span class="text-danger">*</span></label>
-                  <input type="date" class="form-control" id="startDate" required>
-                </div>
-                <div class="col-md-6">
-                  <label for="endDate" class="form-label">End Date <span class="text-danger">*</span></label>
-                  <input type="date" class="form-control" id="endDate" required>
-                </div>
+              <div class="col">
+                <label class="form-label">Start Time</label>
+                <input type="time" name="start_time" class="form-control" required>
               </div>
-              
-              <div class="row mb-3">
-                <div class="col-md-6">
-                  <label for="receiptDate" class="form-label">Receipt Date <span class="text-danger">*</span></label>
-                  <input type="date" class="form-control" id="receiptDate" required>
-                </div>
-                <div class="col-md-6">
-                  <label for="receiptAmount" class="form-label">Amount (RM) <span class="text-danger">*</span></label>
-                  <input type="form-control" step="0.01" class="form-control" id="receiptAmount" required>
-                </div>
+              <div class="col">
+                <label class="form-label">End Time</label>
+                <input type="time" name="end_time" class="form-control" required>
               </div>
-              
-              <div class="mb-3">
-                <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
-                <textarea class="form-control" id="description" rows="2" required placeholder="Brief description of medical treatment"></textarea>
-              </div>
-              
-              <div class="mb-4">
-                <label for="attachment" class="form-label">Attachment <span class="text-danger">*</span> (pdf/jpg/png/HEIC/HEIF)</label>
-                <input type="file" class="form-control" id="attachment" accept=".pdf,.jpg,.jpeg,.png,.heic,.heif" required>
-                <small class="text-muted">Max file size: 5MB</small>
-              </div>
-              
-              <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary">
-                  <i class="fas fa-paper-plane me-2"></i>Submit Claim
-                </button>
-              </div>
-            </form>
-          </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Remarks</label>
+              <textarea name="remarks" class="form-control" rows="3" placeholder="Enter remarks..."></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Supporting Document (PDF or Image)</label>
+              <input type="file" name="supporting_file" class="form-control" accept=".pdf, image/*">
+            </div>
+
+            <button type="submit" class="btn btn-dark">Submit Overtime</button>
+          </form>
         </div>
       </div>
     </div>
-
-
-        <!-- History Claims Table -->
-      <div class="container-fluid py-4">
-      <div class="card">
-        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-            <h3 class="mb-0">History Claims</h3>
-        </div>
-        <div class="card-body">
-            <table class="table table-bordered table-striped">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Date Submitted</th>
-                        <th>Period (Start-End)</th>
-                        <th>Claim Amount</th>
-                        <th>Status</th>
-                        <th>Approved By</th>
-                        <th>Approval Date</th>
-                        <th>Receipt</th>
-                    </tr>
-                </thead>
-                <tbody id="historyTableBody"></tbody>
-                </table>
-            </div>
-            <nav aria-label="History claims pagination">
-                <ul class="pagination justify-content-center" id="historyClaimsPagination">
-                    <!-- Pagination will be inserted here by JavaScript -->
-                </ul>
-            </nav>
-        </div>
-    </div>
+  </div>
 </div>
-  </main>
-
-  <!-- Bootstrap JS Bundle with Popper -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // Main application controller
-    document.addEventListener('DOMContentLoaded', function() {
-      // Initialize date fields
-      initDates();
-      
-      // Setup form submission handler
-      setupFormSubmission();
-      
-      // Setup table event handlers
-      setupTableEvents();
-    });
-
-    // Initialize date fields with default values
-    function initDates() {
-      const today = new Date();
-      const oneYearLater = new Date();
-      oneYearLater.setFullYear(today.getFullYear() + 1);
-      
-      document.getElementById('receiptDate').valueAsDate = today;
-      document.getElementById('startDate').valueAsDate = today;
-      document.getElementById('endDate').valueAsDate = oneYearLater;
-    }
-
-    // Configure form submission handler
-    function setupFormSubmission() {
-      const form = document.getElementById('medicalClaimForm');
-      
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Process form submission
-        const claimData = getFormData();
-        logSubmission(claimData);
-        addClaimToTable(claimData);
-        showSuccessMessage();
-        resetForm();
-        closeModal();
-      });
-    }
-
-    // Get form data as an object
-    function getFormData() {
-      return {
-        startDate: document.getElementById('startDate').value,
-        endDate: document.getElementById('endDate').value,
-        receiptDate: document.getElementById('receiptDate').value,
-        amount: parseFloat(document.getElementById('receiptAmount').value),
-        description: document.getElementById('description').value
-      };
-    }
-
-    // Log submission data (would be API call in real app)
-    function logSubmission(data) {
-      console.log('Claim submitted:', data);
-    }
-
-    // Add new claim to the table
-    function addClaimToTable(data) {
-      const tbody = document.getElementById('claimsTableBody');
-      const demoValues = getDemoBalanceValues(data.amount);
-      
-      const newRow = document.createElement('tr');
-      newRow.innerHTML = createTableRowHTML(data, demoValues);
-      tbody.insertBefore(newRow, tbody.firstChild);
-    }
-
-   function getDemoBalanceValues(newAmount = 0, previousAvailableBalance = null) {
-  // For first row: fixed entitled balance (1000.00)
-  // For subsequent rows: previous available balance becomes entitled balance
-  const entitledBalance = previousAvailableBalance !== null ? previousAvailableBalance : 1000.00;
-  
-  // Used amount is ONLY what the user enters (no initial 300.00)
-  const usedAmount = newAmount;
-  
-  // Current balance is entitled minus used
-  const currentBalance = entitledBalance - usedAmount;
-  
-  // Pending amount starts at 0 (only grows when requests are awaiting approval)
-  const pendingAmount = 0;
-  
-  // Available balance is current minus pending (since pending amounts are reserved)
-  const availableBalance = currentBalance - pendingAmount;
-  
-  return {
-    entitledBalance,
-    usedAmount,
-    currentBalance,
-    pendingAmount,
-    availableBalance
-  };
-}
-
-    // Create HTML for table row
-    function createTableRowHTML(data, balances) {
-      return `
-        <td>${data.startDate} to ${data.endDate}</td>
-        <td>${balances.entitledBalance.toFixed(2)}</td>
-        <td>${balances.usedAmount.toFixed(2)}</td>
-        <td>${balances.currentBalance.toFixed(2)}</td>
-        <td>${balances.pendingAmount.toFixed(2)} <span class="badge bg-warning">Pending HOD</span></td>
-        <td>${balances.availableBalance.toFixed(2)}</td>
-        <td>
-          <button class="btn btn-sm btn-warning me-1">Edit</button>
-          <button class="btn btn-sm btn-danger">Delete</button>
-        </td>
-      `;
-    }
-
-    // Show success message
-    function showSuccessMessage() {
-      alert('Medical claim submitted successfully! It is now pending approval.');
-    }
-
-    // Reset form fields
-    function resetForm() {
-      document.getElementById('medicalClaimForm').reset();
-      document.getElementById('receiptDate').valueAsDate = new Date();
-    }
-
-    // Close the modal
-    function closeModal() {
-      const modal = bootstrap.Modal.getInstance(document.getElementById('medicalClaimModal'));
-      modal.hide();
-    }
-
-    // Setup table event handlers
-    function setupTableEvents() {
-      document.getElementById('claimsTableBody').addEventListener('click', function(e) {
-        if (e.target.classList.contains('btn-warning')) {
-          handleEditClick(e);
-        } else if (e.target.classList.contains('btn-danger')) {
-          handleDeleteClick(e);
-        }
-      });
-    }
-
-    // Handle edit button click
-    function handleEditClick(event) {
-      const row = event.target.closest('tr');
-      alert('Edit functionality would load claim data into the modal for editing');
-    }
-
-    // Handle delete button click
-    function handleDeleteClick(event) {
-      if (confirm('Are you sure you want to delete this claim?')) {
-        const row = event.target.closest('tr');
-        row.remove();
-        alert('Claim deleted (this would be permanent in a real app)');
-      }
-    }
-    // Function to add a claim to history table (would be called when a claim is approved)
-function addToHistoryTable(claimData, status, approvedBy) {
-    const tbody = document.getElementById('historyTableBody');
-    const approvalDate = new Date().toISOString().split('T')[0];
-    
-    const newRow = document.createElement('tr');
-    newRow.innerHTML = `
-        <td>${new Date().toISOString().split('T')[0]}</td>
-        <td>${claimData.startDate} to ${claimData.endDate}</td>
-        <td>${claimData.amount.toFixed(2)}</td>
-        <td><span class="badge ${getStatusBadgeClass(status)}">${status}</span></td>
-        <td>${approvedBy}</td>
-        <td>${approvalDate}</td>
-        <td><a href="#" class="btn btn-sm btn-info">View</a></td>
-    `;
-    
-    tbody.insertBefore(newRow, tbody.firstChild);
-}
-
-// Helper function to get badge class based on status
-function getStatusBadgeClass(status) {
-    switch(status.toLowerCase()) {
-        case 'approved': return 'bg-success';
-        case 'rejected': return 'bg-danger';
-        case 'completed': return 'bg-primary';
-        default: return 'bg-secondary';
-    }
-}
-
-// Example usage (would be called when a claim is approved)
-// addToHistoryTable(claimData, 'Approved', 'John Doe (HOD)');
-  </script>
+</main>
+<!-- Core JS Files -->
+<script src="../assets/js/core/popper.min.js"></script>
+<script src="../assets/js/core/bootstrap.min.js"></script>
+<script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
+<script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
+<script>
+  var win = navigator.platform.indexOf('Win') > -1;
+  if (win && document.querySelector('#sidenav-scrollbar')) {
+    var options = { damping: '0.5' }
+    Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+  }
+</script>
+<!-- Argon JS -->
+<script src="../assets/js/argon-dashboard.min.js?v=2.1.0"></script>
 </body>
 </html>
