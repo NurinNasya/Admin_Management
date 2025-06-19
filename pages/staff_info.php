@@ -4,7 +4,7 @@ require_once '../Controller/departController.php';
 require_once '../Controller/compController.php';
 require_once '../model/Staff.php';
 require_once '../model/Role.php';
-require_once '../model/Branch.php';
+//require_once '../model/Branch.php';
 require_once '../model/Shift.php';
 
 session_start();
@@ -12,13 +12,13 @@ session_start();
 $departModel = new Depart();
 $compModel = new Company();
 $roleModel = new Role();
-$branchModel = new Branch();
+//$branchModel = new Branch();
 $shiftModel = new Shift();
 
 $departments = $departModel->getAllDepartments();
 $companies = $compModel->getAllCompanies();
 $roles = $roleModel->getAllRoles();
-$branches = $branchModel->getAllBranches();
+//$branches = $branchModel->getAllBranches();
 $shifts = $shiftModel->getAllShifts();
 
 $staffModel = new Staff();
@@ -307,7 +307,7 @@ $staff = $staffModel->getAllStaff();
             <div class="card-body">
               <form method="POST" action="/Admin_Management/Controller/staffController.php?action=create" enctype="multipart/form-data">
                 <div class="row">
-                 <!-- <div class="col-md-3">
+                 <!--<div class="col-md-3">
                     <label>Staff Number</label>
                     <input type="text" name="staff_no" class="form-control" value="<?= $generatedStaffNo ?? '' ?>" readonly>
                   </div>-->
@@ -373,8 +373,8 @@ $staff = $staffModel->getAllStaff();
                   <div class="col-md-3">
                     <label>Role Status</label>
                     <select name="status" class="form-control">
-                      <option value="1">Active</option>
-                      <option value="0">Inactive</option>
+                      <option value="1">Contract</option>
+                      <option value="0">Permanent</option>
                     </select>
                   </div>
 
