@@ -352,10 +352,9 @@ try {
                       <th>ID</th>
                       <th>PROFILE</th>
                       <th>NAME</th>
-                      <th>POSITION</th>
                       <th>DEPARTMENT</th>
                       <th>COMPANY</th>
-                      <th>ROLE</th>
+                      <th>POSITION</th>
                       <th>PHONE</th>
                       <th>ACTION</th>
                     </tr>
@@ -373,10 +372,9 @@ try {
                             </div>
                           </td>
                           <td><?= htmlspecialchars($staff['name'] ?? 'N/A') ?></td>
-                          <td><?= htmlspecialchars($staff['position'] ?? ($staff['roles'] ?? 'N/A')) ?></td>
                           <td><?= htmlspecialchars($staff['department_name'] ?? ($staff['departments_code'] ?? 'N/A')) ?></td>
                           <td><?= htmlspecialchars($staff['company_name'] ?? ($staff['company_code'] ?? 'N/A')) ?></td>
-                          <td><?= htmlspecialchars($staff['role_name'] ?? 'N/A') ?></td>
+                          <td><?= htmlspecialchars($staff['position'] ?? ($staff['roles'] ?? 'N/A')) ?></td>
                           <td><?= htmlspecialchars($staff['phone'] ?? 'N/A') ?></td>
                           <td class="align-middle">
                             <div class="dropdown">

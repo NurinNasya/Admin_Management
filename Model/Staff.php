@@ -12,11 +12,13 @@ class Staff {
     public function getAllStaff() {
         $query = "SELECT 
             s.*, 
-            d.name AS department_name,
-            c.name AS company_name
+            d.code AS departments_code,
+            c.code AS company_code,
+            r.name AS role_name
         FROM staff s
         LEFT JOIN departments d ON s.departments_id = d.id
         LEFT JOIN companies c ON s.company_id = c.id
+        LEFT JOIN roles r ON s.roles = r.name
         ORDER BY s.created_at DESC";
 
         $result = $this->conn->query($query);
