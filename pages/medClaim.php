@@ -1,11 +1,3 @@
-<?php 
-require_once '../db.php';  // Ensure the file is included only once
-session_start(); // Start session to access session messages
-require_once '../Controller/compController.php';
-$compModel = new company();
-$companies = $compModel->getAllRaw();
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -58,11 +50,11 @@ $companies = $compModel->getAllRaw();
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/billing.html">
+          <a class="nav-link <?php echo ($current_page == 'staff.php') ? 'active' : ''; ?>" href="../pages/staff.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
-            <span class="nav-link-text ms-1">Billing</span>
+            <span class="nav-link-text ms-1">Staff</span>
           </a>
         </li>
         <li class="nav-item">
@@ -150,19 +142,17 @@ $companies = $compModel->getAllRaw();
         </div>
       </div>
     </div>
-  </aside>
-
-<!-- Main Content -->
- <main class="main-content position-relative border-radius-lg">
-  <!-- Navbar -->
+  </aside> <!--smpai sini-->>
+    <main class="main-content position-relative border-radius-lg">
+            <!-- Navbar -->
             <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
             <div class="container-fluid py-1 px-3">
                 <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Settings</a></li>
-                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Company</li>
+                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Work Shift</li>
                 </ol>
-                <h6 class="font-weight-bolder text-white mb-0">Company</h6>
+                <h6 class="font-weight-bolder text-white mb-0">Work Shift</h6>
                 </nav>
                 <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
                 <div class="ms-md-auto pe-md-3 d-flex align-items-center">
@@ -269,187 +259,323 @@ $companies = $compModel->getAllRaw();
                 </div>
             </div>
             </nav>
-    <!--start main content-->        
-    <div class="container-fluid py-4">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center" style="margin-bottom: 5px;">
-            <h5 style="margin-bottom: 0;">Company Management</h5>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCompanyModal" style="margin-top: 0;">Add Company</button>
-          </div>
-          <div class="card-body" style="padding-top: 10px;">
+            <!-- End Navbar -->
 
-      <!-- Alert Messages -->
-            <?php if (isset($_SESSION['success_message']) || isset($_SESSION['error_message'])): ?>
-            <div class="w-50">
-              <?php if (isset($_SESSION['success_message'])): ?>
-                <div class="alert alert-success alert-dismissible fade show auto-dismiss text-white" role="alert">
-                  <?= htmlspecialchars($_SESSION['success_message']) ?>
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                <?php unset($_SESSION['success_message']); ?>
-              <?php elseif (isset($_SESSION['error_message'])): ?>
-                <div class="alert alert-danger alert-dismissible fade show auto-dismiss text-white" role="alert">
-                  <?= htmlspecialchars($_SESSION['error_message']) ?>
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                <?php unset($_SESSION['error_message']); ?>
-              <?php endif; ?>
-            </div>
-          <?php endif; ?>
+<div class="container-fluid py-4">
+      <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h3 class="mb-0">Medical Claims</h3>
+          <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#medicalClaimModal">
+            <i class="fas fa-plus-circle me-2"></i>Add Claim
+          </button>
+        </div>
+        
+        <div class="card-body">
+          <table class="table table-bordered table-striped mt-3">
+            <thead class="table-dark">
+              <tr>
+                <th>Period (Start-End)</th>
+                <th>Entitled Balance</th>
+                <th>Used</th>
+                <th>Current Balance</th>
+                <th>Pending Approval</th>
+                <th>Available Balance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="claimsTableBody"></tbody>
+          </table>
+        </div>
+        <nav aria-label="Current claims pagination">
+                <ul class="pagination justify-content-center" id="currentClaimsPagination">
+                    <!-- Pagination will be inserted here by JavaScript -->
+                </ul>
+            </nav>
+      </div>
+    </div>
 
-
-            <div class="card-body">
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php if ($companies && $companies->num_rows > 0): ?>
-                      <?php $counter = 1; ?>
-                      <?php while ($row = $companies->fetch_assoc()): ?>
-                          <?php
-                              $id = $row['id'];
-                              $code = htmlspecialchars($row['code']);
-                              $name = htmlspecialchars($row['name']);
-                              $raw_status = $row['status'];
-                              $statusBadge = $raw_status
-                                  ? '<span class="badge border border-success text-success px-3 py-2">Active</span>'
-                                  : '<span class="badge border border-danger text-danger px-3 py-2">Inactive</span>';
-                          ?>
-                          <tr>
-                              <td><?= $counter++ ?></td>
-                              <td><?= $code ?></td>
-                              <td><?= $name ?></td>
-                              <td><?= $statusBadge ?></td>
-                              <td>
-                                  <a href="#" class="text-primary me-3 edit-company-btn"
-                                      data-id="<?= $id ?>"
-                                      data-code="<?= $code ?>"
-                                      data-name="<?= $name ?>"
-                                      data-status="<?= $raw_status ?>"
-                                      data-bs-toggle="modal"
-                                      data-bs-target="#editCompanyModal"
-                                      title="Edit">
-                                      <i class="bi bi-pencil-square fs-4"></i>
-                                  </a>
-                                  <a href="../Controller/companyController.php?delete_id=<?= $id ?>" 
-                                      class="text-danger" 
-                                      onclick="return confirm('Are you sure you want to delete this company?');"
-                                      title="Delete">
-                                      <i class="bi bi-trash-fill fs-4"></i>
-                                  </a>
-                              </td>
-                          </tr>
-                      <?php endwhile; ?>
-                  <?php else: ?>
-                      <tr>
-                          <td colspan="5" class="text-center">No companies found.</td>
-                      </tr>
-                  <?php endif; ?>
-              </tbody>
-  </table>
-</div>
-
-
-    <!-- Add Company Modal -->
-    <div class="modal fade" id="addCompanyModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <form action="crudCompany.php" method="POST" class="modal-content">
+    <!-- Medical Claim Modal -->
+    <div class="modal fade" id="medicalClaimModal" tabindex="-1" aria-labelledby="medicalClaimModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Add New Company</h5>
+            <h5 class="modal-title" id="medicalClaimModalLabel">Add Medical Claim</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div class="mb-3">
-              <label for="company-code" class="form-label">Company Code <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="company-code" name="code" required>
+            <div class="reminder-box alert alert-info">
+              <h6><i class="fas fa-exclamation-circle me-2"></i>Reminder</h6>
+              <ol>
+                <li>Please attach supporting documents</li>
+                <li>The form must be verified by human resource department</li>
+                <li>Claims will be deducted from your available balance</li>
+              </ol>
             </div>
-            <div class="mb-3">
-              <label for="company-name" class="form-label">Company Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="company-name" name="name" required>
-            </div>
-            <div class="mb-3">
-              <label for="company-status" class="form-label">Status</label>
-              <select class="form-select" id="company-status" name="status">
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-              </select>
-            </div>
+
+            <form id="medicalClaimForm">
+              <h6 class="mb-3">Medical Claim Form</h6>
+              
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="startDate" class="form-label">Start Date <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="startDate" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="endDate" class="form-label">End Date <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="endDate" required>
+                </div>
+              </div>
+              
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="receiptDate" class="form-label">Receipt Date <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="receiptDate" required>
+                </div>
+                <div class="col-md-6">
+                  <label for="receiptAmount" class="form-label">Amount (RM) <span class="text-danger">*</span></label>
+                  <input type="number" step="0.01" class="form-control" id="receiptAmount" required>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="description" rows="2" required placeholder="Brief description of medical treatment"></textarea>
+              </div>
+              
+              <div class="mb-4">
+                <label for="attachment" class="form-label">Attachment <span class="text-danger">*</span> (pdf/jpg/png/HEIC/HEIF)</label>
+                <input type="file" class="form-control" id="attachment" accept=".pdf,.jpg,.jpeg,.png,.heic,.heif" required>
+                <small class="text-muted">Max file size: 5MB</small>
+              </div>
+              
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-paper-plane me-2"></i>Submit Claim
+                </button>
+              </div>
+            </form>
           </div>
-          <div class="modal-footer">
-            <button type="submit" name="add_company" class="btn btn-primary">Save</button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
 
-    <!-- Edit Company Modal -->
-    <div class="modal fade" id="editCompanyModal" tabindex="-1">
-      <div class="modal-dialog">
-        <form action="crudCompany.php" method="POST" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Edit Company</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" name="edit_id" id="edit_id">
-            <div class="mb-3">
-              <label for="edit_code" class="form-label">Company Code <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="edit_code" id="edit_code" required>
+
+        <!-- History Claims Table -->
+      <div class="container-fluid py-4">
+      <div class="card">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">History Claims</h3>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Date Submitted</th>
+                        <th>Period (Start-End)</th>
+                        <th>Claim Amount</th>
+                        <th>Status</th>
+                        <th>Approved By</th>
+                        <th>Approval Date</th>
+                        <th>Receipt</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody"></tbody>
+                </table>
             </div>
-            <div class="mb-3">
-              <label for="edit_name" class="form-label">Company Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="edit_name" id="edit_name" required>
-            </div>
-            <div class="mb-3">
-              <label for="edit_status" class="form-label">Status</label>
-              <select class="form-select" name="edit_status" id="edit_status">
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" name="update_company" class="btn btn-primary">Update</button>
-          </div>
-        </form>
-      </div>
+            <nav aria-label="History claims pagination">
+                <ul class="pagination justify-content-center" id="historyClaimsPagination">
+                    <!-- Pagination will be inserted here by JavaScript -->
+                </ul>
+            </nav>
+        </div>
     </div>
+</div>
   </main>
 
-  <!-- JS Scripts -->
-  <script src="../assets/js/core/bootstrap.bundle.min.js"></script>
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Fill edit modal with selected data
-    document.querySelectorAll('.edit-company-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        document.getElementById('edit_id').value = button.dataset.id;
-        document.getElementById('edit_code').value = button.dataset.code;
-        document.getElementById('edit_name').value = button.dataset.name;
-        document.getElementById('edit_status').value = button.dataset.status;
-      });
+    // Main application controller
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize date fields
+      initDates();
+      
+      // Setup form submission handler
+      setupFormSubmission();
+      
+      // Setup table event handlers
+      setupTableEvents();
     });
 
-    
-  </script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <script>
-    setTimeout(function () {
-      var alert = document.querySelector('.alert');
-      if (alert) {
-        alert.classList.remove('show');
-        alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 500);
+    // Initialize date fields with default values
+    function initDates() {
+      const today = new Date();
+      const oneYearLater = new Date();
+      oneYearLater.setFullYear(today.getFullYear() + 1);
+      
+      document.getElementById('receiptDate').valueAsDate = today;
+      document.getElementById('startDate').valueAsDate = today;
+      document.getElementById('endDate').valueAsDate = oneYearLater;
+    }
+
+    // Configure form submission handler
+    function setupFormSubmission() {
+      const form = document.getElementById('medicalClaimForm');
+      
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Process form submission
+        const claimData = getFormData();
+        logSubmission(claimData);
+        addClaimToTable(claimData);
+        showSuccessMessage();
+        resetForm();
+        closeModal();
+      });
+    }
+
+    // Get form data as an object
+    function getFormData() {
+      return {
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value,
+        receiptDate: document.getElementById('receiptDate').value,
+        amount: parseFloat(document.getElementById('receiptAmount').value),
+        description: document.getElementById('description').value
+      };
+    }
+
+    // Log submission data (would be API call in real app)
+    function logSubmission(data) {
+      console.log('Claim submitted:', data);
+    }
+
+    // Add new claim to the table
+    function addClaimToTable(data) {
+      const tbody = document.getElementById('claimsTableBody');
+      const demoValues = getDemoBalanceValues(data.amount);
+      
+      const newRow = document.createElement('tr');
+      newRow.innerHTML = createTableRowHTML(data, demoValues);
+      tbody.insertBefore(newRow, tbody.firstChild);
+    }
+
+   function getDemoBalanceValues(newAmount = 0, previousAvailableBalance = null) {
+  // For first row: fixed entitled balance (1000.00)
+  // For subsequent rows: previous available balance becomes entitled balance
+  const entitledBalance = previousAvailableBalance !== null ? previousAvailableBalance : 1000.00;
+  
+  // Used amount is ONLY what the user enters (no initial 300.00)
+  const usedAmount = newAmount;
+  
+  // Current balance is entitled minus used
+  const currentBalance = entitledBalance - usedAmount;
+  
+  // Pending amount starts at 0 (only grows when requests are awaiting approval)
+  const pendingAmount = 0;
+  
+  // Available balance is current minus pending (since pending amounts are reserved)
+  const availableBalance = currentBalance - pendingAmount;
+  
+  return {
+    entitledBalance,
+    usedAmount,
+    currentBalance,
+    pendingAmount,
+    availableBalance
+  };
+}
+
+    // Create HTML for table row
+    function createTableRowHTML(data, balances) {
+      return `
+        <td>${data.startDate} to ${data.endDate}</td>
+        <td>${balances.entitledBalance.toFixed(2)}</td>
+        <td>${balances.usedAmount.toFixed(2)}</td>
+        <td>${balances.currentBalance.toFixed(2)}</td>
+        <td>${balances.pendingAmount.toFixed(2)} <span class="badge bg-warning">Pending HOD</span></td>
+        <td>${balances.availableBalance.toFixed(2)}</td>
+        <td>
+          <button class="btn btn-sm btn-warning me-1">Edit</button>
+          <button class="btn btn-sm btn-danger">Delete</button>
+        </td>
+      `;
+    }
+
+    // Show success message
+    function showSuccessMessage() {
+      alert('Medical claim submitted successfully! It is now pending approval.');
+    }
+
+    // Reset form fields
+    function resetForm() {
+      document.getElementById('medicalClaimForm').reset();
+      document.getElementById('receiptDate').valueAsDate = new Date();
+    }
+
+    // Close the modal
+    function closeModal() {
+      const modal = bootstrap.Modal.getInstance(document.getElementById('medicalClaimModal'));
+      modal.hide();
+    }
+
+    // Setup table event handlers
+    function setupTableEvents() {
+      document.getElementById('claimsTableBody').addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-warning')) {
+          handleEditClick(e);
+        } else if (e.target.classList.contains('btn-danger')) {
+          handleDeleteClick(e);
+        }
+      });
+    }
+
+    // Handle edit button click
+    function handleEditClick(event) {
+      const row = event.target.closest('tr');
+      alert('Edit functionality would load claim data into the modal for editing');
+    }
+
+    // Handle delete button click
+    function handleDeleteClick(event) {
+      if (confirm('Are you sure you want to delete this claim?')) {
+        const row = event.target.closest('tr');
+        row.remove();
+        alert('Claim deleted (this would be permanent in a real app)');
       }
-    }, 3000);
+    }
+    // Function to add a claim to history table (would be called when a claim is approved)
+function addToHistoryTable(claimData, status, approvedBy) {
+    const tbody = document.getElementById('historyTableBody');
+    const approvalDate = new Date().toISOString().split('T')[0];
+    
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>${new Date().toISOString().split('T')[0]}</td>
+        <td>${claimData.startDate} to ${claimData.endDate}</td>
+        <td>${claimData.amount.toFixed(2)}</td>
+        <td><span class="badge ${getStatusBadgeClass(status)}">${status}</span></td>
+        <td>${approvedBy}</td>
+        <td>${approvalDate}</td>
+        <td><a href="#" class="btn btn-sm btn-info">View</a></td>
+    `;
+    
+    tbody.insertBefore(newRow, tbody.firstChild);
+}
+
+// Helper function to get badge class based on status
+function getStatusBadgeClass(status) {
+    switch(status.toLowerCase()) {
+        case 'approved': return 'bg-success';
+        case 'rejected': return 'bg-danger';
+        case 'completed': return 'bg-primary';
+        default: return 'bg-secondary';
+    }
+}
+
+// Example usage (would be called when a claim is approved)
+// addToHistoryTable(claimData, 'Approved', 'John Doe (HOD)');
   </script>
 </body>
 </html>

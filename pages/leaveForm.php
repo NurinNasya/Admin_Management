@@ -1,11 +1,3 @@
-<?php 
-require_once '../db.php';  // Ensure the file is included only once
-session_start(); // Start session to access session messages
-require_once '../Controller/compController.php';
-$compModel = new company();
-$companies = $compModel->getAllRaw();
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -58,11 +50,11 @@ $companies = $compModel->getAllRaw();
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/billing.html">
+          <a class="nav-link <?php echo ($current_page == 'staff.php') ? 'active' : ''; ?>" href="../pages/staff.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
-            <span class="nav-link-text ms-1">Billing</span>
+            <span class="nav-link-text ms-1">Staff</span>
           </a>
         </li>
         <li class="nav-item">
@@ -150,19 +142,17 @@ $companies = $compModel->getAllRaw();
         </div>
       </div>
     </div>
-  </aside>
-
-<!-- Main Content -->
- <main class="main-content position-relative border-radius-lg">
-  <!-- Navbar -->
+  </aside> <!--smpai sini-->>
+    <main class="main-content position-relative border-radius-lg">
+            <!-- Navbar -->
             <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl " id="navbarBlur" data-scroll="false">
             <div class="container-fluid py-1 px-3">
                 <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
                     <li class="breadcrumb-item text-sm"><a class="opacity-5 text-white" href="javascript:;">Settings</a></li>
-                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Company</li>
+                    <li class="breadcrumb-item text-sm text-white active" aria-current="page">Work Shift</li>
                 </ol>
-                <h6 class="font-weight-bolder text-white mb-0">Company</h6>
+                <h6 class="font-weight-bolder text-white mb-0">Work Shift</h6>
                 </nav>
                 <div class="collapse navbar-collapse mt-sm-0 mt-2 me-md-0 me-sm-4" id="navbar">
                 <div class="ms-md-auto pe-md-3 d-flex align-items-center">
@@ -269,187 +259,142 @@ $companies = $compModel->getAllRaw();
                 </div>
             </div>
             </nav>
-    <!--start main content-->        
-    <div class="container-fluid py-4">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center" style="margin-bottom: 5px;">
-            <h5 style="margin-bottom: 0;">Company Management</h5>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCompanyModal" style="margin-top: 0;">Add Company</button>
-          </div>
-          <div class="card-body" style="padding-top: 10px;">
+            <!-- End Navbar -->
 
-      <!-- Alert Messages -->
-            <?php if (isset($_SESSION['success_message']) || isset($_SESSION['error_message'])): ?>
-            <div class="w-50">
-              <?php if (isset($_SESSION['success_message'])): ?>
-                <div class="alert alert-success alert-dismissible fade show auto-dismiss text-white" role="alert">
-                  <?= htmlspecialchars($_SESSION['success_message']) ?>
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                <?php unset($_SESSION['success_message']); ?>
-              <?php elseif (isset($_SESSION['error_message'])): ?>
-                <div class="alert alert-danger alert-dismissible fade show auto-dismiss text-white" role="alert">
-                  <?= htmlspecialchars($_SESSION['error_message']) ?>
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                <?php unset($_SESSION['error_message']); ?>
-              <?php endif; ?>
+ <div class="container-fluid py-4">
+      <div class="row">
+        <div class="col-12">
+          <div class="card mb-4">
+            <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+              <h6>Leave Applications</h6>
+              <button class="btn btn-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#addLeaveModal">
+                <i class="ni ni-fat-add"></i> Apply Leave
+              </button>
             </div>
-          <?php endif; ?>
-
-
-            <div class="card-body">
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php if ($companies && $companies->num_rows > 0): ?>
-                      <?php $counter = 1; ?>
-                      <?php while ($row = $companies->fetch_assoc()): ?>
-                          <?php
-                              $id = $row['id'];
-                              $code = htmlspecialchars($row['code']);
-                              $name = htmlspecialchars($row['name']);
-                              $raw_status = $row['status'];
-                              $statusBadge = $raw_status
-                                  ? '<span class="badge border border-success text-success px-3 py-2">Active</span>'
-                                  : '<span class="badge border border-danger text-danger px-3 py-2">Inactive</span>';
-                          ?>
-                          <tr>
-                              <td><?= $counter++ ?></td>
-                              <td><?= $code ?></td>
-                              <td><?= $name ?></td>
-                              <td><?= $statusBadge ?></td>
-                              <td>
-                                  <a href="#" class="text-primary me-3 edit-company-btn"
-                                      data-id="<?= $id ?>"
-                                      data-code="<?= $code ?>"
-                                      data-name="<?= $name ?>"
-                                      data-status="<?= $raw_status ?>"
-                                      data-bs-toggle="modal"
-                                      data-bs-target="#editCompanyModal"
-                                      title="Edit">
-                                      <i class="bi bi-pencil-square fs-4"></i>
-                                  </a>
-                                  <a href="../Controller/companyController.php?delete_id=<?= $id ?>" 
-                                      class="text-danger" 
-                                      onclick="return confirm('Are you sure you want to delete this company?');"
-                                      title="Delete">
-                                      <i class="bi bi-trash-fill fs-4"></i>
-                                  </a>
-                              </td>
-                          </tr>
-                      <?php endwhile; ?>
-                  <?php else: ?>
-                      <tr>
-                          <td colspan="5" class="text-center">No companies found.</td>
-                      </tr>
-                  <?php endif; ?>
-              </tbody>
-  </table>
-</div>
-
-
-    <!-- Add Company Modal -->
-    <div class="modal fade" id="addCompanyModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <form action="crudCompany.php" method="POST" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Add New Company</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="company-code" class="form-label">Company Code <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="company-code" name="code" required>
-            </div>
-            <div class="mb-3">
-              <label for="company-name" class="form-label">Company Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="company-name" name="name" required>
-            </div>
-            <div class="mb-3">
-              <label for="company-status" class="form-label">Status</label>
-              <select class="form-select" id="company-status" name="status">
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-              </select>
+            <div class="card-body px-0 pt-0 pb-2">
+              <div class="table-responsive p-0">
+                <table class="table align-items-center mb-0 leave-table">
+                  <thead>
+                    <tr>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Leave Type</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Start Date</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">End Date</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Total Days</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Application Date</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="submit" name="add_company" class="btn btn-primary">Save</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Edit Company Modal -->
-    <div class="modal fade" id="editCompanyModal" tabindex="-1">
-      <div class="modal-dialog">
-        <form action="crudCompany.php" method="POST" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Edit Company</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" name="edit_id" id="edit_id">
-            <div class="mb-3">
-              <label for="edit_code" class="form-label">Company Code <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="edit_code" id="edit_code" required>
-            </div>
-            <div class="mb-3">
-              <label for="edit_name" class="form-label">Company Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="edit_name" id="edit_name" required>
-            </div>
-            <div class="mb-3">
-              <label for="edit_status" class="form-label">Status</label>
-              <select class="form-select" name="edit_status" id="edit_status">
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" name="update_company" class="btn btn-primary">Update</button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   </main>
 
-  <!-- JS Scripts -->
-  <script src="../assets/js/core/bootstrap.bundle.min.js"></script>
+  <!-- Add Leave Modal -->
+  <div class="modal fade" id="addLeaveModal" tabindex="-1" aria-labelledby="addLeaveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="addLeaveModalLabel">Apply New Leave</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="../Controller/leaveController.php?action=add" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="staff_id" value="<?= $staff_id ?>">
+            <input type="hidden" name="created_by" value="<?= $_SESSION['user_id'] ?? 1 ?>">
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="leave_type" class="form-label">Leave Type</label>
+                <select class="form-select" id="leave_type" name="leave_type" required>
+                  <option value="" disabled selected>Select leave type</option>
+                  <option value="Medical Leave">Medical Leave</option>
+                  <option value="Annual Leave">Annual Leave</option>
+                  <option value="Unpaid Leave">Unpaid Leave</option>
+                  <option value="Maternity Leave">Maternity Leave</option>
+                  <option value="Paternity Leave">Paternity Leave</option>
+                  <option value="Compassionate Leave">Compassionate Leave</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="application_date" class="form-label">Application Date</label>
+                <input type="date" class="form-control" id="application_date" name="application_date" value="<?= date('Y-m-d') ?>" required>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" required>
+              </div>
+              <div class="col-md-6">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" required>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="total_days" class="form-label">Total Days</label>
+                <input type="number" class="form-control" id="total_days" name="total_days" step="0.5" required>
+              </div>
+            </div>
+
+            <div class="row mb-3" id="document_upload_container" style="display: none;">
+              <div class="col-md-12">
+                <label for="leave_document" class="form-label">Medical Certificate</label>
+                <input type="file" class="form-control" id="leave_document" name="leave_document" accept=".pdf,.jpg,.jpeg,.png">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="reason" class="form-label">Reason</label>
+              <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Submit Leave</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--   Core JS Files   -->
+  <script src="../assets/js/core/popper.min.js"></script>
+  <script src="../assets/js/core/bootstrap.min.js"></script>
+  <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
+  <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
   <script>
-    // Fill edit modal with selected data
-    document.querySelectorAll('.edit-company-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        document.getElementById('edit_id').value = button.dataset.id;
-        document.getElementById('edit_code').value = button.dataset.code;
-        document.getElementById('edit_name').value = button.dataset.name;
-        document.getElementById('edit_status').value = button.dataset.status;
-      });
+    // Show document upload only for Medical Leave
+    document.getElementById('leave_type').addEventListener('change', function() {
+      const docContainer = document.getElementById('document_upload_container');
+      docContainer.style.display = this.value === 'Medical Leave' ? 'block' : 'none';
+      
+      // Make document required only for Medical Leave
+      document.getElementById('leave_document').required = this.value === 'Medical Leave';
     });
 
-    
-  </script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <script>
-    setTimeout(function () {
-      var alert = document.querySelector('.alert');
-      if (alert) {
-        alert.classList.remove('show');
-        alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 500);
+    // Calculate total days when dates change
+    document.getElementById('start_date').addEventListener('change', calculateDays);
+    document.getElementById('end_date').addEventListener('change', calculateDays);
+
+    function calculateDays() {
+      const startDate = new Date(document.getElementById('start_date').value);
+      const endDate = new Date(document.getElementById('end_date').value);
+      
+      if (startDate && endDate && endDate >= startDate) {
+        const diffTime = Math.abs(endDate - startDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        document.getElementById('total_days').value = diffDays;
       }
-    }, 3000);
+    }
   </script>
 </body>
 </html>

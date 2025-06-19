@@ -1,13 +1,14 @@
 <?php
-require_once __DIR__ . '/../db.php';
+require_once '../db.php';
 
 
 class Role
 {
     private $conn;
-    public function __construct($db)
-    {
-        $this->conn = $db;
+    
+    public function __construct() {
+        global $conn; // use the shared db connection
+        $this->conn = $conn;
     }
 
       public function getAllRoles() {
