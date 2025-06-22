@@ -57,43 +57,109 @@ function getApplicationById($conn, $id) {
 
 // Function to get leave balance
 function getLeaveBalance($conn, $employee_id, $current_year) {
+    // Initialize with empty array
+    $balances = [];
+    
+    // Sanitize inputs
+    $employee_id = (int)$employee_id;
+    $current_year = (int)$current_year;
+    
+    // Query the database for leave balances
     $sql = "SELECT * FROM leave_balances WHERE employee_id = $employee_id AND year = $current_year";
     $result = mysqli_query($conn, $sql);
-    $balances = [];
     
     if ($result) {
         while ($row = mysqli_fetch_assoc($result)) {
+            // Calculate values with fallbacks if database fields are missing
+            $quota = $row['quota'] ?? 0;
+            $used = $row['used'] ?? 0;
+            $in_process = $row['in_process'] ?? 0;
+            
             $balances[$row['leave_type']] = [
-                'quota' => $row['quota'],
-                'used' => $row['used'],
-                'current' => $row['current_balance'],
-                'in_process' => $row['in_process'],
-                'available' => $row['available_balance']
+                'quota' => $quota,
+                'used' => $used,
+                'current' => $row['current_balance'] ?? ($quota - $used),
+                'in_process' => $in_process,
+                'available' => $row['available_balance'] ?? ($quota - $used - $in_process)
             ];
         }
+    } else {
+        // Log error if query fails
+        error_log("Failed to get leave balance: " . mysqli_error($conn));
     }
     
-    // Tambahkan semua jenis cuti yang ada di $dynamic_leave_types
+    // Define all possible leave types with their default values
     $default_types = [
-        'Annual Leave' => ['quota' => 14, 'used' => 0, 'current' => 14, 'in_process' => 0, 'available' => 14],
-        'Medical Leave' => ['quota' => 14, 'used' => 0, 'current' => 14, 'in_process' => 0, 'available' => 14],
-        'Unpaid Leave' => ['quota' => 0, 'used' => 0, 'current' => 0, 'in_process' => 0, 'available' => 0],
-        'Paternity Leave' => ['quota' => 7, 'used' => 0, 'current' => 7, 'in_process' => 0, 'available' => 7],
-        'Maternity Leave' => ['quota' => 60, 'used' => 0, 'current' => 60, 'in_process' => 0, 'available' => 60],
-        'Compassionate Leave' => ['quota' => 3, 'used' => 0, 'current' => 3, 'in_process' => 0, 'available' => 3],
-        'Hospitalization Leave' => ['quota' => 60, 'used' => 0, 'current' => 60, 'in_process' => 0, 'available' => 60],
-        'Replacement Leave' => ['quota' => 0, 'used' => 0, 'current' => 0, 'in_process' => 0, 'available' => 0]
+        'Annual Leave' => [
+            'quota' => 14, 
+            'used' => 0, 
+            'current' => 14, 
+            'in_process' => 0, 
+            'available' => 14
+        ],
+        'Medical Leave' => [
+            'quota' => 14, 
+            'used' => 0, 
+            'current' => 14, 
+            'in_process' => 0, 
+            'available' => 14
+        ],
+        'Unpaid Leave' => [
+            'quota' => 0, 
+            'used' => 0, 
+            'current' => 0, 
+            'in_process' => 0, 
+            'available' => 0
+        ],
+        'Paternity Leave' => [
+            'quota' => 7, 
+            'used' => 0, 
+            'current' => 7, 
+            'in_process' => 0, 
+            'available' => 7
+        ],
+        'Maternity Leave' => [
+            'quota' => 60, 
+            'used' => 0, 
+            'current' => 60, 
+            'in_process' => 0, 
+            'available' => 60
+        ],
+        'Compassionate Leave' => [
+            'quota' => 3, 
+            'used' => 0, 
+            'current' => 3, 
+            'in_process' => 0, 
+            'available' => 3
+        ],
+        'Hospitalization Leave' => [
+            'quota' => 60, 
+            'used' => 0, 
+            'current' => 60, 
+            'in_process' => 0, 
+            'available' => 60
+        ],
+        'Replacement Leave' => [
+            'quota' => 0, 
+            'used' => 0, 
+            'current' => 0, 
+            'in_process' => 0, 
+            'available' => 0
+        ]
     ];
     
+    // Merge database results with default types
     foreach ($default_types as $type => $default) {
         if (!isset($balances[$type])) {
             $balances[$type] = $default;
+        } else {
+            // Ensure all required keys exist even if some were missing from database
+            $balances[$type] = array_merge($default, $balances[$type]);
         }
     }
     
     return $balances;
 }
-
 // Get data from database
 $leave_applications = getLeaveApplications($conn, $employee_id);
 $leave_balance = getLeaveBalance($conn, $employee_id, $current_year);
