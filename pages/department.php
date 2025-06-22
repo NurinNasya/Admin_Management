@@ -356,7 +356,7 @@ $departments = $departModel->getAllRaw(); // ✅ correct variable name & method 
     <!-- Add Department Modal -->
     <div class="modal fade" id="addDepartmentModal" tabindex="-1">
       <div class="modal-dialog">
-        <form action="crudDepart.php" method="POST" class="modal-content">
+        <form action="department.php" method="POST" class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Add New Department</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -388,7 +388,7 @@ $departments = $departModel->getAllRaw(); // ✅ correct variable name & method 
     <!-- Edit Department Modal -->
     <div class="modal fade" id="editDepartmentModal" tabindex="-1">
     <div class="modal-dialog">
-      <form action="crudDepart.php" method="POST" class="modal-content">
+      <form action="department.php" method="POST" class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title">Edit Department <span class="text-danger">*</span></h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

@@ -4,7 +4,7 @@ require_once '../Controller/departController.php';
 require_once '../Controller/compController.php';
 require_once '../model/Staff.php';
 require_once '../model/Role.php';
-//require_once '../model/Branch.php';
+require_once '../model/Branch.php';
 require_once '../model/Shift.php';
 
 session_start();
@@ -12,13 +12,13 @@ session_start();
 $departModel = new Depart();
 $compModel = new Company();
 $roleModel = new Role();
-//$branchModel = new Branch();
+$branchModel = new Branch();
 $shiftModel = new Shift();
 
 $departments = $departModel->getAllDepartments();
 $companies = $compModel->getAllCompanies();
 $roles = $roleModel->getAllRoles();
-//$branches = $branchModel->getAllBranches();
+$branches = $branchModel->getAllBranches();
 $shifts = $shiftModel->getAllShifts();
 
 $staffModel = new Staff();
@@ -297,48 +297,51 @@ $staff = $staffModel->getAllStaff();
             </div>
             </nav>
  
-    <div class="container-fluid py-4">
+      <div class="container-fluid py-4">
       <div class="row">
         <div class="col-12">
-          <div class="card mb-4">
-            <div class="card-header pb-0">
-              <h6>Personal Information</h6>
-            </div>
-            <div class="card-body">
-              <form method="POST" action="/Admin_Management/Controller/staffController.php?action=create" enctype="multipart/form-data">
+          <!-- Main Form -->
+          <form method="POST" action="/Admin_Management/Controller/staffController.php?action=create" enctype="multipart/form-data">
+            
+            <!-- Personal Information Card -->
+            <div class="card mb-4">
+              <div class="card-header pb-0">
+                <h6>Personal Information</h6>
+              </div>
+              <div class="card-body">
                 <div class="row">
-                 <!--<div class="col-md-3">
-                    <label>Staff Number</label>
-                    <input type="text" name="staff_no" class="form-control" value="<?= $generatedStaffNo ?? '' ?>" readonly>
-                  </div>-->
-
-                  <div class="col-md-3">
-                    <label>Full Name</label>
-                    <input type="text" name="name" class="form-control" required>
-                  </div>
-
-                  <div class="col-md-3">
-                    <label>IC Number</label>
+                  <div class="col-md-2">
+                    <label>IC Number<span class="text-danger">*</span></label>
                     <input type="text" name="noic" id="noic" maxlength="12" pattern="\d*" class="form-control" required>
                   </div>
 
-                  <div class="col-md-3">
-                    <label>Phone</label>
+                  <div class="col-md-6">
+                    <label>Full Name<span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="form-control" required>
+                  </div>
+
+                  <div class="col-md-2">
+                    <label>Date Of Birth<span class="text-danger">*</span></label>
+                    <input type="date" name="dob" id="dob" class="form-control" required readonly>
+                  </div>
+
+                  <div class="col-md-2">
+                    <label>Age<span class="text-danger">*</span></label>
+                    <input type="text" name="age" id="age" class="form-control" required readonly>
+                  </div>
+
+                  <div class="col-md-2">
+                    <label>Phone<span class="text-danger">*</span></label>
                     <input type="text" name="phone" id="phone" maxlength="11" pattern="\d*" class="form-control" required>
                   </div>
 
-                  <div class="col-md-3">
-                    <label>Email</label>
+                  <div class="col-md-4">
+                    <label>Email<span class="text-danger">*</span></label>
                     <input type="email" name="email" class="form-control">
                   </div>
-
-                  <div class="col-md-3">
-                    <label>Password</label>
-                    <input type="text" name="pwd" id="pwd" class="form-control" readonly required>
-                  </div>
-                 
-                  <div class="col-md-3">
-                    <label>Marital Status</label>
+                
+                  <div class="col-md-2">
+                    <label>Marital Status<span class="text-danger">*</span></label>
                     <select name="status_marital" class="form-control">
                       <option value="1">Single</option>
                       <option value="2">Married</option>
@@ -346,9 +349,14 @@ $staff = $staffModel->getAllStaff();
                     </select>
                   </div>
 
-                  <div class="col-md-3">
+                  <div class="col-md-2">
                     <label>Number of Dependents</label>
                     <input type="number" name="dependent" class="form-control" required>
+                  </div>
+
+                  <div class="col-md-2">
+                    <label>Gender<span class="text-danger">*</span></label>
+                    <input type="text" name="gender" id="gender" class="form-control" readonly placeholder="Auto-detected">
                   </div>
 
                   <div class="col-md-6">
@@ -360,55 +368,66 @@ $staff = $staffModel->getAllStaff();
                     <label>Mailing Address</label>
                     <textarea name="mail_address" class="form-control" rows="2"></textarea>
                   </div>
+                </div>
+              </div>
+            </div>
 
+            <!-- Staff Information Card -->
+            <div class="card mb-4">
+              <div class="card-header pb-0">
+                <h6>Staff Information</h6>
+              </div>
+              <div class="card-body">
+                <div class="row">
                   <div class="col-md-3">
-                    <label>Role</label>
+                    <label>Staff Number</label>
+                    <input type="text" name="staff_no" class="form-control" value="<?= $generatedStaffNo ?? '' ?>" readonly>
+                  </div>
+                  <div class="col-md-3">
+                    <label>Role<span class="text-danger">*</span></label>
                     <select name="roles" class="form-control">
                       <?php foreach ($roles as $r): ?>
                         <option value="<?= $r['name'] ?>"><?= $r['name'] ?></option>
                       <?php endforeach; ?>
                     </select>
                   </div>
-
                   <div class="col-md-3">
-                    <label>Role Status</label>
-                    <select name="status" class="form-control">
-                      <option value="1">Contract</option>
-                      <option value="0">Permanent</option>
-                    </select>
-                  </div>
-
-                  <div class="col-md-3">
-                    <label>Department</label>
+                    <label>Department<span class="text-danger">*</span></label>
                     <select name="departments_id" class="form-control">
                       <?php foreach ($departments as $d): ?>
                         <option value="<?= $d['id'] ?>"><?= $d['name'] ?></option>
                       <?php endforeach; ?>
                     </select>
                   </div>
-
                   <div class="col-md-3">
-                    <label>Company</label>
+                    <label>Company<span class="text-danger">*</span></label>
                     <select name="company_id" class="form-control">
                       <?php foreach ($companies as $c): ?>
                         <option value="<?= $c['id'] ?>"><?= $c['name'] ?></option>
                       <?php endforeach; ?>
                     </select>
                   </div>
-                  
+                </div>
+
+                <div class="row mt-3">
                   <div class="col-md-3">
-                    <label>Status</label>
-                    <select name="status" class="form-control">
-                      <option value="1">Active</option>
-                      <option value="0">Inactive</option>
+                    <label>Branch<span class="text-danger">*</span></label>
+                    <select name="company_branch" class="form-control">
+                      <?php foreach ($branches as $branch): ?>
+                        <option value="<?= htmlspecialchars($branch['id']) ?>">
+                          <?= htmlspecialchars($branch['branch_name']) ?>
+                        </option>
+                      <?php endforeach; ?>
                     </select>
                   </div>
-
                   <div class="col-md-3">
-                    <label>Gender</label>
-                    <input type="text" name="gender" id="gender" class="form-control" readonly placeholder="Auto-detected">
+                    <label>Daily Working Hours</label>
+                    <input type="number" name="working_hours" class="form-control" min="1" max="24" value="8" required>
                   </div>
-
+                  <div class="col-md-3">
+                    <label>Break Duration (minutes)</label>
+                    <input type="number" name="break_duration" class="form-control" min="0" max="180" value="60" required>
+                  </div>
                   <div class="col-md-3">
                     <label>Shift</label>
                     <select name="shift_id" class="form-control">
@@ -417,15 +436,47 @@ $staff = $staffModel->getAllStaff();
                       <?php endforeach; ?>
                     </select>
                   </div>
+                </div>
 
-                  <!--<div class="col-md-3">
-                    <label>Leave Approval (Staff ID)</label>
-                    <select name="leave_approval" class="form-control">
-                      <?php foreach ($staff as $s): ?>
-                        <option value="<?= $s['id'] ?>"><?= $s['name'] ?> (<?= $s['staff_no'] ?>)</option>
+                <div class="row mt-3">
+                  <div class="col-md-3">
+                    <label>Employment Start Date</label>
+                    <input type="date" name="start_date" class="form-control" required>
+                  </div>
+                  <div class="col-md-3">
+                    <label>Employment End Date (if applicable)</label>
+                    <input type="date" name="end_date" class="form-control">
+                  </div>
+                  <div class="col-md-3">
+                    <label>Status<span class="text-danger">*</span></label>
+                    <select name="status" class="form-control">
+                      <option value="1">Active</option>
+                      <option value="0">Inactive</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label>Leave Approval<span class="text-danger">*</span></label>
+                    <select name="leave_approval" class="form-control" required>
+                      <option value="">-- Select Approver --</option>
+                      <?php 
+                        $approvers = $staffModel->getStaffByRoles(['HOD', 'HOC', 'FOUNDER']);
+                        foreach ($approvers as $approver): ?>
+                        <option value="<?= htmlspecialchars($approver['id']) ?>">
+                          <?= htmlspecialchars($approver['name']) ?> (<?= htmlspecialchars($approver['staff_no']) ?> - <?= htmlspecialchars($approver['role_name']) ?>)
+                        </option>
                       <?php endforeach; ?>
                     </select>
-                  </div>-->
+                  </div>
+                </div>
+                  
+                <div class="row mt-3">
+                  <div class="col-md-3">
+                    <label>Role Status</label>
+                    <select name="role_status" class="form-control">
+                      <option value="1">Permanent</option>
+                      <option value="0">Contract</option>
+                    </select>
+                  </div>
 
                   <div class="col-md-3">
                     <label>QR Code Status</label>
@@ -451,389 +502,431 @@ $staff = $staffModel->getAllStaff();
                     </select>
                   </div>
 
-                  <div class="col-md-3">
-                    <label>Profile Picture</label>
-                    <input type="file" name="profile_pic" class="form-control">
+                  <div class="col-md-12 d-flex justify-content-end mt-4">
+                    <!-- mt-4 adds margin top (1.5rem gap) -->
+                    <button type="reset" class="btn btn-secondary me-2">
+                      <i class="fas fa-undo me-2"></i>Reset Form
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                      <i class="fas fa-save me-2"></i>Save Staff
+                    </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </form> <!-- Closing form tag -->
 
-                <!-- You may add user session ID as created_by -->
-                <input type="hidden" name="created_by" value="<?= $_SESSION['user_id'] ?? 0 ?>">
-
-                <div class="row mt-4">
-                  <div class="col-md-12 text-end">
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                  </div>
-                </div>
-              </form>
+          <!-- Education Card -->
+          <div class="card mb-4">
+            <div class="card-header pb-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Education</h6>
+                <button class="btn btn-sm btn-primary mb-0" data-bs-toggle="modal" data-bs-target="#educationModal">
+                  <i class="fas fa-plus me-2"></i>Add Education
+                </button>
+              </div>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+              <div class="table-responsive p-0">
+                <table class="table align-items-center mb-0">
+                  <thead>
+                    <tr>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Qualification</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Start Date</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">End Date</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Institution</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Result</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="6" class="text-center text-sm text-secondary py-4">No education records found</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
-          <!-- Education Card -->
-  <div class="card mb-4">
-    <div class="card-header pb-0">
-      <div class="d-flex justify-content-between align-items-center">
-        <h6 class="mb-0">Education</h6>
-        <button class="btn btn-sm btn-primary mb-0" data-bs-toggle="modal" data-bs-target="#educationModal">
-          <i class="fas fa-plus me-2"></i>Add Education
-        </button>
-      </div>
-    </div>
-    <div class="card-body px-0 pt-0 pb-2">
-      <div class="table-responsive p-0">
-        <table class="table align-items-center mb-0">
-          <thead>
-            <tr>
-              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Qualification</th>
-              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Start Date</th>
-              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">End Date</th>
-              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Institution</th>
-              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Major</th>
-              <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="6" class="text-center text-sm text-secondary py-4">No education records found</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  <!-- Education Modal -->
-<div class="modal fade" id="educationModal" tabindex="-1" aria-labelledby="educationModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="educationModalLabel">Add Education</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="educationForm">
-          <div class="mb-3">
-            <label class="form-label">Qualification</label>
-            <input type="text" class="form-control" name="qualification" required>
+          <!-- Work Experience Card -->
+          <div class="card mb-4">
+            <div class="card-header pb-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Work Experience</h6>
+                <button class="btn btn-sm btn-primary mb-0" data-bs-toggle="modal" data-bs-target="#workModal">
+                  <i class="fas fa-plus me-2"></i>Add Work Experience
+                </button>
+              </div>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+              <div class="table-responsive p-0">
+                <table class="table align-items-center mb-0">
+                  <thead>
+                    <tr>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Company</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Start Date</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">End Date</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Position</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Salary</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Responsibilities</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="7" class="text-center text-sm text-secondary py-4">No work experience records found</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Institution</label>
-            <input type="text" class="form-control" name="institution" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Major</label>
-            <input type="text" class="form-control" name="major">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Start Date</label>
-            <input type="date" class="form-control" name="start_date">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">End Date</label>
-            <input type="date" class="form-control" name="end_date">
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" onclick="saveEducation()">Save</button>
-      </div>
-    </div>
-  </div>
-</div>
 
-<!-- Work Experience Card -->
-<div class="card mb-4">
-  <div class="card-header pb-0">
-    <div class="d-flex justify-content-between align-items-center">
-      <h6 class="mb-0">Work Experience</h6>
-      <button class="btn btn-sm btn-primary mb-0" data-bs-toggle="modal" data-bs-target="#workModal">
-        <i class="fas fa-plus me-2"></i>Add Work Experience
-      </button>
-    </div>
-  </div>
-  <div class="card-body px-0 pt-0 pb-2">
-    <div class="table-responsive p-0">
-      <table class="table align-items-center mb-0">
-        <thead>
-          <tr>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Company</th>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Start Date</th>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">End Date</th>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Position</th>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Salary</th>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Responsibilities</th>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td colspan="7" class="text-center text-sm text-secondary py-4">No work experience records found</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-<!-- Work Modal -->
-<div class="modal fade" id="workModal" tabindex="-1" aria-labelledby="workModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="workModalLabel">Add Work Experience</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="workForm">
-          <div class="mb-3">
-            <label class="form-label">Company</label>
-            <input type="text" class="form-control" name="company" required>
+          <!-- Skills Card -->
+          <div class="card mb-4">
+            <div class="card-header pb-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Skills</h6>
+                <button class="btn btn-sm btn-primary mb-0" data-bs-toggle="modal" data-bs-target="#skillModal">
+                  <i class="fas fa-plus me-2"></i>Add Skill
+                </button>
+              </div>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+              <div class="table-responsive p-0">
+                <table class="table align-items-center mb-0">
+                  <thead>
+                    <tr>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Skill Name</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Proficiency Level</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="3" class="text-center text-sm text-secondary py-4">No skills records found</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Position</label>
-            <input type="text" class="form-control" name="position">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Start Date</label>
-            <input type="date" class="form-control" name="start_date">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">End Date</label>
-            <input type="date" class="form-control" name="end_date">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Salary</label>
-            <input type="number" class="form-control" name="salary">
-          </div>
-          <div class="mb-3">
-            <label class="form-label">Responsibilities</label>
-            <textarea class="form-control" name="responsibilities" rows="3"></textarea>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" onclick="saveWork()">Save</button>
-      </div>
-    </div>
-  </div>
-</div>
 
+          <!-- Family Card -->
+          <div class="card mb-4">
+            <div class="card-header pb-0">
+              <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Family Members</h6>
+                <button class="btn btn-sm btn-primary mb-0" data-bs-toggle="modal" data-bs-target="#familyModal">
+                  <i class="fas fa-plus me-2"></i>Add Family Member
+                </button>
+              </div>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+              <div class="table-responsive p-0">
+                <table class="table align-items-center mb-0">
+                  <thead>
+                    <tr>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Relationship</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Occupation</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Phone Number</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="5" class="text-center text-sm text-secondary py-4">No family records found</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<!-- Skills Card -->
-<div class="card mb-4">
-  <div class="card-header pb-0">
-    <div class="d-flex justify-content-between align-items-center">
-      <h6 class="mb-0">Skills</h6>
-      <button class="btn btn-sm btn-primary mb-0" data-bs-toggle="modal" data-bs-target="#skillModal">
-        <i class="fas fa-plus me-2"></i>Add Skill
-      </button>
-    </div>
-  </div>
-  <div class="card-body px-0 pt-0 pb-2">
-    <div class="table-responsive p-0">
-      <table class="table align-items-center mb-0">
-        <thead>
-          <tr>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Skill Name</th>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Proficiency Level</th>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td colspan="3" class="text-center text-sm text-secondary py-4">No skills records found</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-<!-- Skill Modal -->
-<div class="modal fade" id="skillModal" tabindex="-1" aria-labelledby="skillModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="skillModalLabel">Add Skill</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="skillForm">
-          <div class="mb-3">
-            <label class="form-label">Skill Name</label>
-            <input type="text" class="form-control" name="skill_name" required>
+    <!-- Education Modal -->
+    <div class="modal fade" id="educationModal" tabindex="-1" aria-labelledby="educationModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="educationModalLabel">Add Education</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Proficiency Level</label>
-            <select class="form-control" name="proficiency_level">
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
-              <option value="Expert">Expert</option>
-            </select>
+          <div class="modal-body">
+            <form id="educationForm">
+              <div class="mb-3">
+                <label class="form-label">Qualification <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="qualification" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Institution</label>
+                <input type="text" class="form-control" name="institution" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Result</label>
+                <input type="text" class="form-control" name="result">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Start Date</label>
+                <input type="date" class="form-control" name="start_date">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">End Date</label>
+                <input type="date" class="form-control" name="end_date">
+              </div>
+            </form>
           </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" onclick="saveSkill()">Save</button>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="saveEducation()">Save</button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-
-<!-- Family Card -->
-<div class="card mb-4">
-  <div class="card-header pb-0">
-    <div class="d-flex justify-content-between align-items-center">
-      <h6 class="mb-0">Family Members</h6>
-      <button class="btn btn-sm btn-primary mb-0" data-bs-toggle="modal" data-bs-target="#familyModal">
-        <i class="fas fa-plus me-2"></i>Add Family Member
-      </button>
-    </div>
-  </div>
-  <div class="card-body px-0 pt-0 pb-2">
-    <div class="table-responsive p-0">
-      <table class="table align-items-center mb-0">
-        <thead>
-          <tr>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Relationship</th>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Occupation</th>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Phone Number</th>
-            <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td colspan="5" class="text-center text-sm text-secondary py-4">No family records found</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-<!-- Family Modal -->
-<div class="modal fade" id="familyModal" tabindex="-1" aria-labelledby="familyModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="familyModalLabel">Add Family Member</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="familyForm">
-          <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input type="text" class="form-control" name="name" required>
+    <!-- Work Modal -->
+    <div class="modal fade" id="workModal" tabindex="-1" aria-labelledby="workModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="workModalLabel">Add Work Experience</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Relationship</label>
-            <select class="form-select" name="relationship" required>
-              <option value="" disabled selected>Select relationship</option>
-              <option value="Father">Father</option>
-              <option value="Mother">Mother</option>
-              <option value="Brother">Brother</option>
-              <option value="Sister">Sister</option>
-              <option value="Spouse">Spouse</option>
-              <option value="Child">Child</option>
-              <option value="Guardian">Guardian</option>
-              <option value="Other">Other</option>
-            </select>
+          <div class="modal-body">
+            <form id="workForm">
+              <div class="mb-3">
+                <label class="form-label">Company <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="company" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Position</label>
+                <input type="text" class="form-control" name="position">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Start Date</label>
+                <input type="date" class="form-control" name="start_date">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">End Date</label>
+                <input type="date" class="form-control" name="end_date">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Salary</label>
+                <input type="number" class="form-control" name="salary">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Responsibilities</label>
+                <textarea class="form-control" name="responsibilities" rows="3"></textarea>
+              </div>
+            </form>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Occupation</label>
-            <input type="text" class="form-control" name="occupation">
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="saveWork()">Save</button>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Phone Number</label>
-            <input type="text" class="form-control" name="phone">
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" onclick="saveFamily()">Save</button>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
+    <!-- Skill Modal -->
+    <div class="modal fade" id="skillModal" tabindex="-1" aria-labelledby="skillModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="skillModalLabel">Add Skill</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="skillForm">
+              <div class="mb-3">
+                <label class="form-label">Skill Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="skill_name" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Proficiency Level <span class="text-danger">*</span></label>
+                <select class="form-control" name="proficiency_level">
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                  <option value="Expert">Expert</option>
+                </select>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="saveSkill()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <!-- Core JS Files -->
-  <script src="../assets/js/core/popper.min.js"></script>
-  <script src="../assets/js/core/bootstrap.min.js"></script>
-  <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
-  <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
+    <!-- Family Modal -->
+    <div class="modal fade" id="familyModal" tabindex="-1" aria-labelledby="familyModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="familyModalLabel">Add Family Member</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="familyForm">
+              <div class="mb-3">
+                <label class="form-label">Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="name" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Relationship <span class="text-danger">*</span></label>
+                <select class="form-select" name="relationship" required>
+                  <option value="" disabled selected>Select relationship</option>
+                  <option value="Father">Father</option>
+                  <option value="Mother">Mother</option>
+                  <option value="Brother">Brother</option>
+                  <option value="Sister">Sister</option>
+                  <option value="Spouse">Spouse</option>
+                  <option value="Child">Child</option>
+                  <option value="Guardian">Guardian</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Occupation</label>
+                <input type="text" class="form-control" name="occupation">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Phone Number</label>
+                <input type="text" class="form-control" name="phone">
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="saveFamily()">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
   <!-- Bootstrap JS Bundle with Popper -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  
+  <!-- Perfect Scrollbar -->
+  <script src="../assets/js/plugins/perfect-scrollbar.min.js"></script>
+  <script src="../assets/js/plugins/smooth-scrollbar.min.js"></script>
+
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const icInput = document.querySelector('input[name="noic"]');
-      const phoneInput = document.querySelector('input[name="phone"]');
+  document.addEventListener('DOMContentLoaded', function() {
+      const icInput = document.getElementById('noic');
       const genderInput = document.getElementById('gender');
-      const pwdInput = document.querySelector('input[name="pwd"]');
+      const dobInput = document.getElementById('dob');
+      const ageInput = document.getElementById('age');
+      const phoneInput = document.getElementById('phone');
 
-      function updateGenderAndPassword() {
-        const ic = icInput.value.trim();
-        const phone = phoneInput.value.trim();
-
-        // Auto-detect gender (last digit of IC)
-        if (ic.length === 12) {
-          const lastDigit = parseInt(ic[ic.length - 1]);
-          genderInput.value = (lastDigit % 2 === 0) ? 'F' : 'M';
-        } else {
-          genderInput.value = '';
-        }
-
-        // Generate password: last 6 of IC + '@' + last 4 of phone
-        if (ic.length === 12 && phone.length === 11) {
-          const icLast6 = ic.slice(-6);
-          const phoneLast4 = phone.slice(-4);
-          pwdInput.value = `${icLast6}@${phoneLast4}`;
-        } else {
-          pwdInput.value = '';
-        }
+      function calculateAge(birthDate) {
+          const today = new Date();
+          let age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+              age--;
+          }
+          return age;
       }
 
-      icInput.addEventListener('input', function (e) {
-        this.value = this.value.replace(/\D/g, '').slice(0, 12); // Only digits, max 12
-        updateGenderAndPassword();
+      function processICNumber(ic) {
+          ic = ic.replace(/\D/g, '').slice(0, 12);
+          
+          if (ic.length === 12) {
+              // Extract birth date parts (YYMMDD)
+              const birthYY = ic.substr(0, 2);
+              const birthMM = ic.substr(2, 2);
+              const birthDD = ic.substr(4, 2);
+              
+              // Determine century (current year - 2000)
+              const currentYearShort = new Date().getFullYear() - 2000;
+              const fullBirthYear = (parseInt(birthYY) <= currentYearShort) ? 
+                  '20' + birthYY : '19' + birthYY;
+              
+              // Validate date
+              const dobDate = new Date(`${fullBirthYear}-${birthMM}-${birthDD}`);
+              if (!isNaN(dobDate.getTime())) {
+                  // Format date as YYYY-MM-DD
+                  const formattedDob = dobDate.toISOString().split('T')[0];
+                  dobInput.value = formattedDob;
+                  ageInput.value = calculateAge(dobDate);
+              } else {
+                  dobInput.value = '';
+                  ageInput.value = '';
+              }
+              
+              // Determine gender (last digit)
+              const lastDigit = parseInt(ic.substr(11, 1));
+              genderInput.value = (lastDigit % 2 === 0) ? 'Female' : 'Male';
+          } else {
+              dobInput.value = '';
+              ageInput.value = '';
+              genderInput.value = '';
+          }
+          
+          return ic;
+      }
+
+      icInput.addEventListener('input', function(e) {
+          this.value = processICNumber(this.value);
       });
 
-      phoneInput.addEventListener('input', function (e) {
-        this.value = this.value.replace(/\D/g, '').slice(0, 11); // Only digits, max 11
-        updateGenderAndPassword();
+      icInput.addEventListener('blur', function() {
+          if (this.value.length !== 12) {
+              alert('IC number must be exactly 12 digits');
+              this.focus();
+          }
       });
-    });
-  </script>
 
-  <script>
-    // These functions would be connected to your backend in a real application
-    function saveEducation() {
+      phoneInput.addEventListener('input', function(e) {
+          this.value = this.value.replace(/\D/g, '').slice(0, 11);
+      });
+
+      // Initialize fields if IC is pre-filled
+      if (icInput.value.length === 12) {
+          processICNumber(icInput.value);
+      }
+  });
+
+  function resetICFields() {
+      document.getElementById('noic').value = '';
+      document.getElementById('dob').value = '';
+      document.getElementById('age').value = '';
+      document.getElementById('gender').value = '';
+  }
+
+  // Modal save functions
+  function saveEducation() {
       // Save logic here
       alert('Education saved successfully!');
       $('#educationModal').modal('hide');
-    }
-    
-    function saveWork() {
+  }
+  
+  function saveWork() {
       // Save logic here
       alert('Work experience saved successfully!');
       $('#workModal').modal('hide');
-    }
-    
-    function saveSkill() {
+  }
+  
+  function saveSkill() {
       // Save logic here
       alert('Skill saved successfully!');
       $('#skillModal').modal('hide');
-    }
-    
-    function saveFamily() {
+  }
+  
+  function saveFamily() {
       // Save logic here
       alert('Family member saved successfully!');
       $('#familyModal').modal('hide');
-    }
+  }
   </script>
 </body>
 </html>

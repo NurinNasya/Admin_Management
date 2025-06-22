@@ -389,6 +389,16 @@ try {
                                   </a>
                                 </li>
                                 <li>
+                                  <a class="dropdown-item border-radius-md" href="claim.php?id=<?= $staff['id'] ?>">
+                                    <i class="fas fa-file-medical me-2"></i> Claim
+                                  </a>
+                                </li>
+                                <li>
+                                  <a class="dropdown-item border-radius-md" href="leave.php?id=<?= $staff['id'] ?>">
+                                    <i class="fas fa-file-medical me-2"></i> Leave
+                                  </a>
+                                </li>
+                                <li>
                                   <form method="POST" action="../Controller/staffController.php"
                                     onsubmit="return confirm('Are you sure you want to delete this staff?');">
                                     <input type="hidden" name="staff_id" value="<?= $staff['id'] ?>">

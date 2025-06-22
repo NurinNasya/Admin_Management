@@ -340,11 +340,11 @@ $companies = $compModel->getAllRaw();
                                       title="Edit">
                                       <i class="bi bi-pencil-square fs-4"></i>
                                   </a>
-                                  <a href="../Controller/companyController.php?delete_id=<?= $id ?>" 
-                                      class="text-danger" 
-                                      onclick="return confirm('Are you sure you want to delete this company?');"
-                                      title="Delete">
-                                      <i class="bi bi-trash-fill fs-4"></i>
+                                  <a href="../Controller/departController.php?delete_id=<?= $id ?>" 
+                                    class="text-danger" 
+                                    onclick="return confirm('Are you sure you want to delete this company?');"
+                                    title="Delete">
+                                    <i class="bi bi-trash-fill fs-4"></i>
                                   </a>
                               </td>
                           </tr>
@@ -362,7 +362,7 @@ $companies = $compModel->getAllRaw();
     <!-- Add Company Modal -->
     <div class="modal fade" id="addCompanyModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
-        <form action="crudCompany.php" method="POST" class="modal-content">
+        <form action="company.php" method="POST" class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Add New Company</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -394,7 +394,7 @@ $companies = $compModel->getAllRaw();
     <!-- Edit Company Modal -->
     <div class="modal fade" id="editCompanyModal" tabindex="-1">
       <div class="modal-dialog">
-        <form action="crudCompany.php" method="POST" class="modal-content">
+        <form action="company.php" method="POST" class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Edit Company</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>

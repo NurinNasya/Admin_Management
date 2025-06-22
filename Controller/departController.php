@@ -8,13 +8,13 @@ class DepartController
 
     public function __construct()
     {
-        $db = new Database();
-        $conn = $db->getConnection();
-        $this->departModel = new Depart($conn);
+        global $conn; // Use the existing connection from db.php
         
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+        
+        $this->departModel = new Depart($conn);
     }
 
     public function handleRequests()
