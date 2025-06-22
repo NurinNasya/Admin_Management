@@ -1,5 +1,5 @@
 <?php
-require_once '../db.php';
+require_once __DIR__ . '/../db.php';
 
 class Role
 {
@@ -8,23 +8,31 @@ class Role
     public function __construct() {
         global $conn;
         $this->conn = $conn;
+        
+        if (!$this->conn || $this->conn->connect_error) {
+            throw new Exception("Database connection failed");
+        }
     }
 
-    public function getAllRoles() {
-        $query = "SELECT * FROM roles WHERE created_at IS NULL ORDER BY id DESC";
-        $result = $this->conn->query($query);
+   public function getAllRoles() {
+    // Simple version without filtering
+    $query = "SELECT * FROM roles ORDER BY id DESC";
+    
+    // Or if you want to check for non-null created_at
+    // $query = "SELECT * FROM roles WHERE created_at IS NOT NULL ORDER BY id DESC";
+    
+    $result = $this->conn->query($query);
 
-        if (!$result) {
-            throw new Exception("Database error: " . $this->conn->error);
-        }
-
-        $roles = [];
-        while ($row = $result->fetch_assoc()) {
-            $roles[] = $row;
-        }
-
-        return $roles;
+    if (!$result) {
+        throw new Exception("Query failed: " . $this->conn->error);
     }
+
+    $roles = [];
+    while ($row = $result->fetch_assoc()) {
+        $roles[] = $row;
+    }
+    return $roles;
+}
 
     public function validate($role_name, $role_type) {
         $role_name = trim($role_name);
@@ -39,8 +47,13 @@ class Role
     }
 
     public function existsByNameAndType($role_name, $role_type, $exclude_id = null) {
-        $sql = "SELECT id FROM roles WHERE role_name = '" . $this->conn->real_escape_string($role_name) . "' 
-                AND role_type = '" . $this->conn->real_escape_string($role_type) . "'";
+        $role_name = $this->conn->real_escape_string($role_name);
+        $role_type = $this->conn->real_escape_string($role_type);
+        
+        $sql = "SELECT id FROM roles 
+                WHERE role_name = '$role_name' 
+                AND role_type = '$role_type' 
+                AND created_at IS NULL";
         
         if ($exclude_id) {
             $sql .= " AND id != " . (int)$exclude_id;
@@ -50,65 +63,80 @@ class Role
         return $result->num_rows > 0;
     }
 
-     public function create($role_name, $role_type, $status, $user_id) {
-        $sql = "INSERT INTO roles (role_name, role_type, status, created_by, updated_by) 
-                VALUES (?, ?, ?, ?, ?)";
+    public function create($role_name, $role_type, $status, $user_id) {
+        $role_name = $this->conn->real_escape_string($role_name);
+        $role_type = $this->conn->real_escape_string($role_type);
+        $status = (int)$status;
+        $user_id = (int)$user_id;
         
-        $stmt = $this->conn->prepare($sql);
-        if (!$stmt) {
-            throw new Exception("Prepare failed: " . $this->conn->error);
-        }
+        $sql = "INSERT INTO roles 
+                (role_name, role_type, status, created_at, updated_at) 
+                VALUES 
+                ('$role_name', '$role_type', $status, $user_id, $user_id)";
         
-        $stmt->bind_param("ssiii", $role_name, $role_type, $status, $user_id, $user_id);
-        $result = $stmt->execute();
+        $result = $this->conn->query($sql);
         
         if (!$result) {
-            throw new Exception("Execute failed: " . $stmt->error);
+            throw new Exception("Create failed: " . $this->conn->error);
         }
         
-        return $result;
+        return $this->conn->insert_id;
     }
-
-    /*public function create($role_name, $role_type, $status, $user_id) {
-        $sql = "INSERT INTO roles (role_name, role_type, status, created_by, updated_by) 
-                VALUES ('" . $this->conn->real_escape_string($role_name) . "', 
-                        '" . $this->conn->real_escape_string($role_type) . "', 
-                        " . (int)$status . ", 
-                        " . (int)$user_id . ", 
-                        " . (int)$user_id . ")";
-        return $this->conn->query($sql);
-    }*/
 
     public function update($id, $role_name, $role_type, $status, $user_id) {
-        $sql = "UPDATE roles SET 
-                role_name = '" . $this->conn->real_escape_string($role_name) . "', 
-                role_type = '" . $this->conn->real_escape_string($role_type) . "', 
-                status = " . (int)$status . ", 
-                updated_by = " . (int)$user_id . ", 
-                updated_at = NOW() 
-                WHERE id = " . (int)$id;
-        return $this->conn->query($sql);
+    $role_name = $this->conn->real_escape_string($role_name);
+    $role_type = $this->conn->real_escape_string($role_type);
+    $status = (int)$status;
+    $id = (int)$id;
+    
+    // Removed updated_by since column doesn't exist
+    $sql = "UPDATE roles SET 
+            role_name = '$role_name', 
+            role_type = '$role_type', 
+            status = $status
+            WHERE id = $id";
+            
+    $result = $this->conn->query($sql);
+    
+    if (!$result) {
+        throw new Exception("Update failed: " . $this->conn->error);
     }
+    
+    return $result;
+}
 
-    public function softDelete($id, $user_id) {
+public function softDelete($id, $user_id) {
+    $id = (int)$id;
+    
+    // Check if soft delete columns exist
+    $check = $this->conn->query("SHOW COLUMNS FROM roles LIKE 'deleted_at'");
+    if ($check->num_rows > 0) {
+        // Soft delete
         $sql = "UPDATE roles SET 
-                deleted_at = NOW(), 
-                deleted_by = " . (int)$user_id . " 
-                WHERE id = " . (int)$id;
-        return $this->conn->query($sql);
+                deleted_at = NOW() 
+                WHERE id = $id";
+    } else {
+        // Physical delete
+        $sql = "DELETE FROM roles WHERE id = $id";
     }
+    
+    return $this->conn->query($sql);
+}
+
+public function existsById($id) {
+    $id = (int)$id;
+    // Simplified since we don't have deleted_at column
+    $sql = "SELECT id FROM roles WHERE id = $id";
+    $result = $this->conn->query($sql);
+    return $result->num_rows > 0;
+}
 
     public function isAssignedToUsers($role_id) {
-        $sql = "SELECT COUNT(*) as count FROM users WHERE role_id = " . (int)$role_id;
+        $role_id = (int)$role_id;
+        $sql = "SELECT COUNT(*) as count FROM users WHERE role_id = $role_id";
         $result = $this->conn->query($sql);
         $row = $result->fetch_assoc();
         return $row['count'] > 0;
-    }
-
-    public function existsById($id) {
-        $sql = "SELECT id FROM roles WHERE id = " . (int)$id . " AND deleted_at IS NULL";
-        $result = $this->conn->query($sql);
-        return $result->num_rows > 0;
     }
 
     public function getRoleTypes() {

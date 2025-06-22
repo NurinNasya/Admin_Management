@@ -430,13 +430,11 @@ if (empty($_SESSION['csrf_token'])) {
                                                     title="Edit">
                                                     <i class="bi bi-pencil-square fs-4"></i>
                                                 </a>
-                                                <a href="#" class="text-danger delete-role-btn"
-                                                    data-id="<?= $row['id'] ?>"
-                                                    data-name="<?= htmlspecialchars($row['role_name']) ?>:<?= htmlspecialchars($row['role_type']) ?>"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#deleteRoleModal"
-                                                    title="Delete">
-                                                    <i class="bi bi-trash-fill fs-4"></i>
+                                                <a href="../Controller/roleController.php?delete_id=<?= $id ?>" 
+                                                  class="text-danger" 
+                                                  onclick="return confirm('Are you sure you want to delete this role?');"
+                                                  title="Delete">
+                                                  <i class="bi bi-trash-fill fs-4"></i>
                                                 </a>
                                             </td>
                                         </tr>
@@ -499,7 +497,7 @@ if (empty($_SESSION['csrf_token'])) {
     <!-- Edit Role Modal -->
     <div class="modal fade" id="editRoleModal" tabindex="-1">
         <div class="modal-dialog">
-            <form action="crudrole.php" method="POST" class="modal-content">
+            <form action="roles.php" method="POST" class="modal-content">
                 <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                 <input type="hidden" name="role_id" id="edit_role_id">
                 <div class="modal-header">
@@ -541,20 +539,17 @@ if (empty($_SESSION['csrf_token'])) {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Role type to name mappings
     const roleNames = {
         'MANAGEMENT': ['MANAGER', 'HR', 'FOUNDER', 'CFO', 'MANAGING-DIRECTOR', 'EXECUTIVE-DIRECTOR'],
         'STAFF': ['STAFF', 'CONTRACT', 'HOD', 'OPERATIONMANAGER', 'EXECUTIVEAVSB', 'SUPERVISORAVSB', 'HR-AGMA'],
         'INTERN': ['INTERN']
     };
 
-    // Helper function to update role names dropdown
     function updateRoleNames(selectId, roleType, currentRoleName = null) {
         const select = document.getElementById(selectId);
+        select.innerHTML = currentRoleName ? '' : '<option value="">Select Name</option>';
         
         if (roleType && roleNames[roleType]) {
-            select.innerHTML = currentRoleName ? '' : '<option value="">Select Name</option>';
-            
             roleNames[roleType].forEach(name => {
                 if (!currentRoleName || name !== currentRoleName) {
                     const option = document.createElement('option');
@@ -569,35 +564,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Update role names when type changes (for add modal)
+    // Event listeners
     document.getElementById('role-type').addEventListener('change', function() {
         updateRoleNames('role-name', this.value);
     });
 
-    // Edit Role Button Handler
     document.querySelectorAll('.edit-role-btn').forEach(button => {
         button.addEventListener('click', function() {
             document.getElementById('edit_role_id').value = this.dataset.id;
             document.getElementById('edit_role_type').value = this.dataset.roleType;
             document.getElementById('edit_status').value = this.dataset.status;
-            
-            // Update the role name dropdown with current value and options
             updateRoleNames('edit_role_name', this.dataset.roleType, this.dataset.roleName);
-        });
-    });
-
-    // Delete Role Button Handler
-    document.querySelectorAll('.delete-role-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            document.getElementById('delete_role_id').value = this.dataset.id;
         });
     });
 
     // Auto-dismiss alerts
     setTimeout(() => {
         document.querySelectorAll('.alert-auto-dismiss').forEach(alert => {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
+            new bootstrap.Alert(alert).close();
         });
     }, 5000);
 });
