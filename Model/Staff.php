@@ -3,24 +3,28 @@ require_once '../db.php';
 
 class Staff {
     private $conn;
-    
+
     public function __construct() {
         global $conn;
         $this->conn = $conn;
     }
 
+    // ==============================================
+    // GET ALL STAFF
+    // ==============================================
     public function getAllStaff() {
         $query = "SELECT 
-            s.*, 
-            d.code AS departments_code,
+            s.id,
+            s.name,
+            s.roles,
+            s.phone,
+            d.code AS department_code,
             c.code AS company_code,
-            r.role_name AS role_role_name,
-            sh.description AS shift_description
+            r.role_name
         FROM staff s
         LEFT JOIN departments d ON s.departments_id = d.id
         LEFT JOIN companies c ON s.company_id = c.id
         LEFT JOIN roles r ON s.roles = r.role_name
-        LEFT JOIN shifts sh ON s.shift_id = sh.id
         ORDER BY s.created_at DESC";
 
         $result = $this->conn->query($query);
@@ -31,44 +35,72 @@ class Staff {
         return $result->fetch_all(MYSQLI_ASSOC);
     }
 
+    // ==============================================
+    // GET STAFF BY ID
+    // ==============================================
     public function getStaffById($id) {
         $id = (int)$this->conn->real_escape_string($id);
         $query = "SELECT 
-            s.*, 
-            d.name AS department_name,
-            c.name AS company_name,
-            b.branch_name,
-            sh.description AS shift_description
+            s.*,
+            d.code AS department_code,
+            c.code AS company_code,
+            r.role_name
         FROM staff s
         LEFT JOIN departments d ON s.departments_id = d.id
         LEFT JOIN companies c ON s.company_id = c.id
-        LEFT JOIN branches b ON s.company_branch = b.id
-        LEFT JOIN shifts sh ON s.shift_id = sh.id
+        LEFT JOIN roles r ON s.roles = r.role_name
         WHERE s.id = $id";
         
         $result = $this->conn->query($query);
         return $result ? $result->fetch_assoc() : null;
     }
 
-    public function create($data) {
-        // Validate required fields
-        if (empty($data['roles']) || !$this->roleExists($data['roles'])) {
-            error_log("Invalid or missing role");
-            return false;
-        }
+    // ==============================================
+    // DROPDOWN DATA METHODS
+    // ==============================================
+    public function getAllRoles() {
+        $query = "SELECT * FROM roles ORDER BY role_name";
+        $result = $this->conn->query($query);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
 
-        // Escape all input data
-        $escapedData = array_map(function($value) {
-            return $this->conn->real_escape_string($value);
-        }, $data);
+    public function getAllDepartments() {
+        $query = "SELECT * FROM departments ORDER BY name";
+        $result = $this->conn->query($query);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function getAllCompanies() {
+        $query = "SELECT * FROM companies ORDER BY name";
+        $result = $this->conn->query($query);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function getAllBranches() {
+        $query = "SELECT * FROM company_branch ORDER BY branch_name";
+        $result = $this->conn->query($query);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function getAllShifts() {
+        $query = "SELECT * FROM shifts ORDER BY description";
+        $result = $this->conn->query($query);
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    // ==============================================
+    // CRUD OPERATIONS
+    // ==============================================
+    public function create($data) {
+        $escapedData = array_map([$this->conn, 'real_escape_string'], $data);
 
         $query = "INSERT INTO staff (
             staff_no, noic, pwd, name, email, phone, roles, 
             departments_id, company_id, company_branch, status, 
-            gender, shift_id, leave_approval, permanent_address, 
-            mail_address, status_qrcode, status_swafoto, status_monitor,
-            status_marital, dependent, working_hours, break_duration,
-            start_date, end_date, created_by, profile_pic
+            gender, shift_id, working_hours, break_duration,
+            start_date, end_date, permanent_address, mail_address,
+            status_qrcode, status_swafoto, status_monitor,
+            status_marital, dependent, created_by, profile_pic
         ) VALUES (
             '{$escapedData['staff_no']}',
             '{$escapedData['noic']}',
@@ -83,83 +115,106 @@ class Staff {
             ".(int)$data['status'].",
             '{$escapedData['gender']}',
             ".(int)$data['shift_id'].",
-            '{$escapedData['leave_approval']}',
-            '{$escapedData['permanent_address']}',
-            '{$escapedData['mail_address']}',
-            '{$escapedData['status_qrcode']}',
-            '{$escapedData['status_swafoto']}',
-            '{$escapedData['status_monitor']}',
-            '{$escapedData['status_marital']}',
-            ".(int)$data['dependent'].",
-            ".(int)$data['working_hours'].",
-            ".(int)$data['break_duration'].",
+            ".(float)$data['working_hours'].",
+            ".(float)$data['break_duration'].",
             '{$escapedData['start_date']}',
             '{$escapedData['end_date']}',
+            '{$escapedData['permanent_address']}',
+            '{$escapedData['mail_address']}',
+            ".(int)$data['status_qrcode'].",
+            ".(int)$data['status_swafoto'].",
+            ".(int)$data['status_monitor'].",
+            ".(int)$data['status_marital'].",
+            ".(int)$data['dependent'].",
             ".(int)$data['created_by'].",
             '{$escapedData['profile_pic']}'
         )";
 
-        if (!$this->conn->query($query)) {
-            error_log("Database error: " . $this->conn->error);
-            return false;
-        }
-        return $this->conn->insert_id;
-    }
-
-    public function update($id, $data) {
-        // Validate required fields
-        if (empty($data['roles']) || !$this->roleExists($data['roles'])) {
-            error_log("Invalid or missing role");
-            return false;
-        }
-
-        // Escape all input data
-        $escapedData = array_map(function($value) {
-            return $this->conn->real_escape_string($value);
-        }, $data);
-
-        $query = "UPDATE staff SET 
-            noic = '{$escapedData['noic']}',
-            pwd = '{$escapedData['pwd']}',
-            name = '{$escapedData['name']}',
-            email = '{$escapedData['email']}',
-            phone = '{$escapedData['phone']}',
-            roles = '{$escapedData['roles']}',
-            departments_id = ".(int)$data['departments_id'].",
-            company_id = ".(int)$data['company_id'].",
-            company_branch = ".(int)$data['company_branch'].",
-            status = ".(int)$data['status'].",
-            gender = '{$escapedData['gender']}',
-            shift_id = ".(int)$data['shift_id'].",
-            leave_approval = '{$escapedData['leave_approval']}',
-            permanent_address = '{$escapedData['permanent_address']}',
-            mail_address = '{$escapedData['mail_address']}',
-            status_qrcode = '{$escapedData['status_qrcode']}',
-            status_swafoto = '{$escapedData['status_swafoto']}',
-            status_monitor = '{$escapedData['status_monitor']}',
-            status_marital = '{$escapedData['status_marital']}',
-            dependent = ".(int)$data['dependent'].",
-            working_hours = ".(int)$data['working_hours'].",
-            break_duration = ".(int)$data['break_duration'].",
-            start_date = '{$escapedData['start_date']}',
-            end_date = '{$escapedData['end_date']}',
-            updated_by = ".(int)$data['updated_by'].",
-            profile_pic = '{$escapedData['profile_pic']}'
-            WHERE id = ".(int)$id;
-
-        if (!$this->conn->query($query)) {
-            error_log("Database error: " . $this->conn->error);
-            return false;
-        }
-        return true;
-    }
-
-    public function delete($id) {
-        $id = (int)$this->conn->real_escape_string($id);
-        $query = "DELETE FROM staff WHERE id = $id";
         return $this->conn->query($query);
     }
 
+    // ==============================================
+    // UPDATE STAFF - FIXED VERSION
+    // ==============================================
+    public function update($id, $data) {
+        $id = (int)$id;
+        if ($id <= 0) {
+            error_log("Invalid staff ID for update: $id");
+            return false;
+        }
+
+        // Prepare allowed fields
+        $allowedFields = [
+            'name', 'email', 'phone', 'roles',
+            'departments_id', 'company_id', 'company_branch',
+            'status', 'gender', 'shift_id', 'status_marital',
+            'dependent', 'permanent_address', 'mail_address',
+            'status_qrcode', 'status_swafoto', 'status_monitor',
+            'start_date', 'end_date', 'updated_by'
+        ];
+
+        // Build SET clauses
+        $updates = [];
+        foreach ($allowedFields as $field) {
+            if (isset($data[$field])) {
+                $value = $this->conn->real_escape_string($data[$field]);
+                if (is_numeric($value) && $value == (int)$value) {
+                    $updates[] = "$field = ".(int)$value;
+                } else {
+                    $updates[] = "$field = '$value'";
+                }
+            }
+        }
+
+        // Add system fields
+        $updates[] = "updated_at = NOW()";
+
+        // Build and execute query
+        $query = "UPDATE staff SET ".implode(', ', $updates)." WHERE id = $id";
+        
+        error_log("UPDATE QUERY: $query");
+        $result = $this->conn->query($query);
+        
+        if (!$result) {
+            error_log("UPDATE FAILED: ".$this->conn->error);
+            return false;
+        }
+        
+        return true; // Return true even if no rows changed
+    }
+
+    // ==============================================
+    // DELETE STAFF
+    // ==============================================
+    public function delete($id) {
+        $id = (int)$this->conn->real_escape_string($id);
+        if ($id <= 0) {
+            error_log("Invalid ID for deletion: $id");
+            return false;
+        }
+
+        $query = "DELETE FROM staff WHERE id = ?";
+        $stmt = $this->conn->prepare($query);
+        
+        if (!$stmt) {
+            error_log("Prepare failed: " . $this->conn->error);
+            return false;
+        }
+
+        $stmt->bind_param("i", $id);
+        $success = $stmt->execute();
+        
+        if (!$success) {
+            error_log("Delete failed: " . $stmt->error);
+        }
+
+        $stmt->close();
+        return $success;
+    }
+
+    // ==============================================
+    // UTILITY METHODS
+    // ==============================================
     public function generateStaffNumber() {
         $year = date('y');
         $query = "SELECT staff_no FROM staff WHERE staff_no LIKE '$year/%' ORDER BY id DESC LIMIT 1";
@@ -177,7 +232,6 @@ class Staff {
     public function getStaffByRoles($roles) {
         if (empty($roles)) return [];
         
-        // Escape and validate each role
         $escapedRoles = array_map(function($role) {
             $role = $this->conn->real_escape_string($role);
             return "'$role'";

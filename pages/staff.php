@@ -1,25 +1,65 @@
 <?php
+session_start();
 require_once '../db.php';
 require_once '../Model/Staff.php';
 
-// Initialize Staff Model
 $staffModel = new Staff();
+// WITH THIS FIXED VERSION:
+// FIX: Simplified cache control - refresh only when needed
+if (!isset($_SESSION['cached_staff_data']) || isset($_SESSION['staff_data_refreshed'])) {
+    // Clear refresh flag if it exists
+    if (isset($_SESSION['staff_data_refreshed'])) {
+        unset($_SESSION['staff_data_refreshed']);
+    }
+    
+    // Always get fresh data when cache is invalid
+    $_SESSION['cached_staff_data'] = $staffModel->getAllStaff();
 
-try {
-    // Fetch all staff with department and company codes
-    $allStaff = $staffModel->getAllStaff();
-    
-    // Check for success/error messages
-    $successMsg = $_SESSION['success'] ?? '';
-    $errorMsg = $_SESSION['error'] ?? '';
-    
-    // Clear the messages after displaying them
-    unset($_SESSION['success']);
-    unset($_SESSION['error']);
-    
-} catch (Exception $e) {
-    $errorMsg = "Error loading staff data: " . $e->getMessage();
+// // Force fresh data load if we just updated a staff member
+// $forceRefresh = isset($_SESSION['staff_data_refreshed']);
+// if ($forceRefresh) {
+//     unset($_SESSION['staff_data_refreshed']);
+//     // Clear any cached staff data
+//     if (isset($_SESSION['cached_staff_data'])) {
+//         unset($_SESSION['cached_staff_data']);
+//     }
+// }
+
+// // Get staff data using your existing method
+// if (!isset($_SESSION['cached_staff_data']) || $forceRefresh) {
+//     $_SESSION['cached_staff_data'] = $staffModel->getAllStaff(); // Using your existing method
 }
+$allStaff = $_SESSION['cached_staff_data'];
+
+// Handle messages
+$successMsg = $_SESSION['success_message'] ?? '';
+$errorMsg = $_SESSION['error_message'] ?? '';
+
+// Clear messages after displaying
+unset($_SESSION['success_message']);
+unset($_SESSION['error_message']);
+
+// require_once '../db.php';
+// require_once '../Model/Staff.php';
+
+// // Initialize Staff Model
+// $staffModel = new Staff();
+
+// try {
+//     // Fetch all staff with department and company codes
+//     $allStaff = $staffModel->getAllStaff();
+    
+//     // Check for success/error messages
+//     $successMsg = $_SESSION['success'] ?? '';
+//     $errorMsg = $_SESSION['error'] ?? '';
+    
+//     // Clear the messages after displaying them
+//     unset($_SESSION['success']);
+//     unset($_SESSION['error']);
+    
+// } catch (Exception $e) {
+//     $errorMsg = "Error loading staff data: " . $e->getMessage();
+// }
 ?>
 
 
@@ -340,7 +380,7 @@ try {
           <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center" style="margin-bottom: 5px;">
               <h4 style="margin-bottom: 0;">Employee List</h4>
-              <a href="add_staff.php" class="btn btn-primary btn-sm">
+              <a href="staff_info.php" class="btn btn-primary btn-sm">
                 <i class="fas fa-plus me-1"></i> Add Employee
               </a>
             </div>
@@ -350,7 +390,6 @@ try {
                   <thead class="thead-dark">
                     <tr>
                       <th>ID</th>
-                      <th>PROFILE</th>
                       <th>NAME</th>
                       <th>DEPARTMENT</th>
                       <th>COMPANY</th>
@@ -364,17 +403,10 @@ try {
                       <?php foreach ($allStaff as $staff): ?>
                         <tr>
                           <td><?= htmlspecialchars($staff['id'] ?? 'N/A') ?></td>
-                          <td>
-                            <div>
-                              <img src="<?= !empty($staff['profile_pic']) ? '../uploads/' . htmlspecialchars($staff['profile_pic']) : '../assets/img/default-avatar.png' ?>" 
-                                   class="avatar avatar-sm me-3" 
-                                   alt="Profile Picture of <?= htmlspecialchars($staff['name'] ?? 'Staff') ?>">
-                            </div>
-                          </td>
                           <td><?= htmlspecialchars($staff['name'] ?? 'N/A') ?></td>
-                          <td><?= htmlspecialchars($staff['department_name'] ?? ($staff['departments_code'] ?? 'N/A')) ?></td>
-                          <td><?= htmlspecialchars($staff['company_name'] ?? ($staff['company_code'] ?? 'N/A')) ?></td>
-                          <td><?= htmlspecialchars($staff['position'] ?? ($staff['roles'] ?? 'N/A')) ?></td>
+                          <td><?= htmlspecialchars($staff['department_code'] ?? 'N/A') ?></td>
+                          <td><?= htmlspecialchars($staff['company_code'] ?? 'N/A') ?></td>
+                          <td><?= htmlspecialchars($staff['role_name'] ?? $staff['roles'] ?? 'N/A') ?></td>
                           <td><?= htmlspecialchars($staff['phone'] ?? 'N/A') ?></td>
                           <td class="align-middle">
                             <div class="dropdown">
@@ -399,14 +431,14 @@ try {
                                   </a>
                                 </li>
                                 <li>
-                                  <form method="POST" action="../Controller/staffController.php"
-                                    onsubmit="return confirm('Are you sure you want to delete this staff?');">
-                                    <input type="hidden" name="staff_id" value="<?= $staff['id'] ?>">
-                                    <input type="hidden" name="action" value="delete">
-                                    <button type="submit" name="delete_staff"
-                                      class="dropdown-item border-radius-md text-danger">
-                                      <i class="fas fa-trash me-2"></i> Delete
-                                    </button>
+                                  <!-- In your table row actions, replace the delete form with this: -->
+                                  <form method="POST" action="../Controller/staffController.php" 
+                                        onsubmit="return confirm('Are you sure you want to delete this staff member?');">
+                                      <input type="hidden" name="staff_id" value="<?= $staff['id'] ?>">
+                                      <input type="hidden" name="delete_staff" value="1">
+                                      <button type="submit" class="dropdown-item border-radius-md text-danger">
+                                          <i class="fas fa-trash me-2"></i> Delete
+                                      </button>
                                   </form>
                                 </li>
                               </ul>
@@ -436,31 +468,85 @@ try {
   <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
   
   <script>
-    $(document).ready(function() {
-      // Initialize DataTable
-      $('#employeeTable').DataTable({
-        responsive: true,
-        columnDefs: [
-          { responsivePriority: 1, targets: 2 }, // Name
-          { responsivePriority: 2, targets: 8 }, // Actions
-          { orderable: false, targets: [1, 8] } // Disable sorting on profile pic and actions
-        ],
-        language: {
-          search: "_INPUT_",
-          searchPlaceholder: "Search employees...",
-          lengthMenu: "Show _MENU_ entries per page",
-          zeroRecords: "No matching employees found",
-          info: "Showing _START_ to _END_ of _TOTAL_ employees",
-          infoEmpty: "No employees available",
-          infoFiltered: "(filtered from _MAX_ total employees)"
+document.getElementById('staffEditForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    // Disable button during submission
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            return response.text().then(text => {
+                throw new Error(text || 'Update failed');
+            });
         }
-      });
-      
-      // Auto-dismiss alerts after 5 seconds
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred during update');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Update Staff';
+    });
+});
+// Auto-dismiss alerts after 5 seconds
       setTimeout(function() {
         $('.alert').alert('close');
       }, 5000);
+</script>
+
+  <script>
+// Force clear cache on page load
+window.onload = function() {
+    if (performance.navigation.type === 1) {
+        // Page was reloaded
+        if (typeof(Storage) !== "undefined") {
+            sessionStorage.removeItem("staffDataLoaded");
+        }
+    }
+};
+
+// Initialize DataTable with AJAX if you want real-time updates
+$(document).ready(function() {
+    var employeeTable = $('#employeeTable').DataTable({
+        responsive: true,
+        destroy: true, // Allows reinitialization
+        // ... your other DataTable options
     });
-  </script>
+
+    // Optional: Add this if you want to use AJAX for deletion
+    $(document).on('submit', 'form[action*="staffController.php"]', function(e) {
+        e.preventDefault();
+        var form = this;
+        
+        if (confirm('Are you sure you want to delete this staff member?')) {
+            $.ajax({
+                url: form.action,
+                method: 'POST',
+                data: $(form).serialize(),
+                success: function() {
+                    // Reload the table after successful deletion
+                    employeeTable.ajax.reload(null, false);
+                    // Show success message
+                    location.reload(); // Full refresh to ensure consistency
+                },
+                error: function() {
+                    alert('Error deleting staff');
+                }
+            });
+        }
+    });
+});
+</script>
 </body>
 </html>
