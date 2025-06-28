@@ -6,11 +6,9 @@ class LeaveForm {
         $this->conn = $connection;
     }
 
-    // ... [semua method asal anda tanpa ubah]
+    
 
-    // =============== DITAMBAH DI SINI ===============
-
-    // Get application by ID with all details
+    
     public function getApplicationById($id) {
         $id = intval($id);
 
