@@ -1,13 +1,5 @@
-<?php 
-require_once '../db.php';  // Ensure the file is included only once
-require_once '../Model/Staff.php';
-$staffModel = new Staff();
-
-if (isset($_GET['id']) && is_numeric($_GET['id'])) {
-    $staff = $staffModel->getStaffById((int)$_GET['id']);
-} else {
-    $staff = null;
-}
+<?php
+include __DIR__ . '/../Controller/adminMedClaimController.php';
 ?>
 
 <!DOCTYPE html>
@@ -30,6 +22,52 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
   <!-- CSS Files -->
   <link id="pagestyle" href="../assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" />
+  <style>
+    .claim-card {
+      border-left: 4px solid #fb6340;
+      margin-bottom: 20px;
+    }
+    .approved-card {
+      border-left: 4px solid #2dce89;
+    }
+    .rejected-card {
+      border-left: 4px solid #f5365c;
+    }
+    .file-preview {
+      max-width: 100%;
+      max-height: 200px;
+    }
+    .reject-form {
+      display: none;
+      margin-top: 10px;
+    }
+    .document-name {
+      font-weight: bold;
+      margin-top: 5px;
+      word-break: break-all;
+    }
+    .badge-approved {
+      background-color: #2dce89;
+    }
+    .badge-rejected {
+      background-color: #f5365c;
+    }
+    .section-title {
+      border-bottom: 2px solid #dee2e6;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+      .document-link {
+      color: inherit;
+      text-decoration: none;
+      cursor: pointer;
+  }
+  .document-link:hover {
+      text-decoration: underline;
+      color: blue;
+  }
+  </style>
 </head>
 
 <body class="g-sidenav-show   bg-gray-100">
@@ -54,15 +92,15 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/tables.html">
+          <a class="nav-link " href="../pages/approve.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-calendar-grid-58 text-dark text-sm opacity-10"></i>
             </div>
-            <span class="nav-link-text ms-1">Tables</span>
+            <span class="nav-link-text ms-1">Leaves</span>
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/staff.php">
+          <a class="nav-link <?php echo ($current_page == 'staff.php') ? 'active' : ''; ?>" href="../pages/staff.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
@@ -250,7 +288,7 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
                                         </g>
                                     </g>
                                     </g>
-                                </g>
+                                </g> 
                                 </svg>
                             </div>
                             <div class="d-flex flex-column justify-content-center">
@@ -273,76 +311,184 @@ if (isset($_GET['id']) && is_numeric($_GET['id'])) {
             </nav>
             <!-- End Navbar -->
 
-<!-- Main content -->
-    <div class="container-fluid py-4">
-      <div class="row">
-        <div class="col-md-12">
-          <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-              <h5>Medical > Quota Configuration</h5>
-              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">Add Quota</button>
+ <div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5>Medical Claim Approvals</h5>
+        </div>
+    
+    <?php if (isset($_GET['updated'])): ?>
+      <div class="alert alert-success alert-dismissible fade show">
+        Claim status updated successfully!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    <?php endif; ?>
+    
+    <!-- Pending Claims Section -->
+<div class="card-body">
+          <h5 class="card-title">Pending Claims</h5>
+  
+  <?php if (empty($pendingClaims)): ?>
+    <div class="alert alert-info">No pending claims to review.</div>
+  <?php else: ?>
+    <div class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Claim ID</th>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Description</th>
+                <th>Attachment</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($pendingClaims as $claim): ?>
+                <tr>
+                  <td>#<?= $claim['id'] ?></td>
+                  <td><?= date('d M Y', strtotime($claim['date_receipt'])) ?></td>
+                  <td>RM <?= number_format($claim['total'], 2) ?></td>
+                  <td><?= htmlspecialchars($claim['description']) ?></td>
+                  <td>
+    <?php if (!empty($claim['document_name'])): ?>
+        <a href="../uploads/<?= htmlspecialchars($claim['document_name']) ?>" target="_blank" class="document-link">
+            <?= htmlspecialchars($claim['document_name']) ?>
+        </a>
+    <?php else: ?>
+        <span class="text-muted">No document</span>
+    <?php endif; ?>
+</td>
+                  <td>
+                    <div class="d-flex gap-2">
+                      <form method="POST" class="d-inline">
+                        <input type="hidden" name="claim_id" value="<?= $claim['id'] ?>">
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="btn btn-success btn-sm">
+                          <i class="fas fa-check"></i> Approve
+                        </button>
+                      </form>
+                      
+                      <button class="btn btn-danger btn-sm show-reject-form" data-claim-id="<?= $claim['id'] ?>">
+                        <i class="fas fa-times"></i> Reject
+                      </button>
+                    </div>
+                    
+                    <form method="POST" class="reject-form mt-2" id="reject-form-<?= $claim['id'] ?>" style="display: none;">
+                      <input type="hidden" name="claim_id" value="<?= $claim['id'] ?>">
+                      <input type="hidden" name="action" value="reject">
+                      <div class="mb-2">
+                        <label for="reject_reason_<?= $claim['id'] ?>" class="form-label small">Reason:</label>
+                        <textarea class="form-control form-control-sm" id="reject_reason_<?= $claim['id'] ?>" 
+                                  name="reject_reason" required rows="2"></textarea>
+                      </div>
+                      <button type="submit" class="btn btn-danger btn-sm">
+                        <i class="fas fa-check-circle"></i> Confirm Reject
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <?php endif; ?>
+</div>
+    
+    <!-- Recent Approvals Section -->
+<div class="card-body">
+    <h5 class="card-title">Recent Approvals/Rejections</h5>
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Claim ID</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Document</th>
+                            <th>Action Date</th>
+                            <?php if (!empty($recentApprovals) && isset($recentApprovals[0]['reject_reason'])): ?>
+                                <th>Reason</th>
+                            <?php endif; ?>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($recentApprovals)): ?>
+                            <tr>
+                                <td colspan="<?= (!empty($recentApprovals) && isset($recentApprovals[0]['reject_reason'])) ? '7' : '6' ?>" class="text-center">
+                                    No recent approvals
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($recentApprovals as $claim): ?>
+                                <tr>
+                                    <td>#<?= $claim['id'] ?></td>
+                                    <td><?= date('d M Y', strtotime($claim['date_receipt'])) ?></td>
+                                    <td>RM <?= number_format($claim['total'], 2) ?></td>
+                                    <td>
+                                        <span class="badge <?= $claim['status'] == 'approved' ? 'badge-approved' : 'badge-rejected' ?>">
+                                            <?= ucfirst($claim['status']) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+    <?php if (!empty($claim['attachment'])): ?>
+        <a href="../uploads/<?= htmlspecialchars($claim['attachment']) ?>" target="_blank" class="document-link">
+            <?= htmlspecialchars($claim['attachment']) ?>
+        </a>
+    <?php else: ?>
+        <span class="text-muted">None</span>
+    <?php endif; ?>
+</td>
+                                    <td>
+                                        <?php 
+                                        $actionDate = $claim['status'] == 'approved' ? $claim['approved_at'] : $claim['rejected_at'];
+                                        echo $actionDate ? date('d M Y H:i', strtotime($actionDate)) : 'N/A';
+                                        ?>
+                                    </td>
+                                    <?php if (isset($claim['reject_reason'])): ?>
+                                        <td><?= htmlspecialchars($claim['reject_reason']) ?></td>
+                                    <?php endif; ?>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
-            <div class="card-body">
+        </div>
+    </div>
+</div>
 
-              <h5 class="card-title">Employee Info</h5>
-
-              <?php if ($staff): ?>
-                <p class="card-text"><strong>Name:</strong> <?= htmlspecialchars($staff['name']) ?></p>
-                <p class="card-text"><strong>IC:</strong> <?= htmlspecialchars($staff['noic']) ?></p>
-                <p class="card-text"><strong>Company:</strong> <?= htmlspecialchars($staff['company_code']) ?></p>
-                <p class="card-text"><strong>Department:</strong> <?= htmlspecialchars($staff['departments_code']) ?></p>
-              <?php else: ?>
-                <div class="alert alert-warning">Employee data not found.</div>
-              <?php endif; ?>
-
-              <!-- Label outside the table -->
-              <div class="mb-3 p-2 bg-secondary text-start text-white rounded">
-                <strong>Individual Medical Claim Quota List</strong>
-              </div>
-
-              <table class="table table-bordered table-striped mt-3">
-                <thead class="table-dark">
-                  <tr>
-                    <th>Start/End</th>
-                    <th>Entitled</th>
-                    <th>Used</th>
-                    <th>Current</th>
-                    <th>Pending</th>
-                    <th>Available</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <!-- Expired Medical Leave -->
-                  <tr>
-                    <td><span class="text-danger fst-italic">Expired!</span> Medical Leave</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td></td>
-                  </tr>
-
-                  <!-- Expired Annual Leave -->
-                  <tr>
-                    <td><span class="text-danger fst-italic">Expired!</span> Annual Leave</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td>0</td>
-                    <td></td>
-                  </tr>
-                </tbody>
-              </table>
-
-            </div> <!-- end card-body -->
-          </div> <!-- end card -->
-        </div> <!-- end col -->
-      </div> <!-- end row -->
-    </div> <!-- end container -->
-
-<script src="../assets/js/bootstrap.bundle.min.js"></script>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  // Toggle reject reason form for table rows
+  document.querySelectorAll('.show-reject-form').forEach(button => {
+    button.addEventListener('click', function() {
+      const claimId = this.getAttribute('data-claim-id');
+      const form = document.getElementById(`reject-form-${claimId}`);
+      form.style.display = form.style.display === 'block' ? 'none' : 'block';
+    });
+  });
+</script>
+  <!-- <script>
+    // Toggle reject reason form
+    document.querySelectorAll('.show-reject-form').forEach(button => {
+      button.addEventListener('click', function() {
+        const form = this.closest('.card-body').querySelector('.reject-form');
+        form.style.display = form.style.display === 'block' ? 'none' : 'block';
+      });
+    });
+  </script> -->
 </body>
 </html>
