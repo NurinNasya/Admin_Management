@@ -447,13 +447,14 @@ include __DIR__ . '/../Controller/adminMedClaimController.php';
     <?php else: ?>
         <span class="text-muted">None</span>
     <?php endif; ?>
+<td title="Processed on <?= isset($actionDate) ? $actionDate : 'N/A' ?>">
+    <?php 
+    $actionDate = ($claim['status'] == 'approved') 
+        ? $claim['approved_at'] 
+        : (($claim['status'] == 'rejected') ? $claim['rejected_at'] : null);
+    echo $actionDate ? date('d M Y H:i', strtotime($actionDate)) : 'N/A';
+    ?>
 </td>
-                                    <td>
-                                        <?php 
-                                        $actionDate = $claim['status'] == 'approved' ? $claim['approved_at'] : $claim['rejected_at'];
-                                        echo $actionDate ? date('d M Y H:i', strtotime($actionDate)) : 'N/A';
-                                        ?>
-                                    </td>
                                     <?php if (isset($claim['reject_reason'])): ?>
                                         <td><?= htmlspecialchars($claim['reject_reason']) ?></td>
                                     <?php endif; ?>

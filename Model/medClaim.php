@@ -147,6 +147,8 @@ class MedClaim {
     public function approveClaim($claimId) {
         $query = "UPDATE medclaims SET 
                 status = 'approved',
+                approved_at = NOW(),  -- Add this timestamp
+                rejected_at = NULL,   -- Clear rejection timestamp
                 updated_at = NOW()
                 WHERE id = $claimId";
         return mysqli_query($this->conn, $query);
@@ -156,6 +158,8 @@ class MedClaim {
         $reason = mysqli_real_escape_string($this->conn, $reason);
         $query = "UPDATE medclaims SET 
                 status = 'rejected',
+                rejected_at = NOW(),  -- Add this timestamp
+                approved_at = NULL,   -- Clear approval timestamp
                 reject_reason = '$reason',
                 updated_at = NOW()
                 WHERE id = $claimId";
