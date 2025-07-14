@@ -1,186 +1,258 @@
 <?php
-require_once '../db.php';
+require_once __DIR__ . '/../db.php';
 
-class MedClaim { 
+class MedClaim {
     private $conn;
     
     public function __construct($conn) {
+        if (!$conn) {
+            throw new Exception("Database connection failed");
+        }
         $this->conn = $conn;
     }
 
-    // Get all current claims for a user (pending/approved)
-    public function getCurrentClaims($staffId, $page = 1, $perPage = 10) {
-        $offset = ($page - 1) * $perPage;
-        $query = "SELECT * FROM medclaims 
-                 WHERE staff_id = $staffId 
-                 AND (status IS NULL OR status = 'pending' OR status = 'approved')
-                 ORDER BY created_at DESC
-                 LIMIT $perPage OFFSET $offset";
-        $result = mysqli_query($this->conn, $query);
+    // Get current claims with pagination
+    // public function getCurrentClaims($staffId, $page = 1, $perPage = 100) {
+    //     $offset = ($page - 1) * $perPage;
         
-        $claims = [];
-        while ($row = mysqli_fetch_assoc($result)) {
-            $claims[] = $row;
-        }
+    //     $result = $this->conn->query("
+    //         SELECT * FROM medclaims 
+    //         WHERE staff_id = $staffId
+    //         AND (status = 'pending' OR status = 'approved')
+    //         ORDER BY created_at DESC, id DESC
+    //         LIMIT $perPage OFFSET $offset
+    //     ");
         
-        // Get total count for pagination
-        $countQuery = "SELECT COUNT(*) as total FROM medclaims 
-                       WHERE staff_id = $staffId 
-                       AND (status IS NULL OR status = 'pending' OR status = 'approved')";
-        $countResult = mysqli_query($this->conn, $countQuery);
-        $total = mysqli_fetch_assoc($countResult)['total'];
+    //     $claims = [];
+    //     while ($row = $result->fetch_assoc()) {
+    //         $claims[] = $row;
+    //     }
         
-        return [
-            'claims' => $claims,
-            'total' => $total
-        ];
-    }
+    //     return [
+    //         'claims' => $claims,
+    //         'total' => $this->getClaimsCount($staffId, ['pending', 'approved'])
+    //     ];
+    // }
 
-    // Get historical claims (approved/rejected/completed)
+    // Modify getCurrentClaims() to include rejected claims and their reasons
+public function getCurrentClaims($staffId, $page = 1, $perPage = 100) {
+    $offset = ($page - 1) * $perPage;
+    
+    $result = $this->conn->query("
+        SELECT * FROM medclaims 
+        WHERE staff_id = $staffId
+        AND (status = 'pending' OR status = 'approved' OR status = 'rejected')
+        ORDER BY created_at DESC, id DESC
+        LIMIT $perPage OFFSET $offset
+    ");
+    
+    $claims = [];
+    while ($row = $result->fetch_assoc()) {
+        $claims[] = $row;
+    }
+    
+    return [
+        'claims' => $claims,
+        'total' => $this->getClaimsCount($staffId, ['pending', 'approved', 'rejected'])
+    ];
+}
+
+    // Get historical claims
     public function getHistoryClaims($staffId, $page = 1, $perPage = 10) {
         $offset = ($page - 1) * $perPage;
-        $query = "SELECT * FROM medclaims 
-                 WHERE staff_id = $staffId 
-                 AND (status IN ('approved', 'rejected'))
-                 ORDER BY created_at DESC 
-                 LIMIT $perPage OFFSET $offset";
-        $result = mysqli_query($this->conn, $query);
         
-        $claims = [];
-        while ($row = mysqli_fetch_assoc($result)) {
-            $claims[] = $row;
-        }
-        
-        // Get total count for pagination
-        $countQuery = "SELECT COUNT(*) as total FROM medclaims 
-                       WHERE staff_id = $staffId 
-                       AND (status IN ('approved', 'rejected'))";
-        $countResult = mysqli_query($this->conn, $countQuery);
-        $total = mysqli_fetch_assoc($countResult)['total'];
+        $result = $this->conn->query("
+            SELECT * FROM medclaims 
+            WHERE staff_id = $staffId 
+            AND status IN ('approved', 'rejected')
+            ORDER BY created_at DESC 
+            LIMIT $perPage OFFSET $offset
+        ");
         
         return [
-            'claims' => $claims,
-            'total' => $total
+            'claims' => $result->fetch_all(MYSQLI_ASSOC),
+            'total' => $this->getClaimsCount($staffId, ['approved', 'rejected'])
         ];
     }
 
-    // Add a new claim - Updated to match HTML form fields
+    // Add new claim
     public function addClaim($staffId, $data) {
-        $date_receipt = mysqli_real_escape_string($this->conn, $data['date_receipt']);
-        $total = floatval($data['total']);
-        $description = mysqli_real_escape_string($this->conn, $data['description']);
-        $attachment = mysqli_real_escape_string($this->conn, $data['attachment']);
-        $documentSize = isset($data['documentSize']) ? intval($data['documentSize']) : 0;
+        $dateReceipt = $this->conn->real_escape_string($data['date_receipt']);
+        $description = $this->conn->real_escape_string($data['description']);
+        $total = (float)$data['total'];
+        $attachment = $this->conn->real_escape_string($data['attachment']);
+        $documentSize = (int)$data['documentSize'];
         
-        $query = "INSERT INTO medclaims 
-                  (staff_id, date_receipt, description, total, 
-                   document_name, document_size, created_at, status) 
-                  VALUES 
-                  ($staffId, '$date_receipt', '$description', $total, 
-                   '$attachment', $documentSize, NOW(), 'pending')";
-        
-        return mysqli_query($this->conn, $query);
+        return $this->conn->query("
+            INSERT INTO medclaims 
+            (staff_id, date_receipt, description, total, 
+             document_name, document_size, created_at, status) 
+            VALUES ($staffId, '$dateReceipt', '$description', $total, 
+                   '$attachment', $documentSize, NOW(), 'pending')
+        ");
     }
 
-    // Update a claim - matching edit form fields
+    // Update existing claim
     public function updateClaim($claimId, $staffId, $data) {
-        $date_receipt = mysqli_real_escape_string($this->conn, $data['edit_date_receipt']);
-        $total = floatval($data['edit_total']);
-        $description = mysqli_real_escape_string($this->conn, $data['edit_description']);
-        
-        $query = "UPDATE medclaims SET 
-                  date_receipt = '$date_receipt',
-                  total = $total,
-                  description = '$description'";
-        
-        // Update attachment if provided
-        if (!empty($data['edit_attachment'])) {
-            $attachment = mysqli_real_escape_string($this->conn, $data['edit_attachment']);
-            $query .= ", document_name = '$attachment'";
+        try {
+            $this->conn->begin_transaction();
+
+            $dateReceipt = $this->conn->real_escape_string($data['edit_date_receipt']);
+            $total = (float)$data['edit_total'];
+            $description = $this->conn->real_escape_string($data['edit_description']);
+            
+            $query = "UPDATE medclaims SET date_receipt='$dateReceipt', total=$total, description='$description'";
+            
+            if (!empty($data['edit_attachment'])) {
+                $attachment = $this->conn->real_escape_string($data['edit_attachment']);
+                $query .= ", document_name='$attachment'";
+            }
+            
+            $query .= " WHERE id=$claimId AND staff_id=$staffId";
+            
+            $result = $this->conn->query($query);
+            if (!$result) {
+                throw new Exception("Query failed: " . $this->conn->error);
+            }
+            
+            $this->conn->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->conn->rollback();
+            error_log("Update Claim Error: " . $e->getMessage());
+            return false;
         }
-        
-        $query .= " WHERE id = $claimId AND staff_id = $staffId";
-        
-        return mysqli_query($this->conn, $query);
     }
 
-    // Delete a claim
+    // Delete claim
     public function deleteClaim($claimId, $staffId) {
-        $query = "DELETE FROM medclaims WHERE id = $claimId AND staff_id = $staffId";
-        return mysqli_query($this->conn, $query);
+        return $this->conn->query("
+            DELETE FROM medclaims 
+            WHERE id = $claimId AND staff_id = $staffId
+        ");
     }
 
-    // Get single claim by ID
+    // Get claim by ID with staff verification
     public function getClaimById($claimId, $staffId) {
-        $query = "SELECT * FROM medclaims WHERE id = $claimId AND staff_id = $staffId";
-        $result = mysqli_query($this->conn, $query);
-        return mysqli_fetch_assoc($result);
+        $result = $this->conn->query("
+            SELECT * FROM medclaims 
+            WHERE id = $claimId AND staff_id = $staffId
+        ");
+        return $result->fetch_assoc();
+    }
+
+    // Get claim without staff verification (for debugging)
+    public function getClaimByIdWithoutStaffCheck($claimId) {
+        $result = $this->conn->query("
+            SELECT * FROM medclaims 
+            WHERE id = $claimId
+        ");
+        return $result->fetch_assoc();
     }
 
     // Get claim balances
     public function getClaimBalances($staffId) {
-        $query = "SELECT 
-                  SUM(CASE WHEN status = 'approved' THEN total ELSE 0 END) as used_amount,
-                  SUM(CASE WHEN status = 'pending' THEN total ELSE 0 END) as pending_amount,
-                  SUM(CASE WHEN status = 'approved' THEN balance_after_approve ELSE 0 END) as balance_after
-                  FROM medclaims 
-                  WHERE staff_id = $staffId";
-        
-        $result = mysqli_query($this->conn, $query);
-        return mysqli_fetch_assoc($result);
+        $result = $this->conn->query("
+            SELECT 
+                SUM(CASE WHEN status = 'approved' THEN total ELSE 0 END) as used_amount,
+                SUM(CASE WHEN status = 'pending' THEN total ELSE 0 END) as pending_amount
+            FROM medclaims 
+            WHERE staff_id = $staffId
+        ");
+        return $result->fetch_assoc();
     }
 
+    // Get recent approvals
+    public function getRecentApprovalsByStaff($staffId, $limit = 20) {
+        $result = $this->conn->query("
+            SELECT 
+                id, date_receipt, total, description, 
+                document_name as attachment, status,
+                approved_at, rejected_at, reject_reason
+            FROM medclaims 
+            WHERE status IN ('approved', 'rejected')
+            AND staff_id = $staffId
+            ORDER BY COALESCE(approved_at, rejected_at) DESC
+            LIMIT $limit
+        ");
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    // Get pending claims (admin view)
     public function getPendingClaims() {
-        $query = "SELECT * FROM medclaims 
-                WHERE status = 'pending'
-                ORDER BY created_at DESC";
-        $result = mysqli_query($this->conn, $query);
+        $result = $this->conn->query("
+            SELECT 
+                mc.*, 
+                s.name as staff_name,
+                d.name as department_name
+            FROM medclaims mc
+            JOIN staff s ON mc.staff_id = s.id
+            JOIN departments d ON s.departments_id = d.id
+            WHERE mc.status = 'pending'
+            ORDER BY mc.created_at DESC
+        ");
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    // Get staff medical quota
+    public function getStaffQuota($staffId) {
+        $result = $this->conn->query("
+            SELECT additional_quota 
+            FROM staff_medical_quota 
+            WHERE staff_id = $staffId
+        ");
+        return $result->fetch_assoc() ?: ['additional_quota' => 0];
+    }
+
+    // Helper method to get claims count
+    private function getClaimsCount($staffId, $statuses) {
+        $escapedStatuses = array_map(function($status) {
+            return "'" . $this->conn->real_escape_string($status) . "'";
+        }, $statuses);
+        $statusList = implode(',', $escapedStatuses);
         
-        $claims = [];
-        while ($row = mysqli_fetch_assoc($result)) {
-            $claims[] = $row;
-        }
-        
-        return $claims;
+        $result = $this->conn->query("
+            SELECT COUNT(*) as total 
+            FROM medclaims 
+            WHERE staff_id = $staffId 
+            AND status IN ($statusList)
+        ");
+        return $result->fetch_assoc()['total'];
+    }
+
+    // Get recent approvals (admin view)
+    public function getRecentApprovals($limit = 20) {
+        $result = $this->conn->query("
+            SELECT 
+                mc.id, mc.date_receipt, mc.total, mc.description, 
+                mc.document_name as attachment, mc.status,
+                mc.approved_at, mc.rejected_at, mc.reject_reason,
+                s.name as staff_name,
+                d.name as department_name
+            FROM medclaims mc
+            JOIN staff s ON mc.staff_id = s.id
+            JOIN departments d ON s.departments_id = d.id
+            WHERE mc.status IN ('approved', 'rejected')
+            ORDER BY COALESCE(mc.approved_at, mc.rejected_at) DESC
+            LIMIT $limit
+        ");
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
 
     public function approveClaim($claimId) {
-        $query = "UPDATE medclaims SET 
-                status = 'approved',
-                approved_at = NOW(),  -- Add this timestamp
-                rejected_at = NULL,   -- Clear rejection timestamp
-                updated_at = NOW()
-                WHERE id = $claimId";
-        return mysqli_query($this->conn, $query);
+        return $this->conn->query("
+            UPDATE medclaims 
+            SET status = 'approved', approved_at = NOW() 
+            WHERE id = $claimId
+        ");
     }
 
     public function rejectClaim($claimId, $reason) {
-        $reason = mysqli_real_escape_string($this->conn, $reason);
-        $query = "UPDATE medclaims SET 
-                status = 'rejected',
-                rejected_at = NOW(),  -- Add this timestamp
-                approved_at = NULL,   -- Clear approval timestamp
-                reject_reason = '$reason',
-                updated_at = NOW()
-                WHERE id = $claimId";
-        return mysqli_query($this->conn, $query);
-    }
-    
-    public function getRecentApprovals($limit = 20) {
-        $query = "SELECT id, date_receipt, total, description, document_name as attachment, 
-                        status, approved_at, rejected_at, reject_reason
-                FROM medclaims 
-                WHERE status IN ('approved', 'rejected')
-                ORDER BY COALESCE(approved_at, rejected_at) DESC
-                LIMIT $limit";
-        $result = mysqli_query($this->conn, $query);
-        
-        $claims = [];
-        while ($row = mysqli_fetch_assoc($result)) {
-            $claims[] = $row;
-        }
-        
-        return $claims;
+        $escapedReason = $this->conn->real_escape_string($reason);
+        return $this->conn->query("
+            UPDATE medclaims 
+            SET status = 'rejected', reject_reason = '$escapedReason', approved_at = NOW() 
+            WHERE id = $claimId
+        ");
     }
 }
-?>

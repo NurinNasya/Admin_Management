@@ -338,43 +338,45 @@ include __DIR__ . '/../Controller/adminMedClaimController.php';
         <div class="table-responsive">
           <table class="table table-hover">
             <thead class="table-light">
-              <tr>
-                <th>Claim ID</th>
-                <th>Date</th>
-                <th>Amount</th>
-                <th>Description</th>
-                <th>Attachment</th>
-                <th>Actions</th>
-              </tr>
+                <tr>
+                    <th>Claim ID</th>
+                    <th>Staff Name</th>
+                    <th>Department</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th>Attachment</th>
+                    <th>Actions</th>
+                </tr>
             </thead>
             <tbody>
-              <?php foreach ($pendingClaims as $claim): ?>
-                <tr>
-                  <td>#<?= $claim['id'] ?></td>
-                  <td><?= date('d M Y', strtotime($claim['date_receipt'])) ?></td>
-                  <td>RM <?= number_format($claim['total'], 2) ?></td>
-                  <td><?= htmlspecialchars($claim['description']) ?></td>
-                  <td>
-    <?php if (!empty($claim['document_name'])): ?>
-        <a href="../uploads/<?= htmlspecialchars($claim['document_name']) ?>" target="_blank" class="document-link">
-            <?= htmlspecialchars($claim['document_name']) ?>
-        </a>
-    <?php else: ?>
-        <span class="text-muted">No document</span>
-    <?php endif; ?>
-</td>
+                <?php foreach ($pendingClaims as $claim): ?>
+                    <tr>
+                        <td>#<?= htmlspecialchars($claim['id'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($claim['staff_name'] ?? 'N/A') ?></td>
+                        <td><?= htmlspecialchars($claim['department_name'] ?? 'N/A') ?></td>
+                        <td><?= date('d M Y', strtotime($claim['date_receipt'] ?? '')) ?></td>
+                        <td>RM <?= number_format($claim['total'] ?? 0, 2) ?></td>
+                        <td><?= htmlspecialchars($claim['description'] ?? '') ?></td>
+                        <td>
+                            <?php if (!empty($claim['document_name'])): ?>
+                                <a href="../uploads/<?= htmlspecialchars($claim['document_name']) ?>" target="_blank" class="document-link">
+                                    <?= htmlspecialchars($claim['document_name']) ?>
+                                </a>
+                            <?php else: ?>
+                                <span class="text-muted">No document</span>
+                            <?php endif; ?>
+                        </td>
                   <td>
                     <div class="d-flex gap-2">
                       <form method="POST" class="d-inline">
                         <input type="hidden" name="claim_id" value="<?= $claim['id'] ?>">
                         <input type="hidden" name="action" value="approve">
-                        <button type="submit" class="btn btn-success btn-sm">
-                          <i class="fas fa-check"></i> Approve
+                        <button type="submit" class="btn btn-success btn-sm">Approve
                         </button>
                       </form>
                       
-                      <button class="btn btn-danger btn-sm show-reject-form" data-claim-id="<?= $claim['id'] ?>">
-                        <i class="fas fa-times"></i> Reject
+                      <button class="btn btn-danger btn-sm show-reject-form" data-claim-id="<?= $claim['id'] ?>">Reject
                       </button>
                     </div>
                     
@@ -401,7 +403,7 @@ include __DIR__ . '/../Controller/adminMedClaimController.php';
   <?php endif; ?>
 </div>
     
-    <!-- Recent Approvals Section -->
+<!-- Recent Approvals Section -->
 <div class="card-body">
     <h5 class="card-title">Recent Approvals/Rejections</h5>
     <div class="card">
@@ -411,6 +413,8 @@ include __DIR__ . '/../Controller/adminMedClaimController.php';
                     <thead>
                         <tr>
                             <th>Claim ID</th>
+                            <th>Staff Name</th>
+                            <th>Department</th>
                             <th>Date</th>
                             <th>Amount</th>
                             <th>Status</th>
@@ -424,39 +428,42 @@ include __DIR__ . '/../Controller/adminMedClaimController.php';
                     <tbody>
                         <?php if (empty($recentApprovals)): ?>
                             <tr>
-                                <td colspan="<?= (!empty($recentApprovals) && isset($recentApprovals[0]['reject_reason'])) ? '7' : '6' ?>" class="text-center">
+                                <td colspan="<?= (!empty($recentApprovals) && isset($recentApprovals[0]['reject_reason'])) ? '9' : '8' ?>" class="text-center">
                                     No recent approvals
                                 </td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($recentApprovals as $claim): ?>
                                 <tr>
-                                    <td>#<?= $claim['id'] ?></td>
-                                    <td><?= date('d M Y', strtotime($claim['date_receipt'])) ?></td>
-                                    <td>RM <?= number_format($claim['total'], 2) ?></td>
+                                    <td>#<?= htmlspecialchars($claim['id'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($claim['staff_name'] ?? 'N/A') ?></td>
+                                    <td><?= htmlspecialchars($claim['department_name'] ?? 'N/A') ?></td>
+                                    <td><?= date('d M Y', strtotime($claim['date_receipt'] ?? '')) ?></td>
+                                    <td>RM <?= number_format($claim['total'] ?? 0, 2) ?></td>
                                     <td>
-                                        <span class="badge <?= $claim['status'] == 'approved' ? 'badge-approved' : 'badge-rejected' ?>">
-                                            <?= ucfirst($claim['status']) ?>
+                                        <span class="badge <?= ($claim['status'] ?? '') == 'approved' ? 'badge-approved' : 'badge-rejected' ?>">
+                                            <?= ucfirst($claim['status'] ?? '') ?>
                                         </span>
                                     </td>
                                     <td>
-    <?php if (!empty($claim['attachment'])): ?>
-        <a href="../uploads/<?= htmlspecialchars($claim['attachment']) ?>" target="_blank" class="document-link">
-            <?= htmlspecialchars($claim['attachment']) ?>
-        </a>
-    <?php else: ?>
-        <span class="text-muted">None</span>
-    <?php endif; ?>
-<td title="Processed on <?= isset($actionDate) ? $actionDate : 'N/A' ?>">
-    <?php 
-    $actionDate = ($claim['status'] == 'approved') 
-        ? $claim['approved_at'] 
-        : (($claim['status'] == 'rejected') ? $claim['rejected_at'] : null);
-    echo $actionDate ? date('d M Y H:i', strtotime($actionDate)) : 'N/A';
-    ?>
-</td>
+                                        <?php if (!empty($claim['attachment'])): ?>
+                                            <a href="../uploads/<?= htmlspecialchars($claim['attachment']) ?>" target="_blank" class="document-link">
+                                                <?= htmlspecialchars($claim['attachment']) ?>
+                                            </a>
+                                        <?php else: ?>
+                                            <span class="text-muted">None</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        $actionDate = ($claim['status'] ?? '') == 'approved' 
+                                            ? ($claim['approved_at'] ?? null)
+                                            : (($claim['status'] ?? '') == 'rejected' ? ($claim['rejected_at'] ?? null) : null);
+                                        echo $actionDate ? date('d M Y H:i', strtotime($actionDate)) : 'N/A';
+                                        ?>
+                                    </td>
                                     <?php if (isset($claim['reject_reason'])): ?>
-                                        <td><?= htmlspecialchars($claim['reject_reason']) ?></td>
+                                        <td><?= htmlspecialchars($claim['reject_reason'] ?? '') ?></td>
                                     <?php endif; ?>
                                 </tr>
                             <?php endforeach; ?>

@@ -390,121 +390,85 @@ if (isset($_GET['error'])) {
             </table>
 
   <!-- New Leave Modal -->
-  <div class="modal fade" id="addLeaveModal" tabindex="-1" aria-labelledby="addLeaveModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title" id="addLeaveModalLabel">Apply New Leave</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
+<div class="modal fade" id="addLeaveModal" tabindex="-1" aria-labelledby="addLeaveModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="addLeaveModalLabel">Apply New Leave</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
 
-        <div class="modal-body">
-          <!-- Tabs -->
-          <ul class="nav nav-tabs" id="leaveTab" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="medical-tab" data-bs-toggle="tab" data-bs-target="#medical" type="button" role="tab">Medical Leave</button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#other" type="button" role="tab">Other Leave</button>
-            </li>
-          </ul>
+      <div class="modal-body">
+        <form action="../Controller/leaveController.php?action=add" method="post" enctype="multipart/form-data">
+          <!--<input type="hidden" name="staff_id" value="<?= $staff_id ?>">
+          <input type="hidden" name="created_by" value="<?= $_SESSION['user_id'] ?? 1 ?>">-->
 
-          <!-- Tab Content -->
-          <div class="tab-content pt-3" id="leaveTabContent">
-            <!-- Medical Leave Form -->
-            <div class="tab-pane fade show active" id="medical" role="tabpanel">
-              <form action="../Controller/leaveController.php?action=add" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="staff_id" value="<?= $staff_id ?>">
-                <input type="hidden" name="created_by" value="<?= $_SESSION['user_id'] ?? 1 ?>">
-                <input type="hidden" name="leave_type" value="Medical Leave">
-
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <label for="start_date_med" class="form-label">Start Date</label>
-                    <input type="date" class="form-control" id="start_date_med" name="start_date" required>
-                  </div>
-                  <div class="col-md-6">
-                    <label for="end_date_med" class="form-label">End Date</label>
-                    <input type="date" class="form-control" id="end_date_med" name="end_date" required>
-                  </div>
-                </div>
-
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <label for="total_days_med" class="form-label">Total Days</label>
-                    <input type="number" class="form-control" id="total_days_med" name="total_days" step="0.5" required>
-                  </div>
-                  <div class="col-md-6">
-                    <label for="leave_document" class="form-label">Medical Certificate</label>
-                    <input type="file" class="form-control" id="leave_document" name="leave_document" accept=".pdf,.jpg,.jpeg,.png">
-                  </div>
-                </div>
-
-                <div class="mb-3">
-                  <label for="reason_med" class="form-label">Reason</label>
-                  <textarea class="form-control" id="reason_med" name="reason" rows="3" required></textarea>
-                </div>
-
-                <div class="modal-footer px-0">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button type="submit" class="btn btn-primary">Submit Medical Leave</button>
-                </div>
-              </form>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="leave_type" class="form-label">Leave Type</label>
+              <select class="form-select" id="leave_type" name="leave_type" required>
+                <option value="" disabled selected>Select leave type</option>
+                <option value="Medical Leave">Medical Leave</option>
+                <option value="Annual Leave">Annual Leave</option>
+                <option value="Unpaid Leave">Unpaid Leave</option>
+                <option value="Maternity Leave">Maternity Leave</option>
+                <option value="Paternity Leave">Paternity Leave</option>
+                <option value="Compassionate Leave">Compassionate Leave</option>
+              </select>
             </div>
-
-            <!-- Other Leave Form -->
-            <div class="tab-pane fade" id="other" role="tabpanel">
-              <form action="../Controller/leaveController.php?action=add" method="post">
-                <input type="hidden" name="staff_id" value="<?= $staff_id ?>">
-                <input type="hidden" name="created_by" value="<?= $_SESSION['user_id'] ?? 1 ?>">
-
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <label for="leave_type_other" class="form-label">Leave Type</label>
-                    <select class="form-select" id="leave_type_other" name="leave_type" required>
-                      <option value="" disabled selected>Select leave type</option>
-                      <option value="Annual Leave">Annual Leave</option>
-                      <option value="Unpaid Leave">Unpaid Leave</option>
-                      <option value="Maternity Leave">Maternity Leave</option>
-                      <option value="Paternity Leave">Paternity Leave</option>
-                      <option value="Compassionate Leave">Compassionate Leave</option>
-                    </select>
-                  </div>
-                  <div class="col-md-6">
-                    <label for="total_days_other" class="form-label">Total Days</label>
-                    <input type="number" class="form-control" id="total_days_other" name="total_days" step="0.5" required>
-                  </div>
-                </div>
-
-                <div class="row mb-3">
-                  <div class="col-md-6">
-                    <label for="start_date_other" class="form-label">Start Date</label>
-                    <input type="date" class="form-control" id="start_date_other" name="start_date" required>
-                  </div>
-                  <div class="col-md-6">
-                    <label for="end_date_other" class="form-label">End Date</label>
-                    <input type="date" class="form-control" id="end_date_other" name="end_date" required>
-                  </div>
-                </div>
-
-                <div class="mb-3">
-                  <label for="reason_other" class="form-label">Reason</label>
-                  <textarea class="form-control" id="reason_other" name="reason" rows="3" required></textarea>
-                </div>
-
-                <div class="modal-footer px-0">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                  <button type="submit" class="btn btn-primary">Submit Other Leave</button>
-                </div>
-              </form>
+            <div class="col-md-6">
+              <label for="total_days" class="form-label">Total Days</label>
+              <input type="number" class="form-control" id="total_days" name="total_days" step="0.5" required>
             </div>
           </div>
-        </div>
 
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="start_date" class="form-label">Start Date</label>
+              <input type="date" class="form-control" id="start_date" name="start_date" required>
+            </div>
+            <div class="col-md-6">
+              <label for="end_date" class="form-label">End Date</label>
+              <input type="date" class="form-control" id="end_date" name="end_date" required>
+            </div>
+          </div>
+
+          <!-- Document upload (conditionally shown for Medical Leave) -->
+          <div class="row mb-3" id="document_upload_container" style="display: none;">
+            <div class="col-md-12">
+              <label for="leave_document" class="form-label">Medical Certificate</label>
+              <input type="file" class="form-control" id="leave_document" name="leave_document" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="reason" class="form-label">Reason</label>
+            <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+          </div>
+
+          <div class="modal-footer px-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">Submit Leave</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
+</div>
 
+<script>
+  // Show/hide medical certificate upload based on leave type selection
+  document.getElementById('leave_type').addEventListener('change', function() {
+    const documentContainer = document.getElementById('document_upload_container');
+    if (this.value === 'Medical Leave') {
+      documentContainer.style.display = 'block';
+      document.getElementById('leave_document').setAttribute('required', '');
+    } else {
+      documentContainer.style.display = 'none';
+      document.getElementById('leave_document').removeAttribute('required');
+    }
+  });
+</script>
 
   <!-- Required JavaScript -->
   <!-- Bootstrap JS Bundle with Popper -->

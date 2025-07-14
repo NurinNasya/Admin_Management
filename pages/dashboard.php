@@ -64,7 +64,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="../pages/staff.php">
+          <a class="nav-link " href="../pages/staff_info.php">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
               <i class="ni ni-credit-card text-dark text-sm opacity-10"></i>
             </div>
@@ -83,6 +83,11 @@
             <li class="nav-item">
               <a class="nav-link" href="../pages/company.php">
                 <span class="sidenav-normal">Company</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="../pages/company_branch.php">
+                <span class="sidenav-normal">Company Branch</span>
               </a>
             </li>
             <li class="nav-item">

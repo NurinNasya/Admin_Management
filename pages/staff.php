@@ -421,7 +421,8 @@ unset($_SESSION['error_message']);
                                   </a>
                                 </li>
                                 <li>
-                                  <a class="dropdown-item border-radius-md" href="claim.php?id=<?= $staff['id'] ?>">
+                                  <a class="dropdown-item border-radius-md" href="medicalClaim.php?staff_id=<?= $staff['id'] ?>">
+                                  <!-- <a class="dropdown-item border-radius-md" href="medClaim.php?id=<?= $staff['id'] ?>"> -->
                                     <i class="fas fa-file-medical me-2"></i> Claim
                                   </a>
                                 </li>

@@ -1,14 +1,26 @@
 <?php
-require_once '../db.php';
 require_once '../Model/Branch.php';
 require_once '../Model/Comp.php';
-require_once '../Controller/compController.php';
 
 $branchModel = new Branch();
-$compModel = new Company(); // Make sure this matches your Company class name
+$companyModel = new Company();
 
+// Get all branches with company details
+try {
     $branches = $branchModel->getAllBranchesWithCompany();
-    $companies = $compModel->getAllCompanies(); // For the dropdown
+} catch (Exception $e) {
+    $error_message = "Error fetching branches: " . $e->getMessage();
+    error_log($error_message);
+    $branches = [];
+}
+
+// Get all companies for dropdown
+try {
+    $companies = $companyModel->getAllCompanies();
+} catch (Exception $e) {
+    $companies = [];
+    error_log("Error fetching companies: " . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -290,7 +302,7 @@ $compModel = new Company(); // Make sure this matches your Company class name
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5>Branch Management</h5>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBranchModal" style="margin-top: 0;">Add Branch</button>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBranchModal">Add Branch</button>
                     </div>
                     
                     <?php if (isset($_SESSION['success_message'])): ?>
@@ -323,7 +335,6 @@ $compModel = new Company(); // Make sure this matches your Company class name
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <!-- In the table body section of pages/company_branch.php -->
                                 <tbody>
                                     <?php if (!empty($branches)): ?>
                                         <?php foreach ($branches as $index => $branch): ?>
@@ -385,35 +396,35 @@ $compModel = new Company(); // Make sure this matches your Company class name
     </div>
 
     <!-- Add Branch Modal -->
-<!-- Add Branch Modal -->
-<div class="modal fade" id="addBranchModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add New Branch</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form action="../Controller/branchController.php" method="POST">
+    <div class="modal fade" id="addBranchModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Branch</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="../Controller/branchController.php" method="POST">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                     <div class="modal-body">
                         <div class="mb-3">
-                        <div class="form-group">
-                        <label class="form-control-label">Company <span class="text-danger">*</span></label>
-                        <select class="form-control" name="company_id" required>
-                            <option value="">-- Select --</option>
-                            <?php foreach ($companies as $comp): ?>
-                            <option value="<?= $comp['id'] ?>"><?= htmlspecialchars($comp['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                            <div class="form-group">
+                                <label class="form-control-label">Company <span class="text-danger">*</span></label>
+                                <select class="form-control" name="company_id" required>
+                                    <option value="">-- Select --</option>
+                                    <?php foreach ($companies as $comp): ?>
+                                    <option value="<?= $comp['id'] ?>"><?= htmlspecialchars($comp['name']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Branch Code <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="branch_code" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Branch Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="branch_name" required>
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label">Branch Code <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="branch_code" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Branch Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="branch_name" required>
+                        </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Latitude</label>
@@ -450,17 +461,16 @@ $compModel = new Company(); // Make sure this matches your Company class name
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form action="../Controller/branchController.php" method="POST">
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                     <input type="hidden" name="edit_id" id="edit_id">
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Company <span class="text-danger">*</span></label>
                             <select class="form-select" name="company_id" id="edit_company_id" required>
                                 <option value="">Select Company</option>
-                                <?php 
-                                $companies->data_seek(0);
-                                while ($company = $companies->fetch_assoc()): ?>
+                                <?php foreach ($companies as $company): ?>
                                     <option value="<?= $company['id'] ?>"><?= htmlspecialchars($company['name']) ?></option>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -498,9 +508,9 @@ $compModel = new Company(); // Make sure this matches your Company class name
         </div>
     </div>
 
-<script>
-    // Fill edit modal with data
+    <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Fill edit modal with data
         document.querySelectorAll('.edit-branch-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.getElementById('edit_id').value = btn.dataset.id;
@@ -522,6 +532,6 @@ $compModel = new Company(); // Make sure this matches your Company class name
             });
         }, 5000);
     });
-  </script>
+    </script>
 </body>
 </html>

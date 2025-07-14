@@ -95,4 +95,42 @@ class RoleController
     header("Location: roles.php");
     exit();
 }
+
+// In Controller/roleController.php
+private function deleteRole() {
+    try {
+        // Validate input
+        if (!isset($_POST['role_id']) || !is_numeric($_POST['role_id'])) {
+            throw new Exception("Invalid role ID");
+        }
+
+        $id = (int)$_POST['role_id'];
+        
+        // Check existence
+        if (!$this->role->existsById($id)) {
+            throw new Exception("Role not found");
+        }
+
+        // Check assignments
+        if ($this->role->isAssignedToUsers($id)) {
+            throw new Exception("Cannot delete role: Currently assigned to users");
+        }
+
+        // Perform deletion
+        if (!$this->role->delete($id)) {
+            throw new Exception("Database error during deletion");
+        }
+
+        // Success
+        $_SESSION['message'] = "Role deleted successfully";
+        header("Location: roles.php");
+        exit();
+
+    } catch (Exception $e) {
+        error_log("Delete Error: " . $e->getMessage());
+        $_SESSION['error'] = $e->getMessage();
+        header("Location: " . $_SERVER['HTTP_REFERER']);
+        exit();
+    }
+}
 }

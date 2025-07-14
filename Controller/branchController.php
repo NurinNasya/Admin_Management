@@ -10,24 +10,35 @@ error_reporting(E_ALL);
 
 session_start();
 
+// Generate CSRF token if not exists
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $branchModel = new Branch();
 $companyModel = new Company();
+
+// Debug form submission
+error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    error_log("POST data: " . print_r($_POST, true));
+}
 
 // Handle Add Branch
 if (isset($_POST['add_branch'])) {
     try {
-        // Debug: Log received data
         error_log("Add branch form submitted: " . print_r($_POST, true));
 
-        // Validate required fields
-        if (empty($_POST['company_id']) || empty($_POST['branch_code']) || empty($_POST['branch_name'])) {
-            throw new Exception("Company ID, branch code and branch name are required");
+        // Verify required fields
+        $required = ['company_id', 'branch_code', 'branch_name'];
+        foreach ($required as $field) {
+            if (empty($_POST[$field])) {
+                throw new Exception("$field is required");
+            }
         }
 
-        // Check if branch code already exists
-        if ($branchModel->isBranchCodeExists($_POST['branch_code'])) {
-            throw new Exception("Branch code already exists");
-        }
+        // Get current user ID from session
+        $created_by = $_SESSION['user_id'] ?? null;
 
         // Create branch
         $branch_id = $branchModel->createBranch(
@@ -36,13 +47,14 @@ if (isset($_POST['add_branch'])) {
             $_POST['branch_name'],
             $_POST['latitude'] ?? null,
             $_POST['longitude'] ?? null,
-            $_POST['status'] ?? 1
+            $_POST['status'] ?? 1,
+            $created_by
         );
         
-        $_SESSION['success_message'] = "Branch added successfully! ID: $branch_id";
+        $_SESSION['success_message'] = "Branch added successfully!";
         error_log("Branch created successfully. ID: $branch_id");
     } catch (Exception $e) {
-        $_SESSION['error_message'] = "Error: " . $e->getMessage();
+        $_SESSION['error_message'] = $e->getMessage();
         error_log("Branch creation error: " . $e->getMessage());
     }
     header("Location: ../pages/company_branch.php");
@@ -52,20 +64,20 @@ if (isset($_POST['add_branch'])) {
 // Handle Update Branch
 if (isset($_POST['update_branch'])) {
     try {
-        // Debug: Log received data
         error_log("Update branch form submitted: " . print_r($_POST, true));
 
-        // Validate required fields
-        if (empty($_POST['edit_id']) || empty($_POST['company_id']) || 
-            empty($_POST['branch_code']) || empty($_POST['branch_name'])) {
-            throw new Exception("All required fields must be filled");
+        // Verify required fields
+        $required = ['edit_id', 'company_id', 'branch_code', 'branch_name'];
+        foreach ($required as $field) {
+            if (empty($_POST[$field])) {
+                throw new Exception("$field is required");
+            }
         }
 
-        // Check if branch code exists (excluding current branch)
-        if ($branchModel->isBranchCodeExists($_POST['branch_code'], $_POST['edit_id'])) {
-            throw new Exception("Branch code already exists");
-        }
+        // Get current user ID from session
+        $updated_by = $_SESSION['user_id'] ?? null;
 
+        // Update branch
         if ($branchModel->updateBranch(
             $_POST['edit_id'],
             $_POST['company_id'],
@@ -73,15 +85,16 @@ if (isset($_POST['update_branch'])) {
             $_POST['branch_name'],
             $_POST['latitude'] ?? null,
             $_POST['longitude'] ?? null,
-            $_POST['status'] ?? 1
+            $_POST['status'] ?? 1,
+            $updated_by
         )) {
             $_SESSION['success_message'] = "Branch updated successfully!";
             error_log("Branch updated successfully. ID: " . $_POST['edit_id']);
         } else {
-            throw new Exception("Failed to update branch");
+            throw new Exception("No changes made to the branch");
         }
     } catch (Exception $e) {
-        $_SESSION['error_message'] = "Error: " . $e->getMessage();
+        $_SESSION['error_message'] = $e->getMessage();
         error_log("Branch update error: " . $e->getMessage());
     }
     header("Location: ../pages/company_branch.php");
@@ -93,14 +106,17 @@ if (isset($_GET['delete_id'])) {
     try {
         error_log("Attempting to delete branch ID: " . $_GET['delete_id']);
         
-        if ($branchModel->deleteBranch($_GET['delete_id'])) {
-            $_SESSION['success_message'] = "Branch deleted successfully!";
-            error_log("Branch deleted successfully. ID: " . $_GET['delete_id']);
+        // Get current user ID from session
+        $updated_by = $_SESSION['user_id'] ?? null;
+
+        if ($branchModel->deleteBranch($_GET['delete_id'], $updated_by)) {
+            $_SESSION['success_message'] = "Branch deactivated successfully!";
+            error_log("Branch deactivated successfully. ID: " . $_GET['delete_id']);
         } else {
-            throw new Exception("Failed to delete branch");
+            throw new Exception("Branch not found or already deactivated");
         }
     } catch (Exception $e) {
-        $_SESSION['error_message'] = "Error: " . $e->getMessage();
+        $_SESSION['error_message'] = $e->getMessage();
         error_log("Branch deletion error: " . $e->getMessage());
     }
     header("Location: ../pages/company_branch.php");

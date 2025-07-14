@@ -1,9 +1,21 @@
-<?php 
-require_once '../db.php';  // Ensure the file is included only once
-session_start(); // Start session to access session messages
-require_once '../Controller/compController.php';
-$compModel = new company();
-$companies = $compModel->getAllRaw();
+<?php
+session_start();
+require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../Model/Quota.php';
+require_once __DIR__ . '/../Model/medClaim.php';
+
+$csrf = bin2hex(random_bytes(32));
+$_SESSION['csrf_token'] = $csrf;
+
+$quota = new Quota($conn);
+$medClaim = new MedClaim($conn);
+
+$allStaffQuotas = $quota->getAllQuotaAllocations();
+
+// Check for session messages
+$successMessage = $_SESSION['success'] ?? null;
+$errorMessage = $_SESSION['error'] ?? null;
+unset($_SESSION['success'], $_SESSION['error']);
 ?>
 
 <!DOCTYPE html>
@@ -26,8 +38,17 @@ $companies = $compModel->getAllRaw();
   <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
   <!-- CSS Files -->
   <link id="pagestyle" href="../assets/css/argon-dashboard.css?v=2.1.0" rel="stylesheet" />
+  <style>
+    <style>
+        .quota-card {
+            border-left: 4px solid #0d6efd;
+        }
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
-
 <body class="g-sidenav-show   bg-gray-100">
   <div class="min-height-300 bg-dark position-absolute w-100"></div>
   <aside class="sidenav bg-white navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-4 " id="sidenav-main">
@@ -269,188 +290,258 @@ $companies = $compModel->getAllRaw();
                 </div>
             </div>
             </nav>
-            
-    <!--start main content-->        
+
     <div class="container-fluid py-4">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center" style="margin-bottom: 5px;">
-            <h5 style="margin-bottom: 0;">Company Management</h5>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCompanyModal" style="margin-top: 0;">Add Company</button>
-          </div>
-          <div class="card-body" style="padding-top: 10px;">
+        <div class="row">
+            <div class="col-md-12 mx-auto">
+                
 
-      <!-- Alert Messages -->
-            <?php if (isset($_SESSION['success_message']) || isset($_SESSION['error_message'])): ?>
-            <div class="w-50">
-              <?php if (isset($_SESSION['success_message'])): ?>
-                <div class="alert alert-success alert-dismissible fade show auto-dismiss text-white" role="alert">
-                  <?= htmlspecialchars($_SESSION['success_message']) ?>
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <!-- Session-based messages
+                <?php if ($sessionSuccess): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <?= htmlspecialchars($sessionSuccess) ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php elseif ($sessionError): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <?= htmlspecialchars($sessionError) ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?> -->
+
+                <!-- Original GET parameter messages -->
+                <?php if (isset($_GET['success'])): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        Operation completed successfully!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php elseif (isset($_GET['error'])): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <?= htmlspecialchars($_GET['error']) ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Add Quota Button (now triggers modal) -->
+
+<!-- Add Quota Modal -->
+<div class="modal fade" id="addQuotaModal" tabindex="-1" aria-labelledby="addQuotaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="../Controller/quotaController.php">
+                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                
+                <div class="modal-header bg-primary text-white">
+    <h5 class="modal-title text-white" id="addQuotaModalLabel">Add Quota for Staff</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+                
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Staff dropdown -->
+                        <div class="col-md-12">
+                            <label for="staff_id" class="form-label">Staff Member</label>
+                            <select class="form-select" id="staff_id" name="staff_id" required>
+                                <option value="">Select Staff</option>
+                                <?php
+                                    $staffQuery = "SELECT id, name FROM staff ORDER BY name";
+                                    $staffResult = mysqli_query($conn, $staffQuery);
+                                    while ($staff = mysqli_fetch_assoc($staffResult)):
+                                        $quotaInfo = $quota->getStaffQuota($staff['id']);
+                                ?>
+                                    <option value="<?= $staff['id'] ?>" 
+                                        data-current-quota="<?= $quotaInfo ? $quotaInfo['additional_quota'] : 0 ?>"
+                                        data-current-notes="<?= $quotaInfo ? htmlspecialchars($quotaInfo['notes']) : '' ?>">
+                                        <?= htmlspecialchars($staff['name']) ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+
+                        <!-- Quota amount -->
+                        <div class="col-md-12">
+                            <label for="additional_quota" class="form-label">Additional Quota (RM)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">RM</span>
+                                <input type="number" step="0.01" min="0" class="form-control" 
+                                       id="additional_quota" name="additional_quota" required>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="col-12">
+                            <label for="notes" class="form-label">Notes / Reason</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" required></textarea>
+                        </div>
+                    </div>
                 </div>
-                <?php unset($_SESSION['success_message']); ?>
-              <?php elseif (isset($_SESSION['error_message'])): ?>
-                <div class="alert alert-danger alert-dismissible fade show auto-dismiss text-white" role="alert">
-                  <?= htmlspecialchars($_SESSION['error_message']) ?>
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" name="add_quota" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Add Quota
+                    </button>
                 </div>
-                <?php unset($_SESSION['error_message']); ?>
-              <?php endif; ?>
-            </div>
-          <?php endif; ?>
-
-
-            <div class="card-body">
-              <table class="table table-striped">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Code</th>
-                    <th>Name</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php if ($companies && $companies->num_rows > 0): ?>
-                      <?php $counter = 1; ?>
-                      <?php while ($row = $companies->fetch_assoc()): ?>
-                          <?php
-                              $id = $row['id'];
-                              $code = htmlspecialchars($row['code']);
-                              $name = htmlspecialchars($row['name']);
-                              $raw_status = $row['status'];
-                              $statusBadge = $raw_status
-                                  ? '<span class="badge border border-success text-success px-3 py-2">Active</span>'
-                                  : '<span class="badge border border-danger text-danger px-3 py-2">Inactive</span>';
-                          ?>
-                          <tr>
-                              <td><?= $counter++ ?></td>
-                              <td><?= $code ?></td>
-                              <td><?= $name ?></td>
-                              <td><?= $statusBadge ?></td>
-                              <td>
-                                  <a href="#" class="text-primary me-3 edit-company-btn"
-                                      data-id="<?= $id ?>"
-                                      data-code="<?= $code ?>"
-                                      data-name="<?= $name ?>"
-                                      data-status="<?= $raw_status ?>"
-                                      data-bs-toggle="modal"
-                                      data-bs-target="#editCompanyModal"
-                                      title="Edit">
-                                      <i class="bi bi-pencil-square fs-4"></i>
-                                  </a>
-                                  <a href="../Controller/compController.php?delete_id=<?= $id ?>" 
-                                    class="text-danger" 
-                                    onclick="return confirm('Are you sure you want to delete this company?');"
-                                    title="Delete">
-                                    <i class="bi bi-trash-fill fs-4"></i>
-                                  </a>
-                              </td>
-                          </tr>
-                      <?php endwhile; ?>
-                  <?php else: ?>
-                      <tr>
-                          <td colspan="5" class="text-center">No companies found.</td>
-                      </tr>
-                  <?php endif; ?>
-              </tbody>
-  </table>
+            </form>
+        </div>
+    </div>
 </div>
 
-
-    <!-- Add Company Modal -->
-    <div class="modal fade" id="addCompanyModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
-        <form action="company.php" method="POST" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Add New Company</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="company-code" class="form-label">Company Code <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="company-code" name="code" required>
-            </div>
-            <div class="mb-3">
-              <label for="company-name" class="form-label">Company Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" id="company-name" name="name" required>
-            </div>
-            <div class="mb-3">
-              <label for="company-status" class="form-label">Status</label>
-              <select class="form-select" id="company-status" name="status">
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" name="add_company" class="btn btn-primary">Save</button>
-          </div>
-        </form>
-      </div>
+                <!-- CURRENT QUOTAS TABLE -->
+<div class="card">
+    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-list-ul fs-4 me-2"></i>
+            <span class="fs-4 fw-bold">Staff Quota List</span>
+        </div>
+        <div>
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addQuotaModal">
+                <i class="bi bi-plus-circle"></i> Add Quota
+            </button>
+        </div>
     </div>
-
-    <!-- Edit Company Modal -->
-    <div class="modal fade" id="editCompanyModal" tabindex="-1">
-      <div class="modal-dialog">
-        <form action="company.php" method="POST" class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Edit Company</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <input type="hidden" name="edit_id" id="edit_id">
-            <div class="mb-3">
-              <label for="edit_code" class="form-label">Company Code <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="edit_code" id="edit_code" required>
-            </div>
-            <div class="mb-3">
-              <label for="edit_name" class="form-label">Company Name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" name="edit_name" id="edit_name" required>
-            </div>
-            <div class="mb-3">
-              <label for="edit_status" class="form-label">Status</label>
-              <select class="form-select" name="edit_status" id="edit_status">
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" name="update_company" class="btn btn-primary">Update</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </main>
-
-  <!-- JS Scripts -->
-  <script src="../assets/js/core/bootstrap.bundle.min.js"></script>
-  <script>
-    // Fill edit modal with selected data
-    document.querySelectorAll('.edit-company-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        document.getElementById('edit_id').value = button.dataset.id;
-        document.getElementById('edit_code').value = button.dataset.code;
-        document.getElementById('edit_name').value = button.dataset.name;
-        document.getElementById('edit_status').value = button.dataset.status;
-      });
-    });
 
     
-  </script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-  <script>
-    setTimeout(function () {
-      var alert = document.querySelector('.alert');
-      if (alert) {
-        alert.classList.remove('show');
-        alert.classList.add('fade');
-        setTimeout(() => alert.remove(), 500);
-      }
-    }, 3000);
-  </script>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Staff Name</th>
+                                        <th>Department</th>
+                                        <th>Additional Quota (RM)</th>
+                                        <th>Last Updated</th>
+                                        <th>Notes</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($allStaffQuotas as $q): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($q['staff_name']) ?></td>
+                                        <td><?= htmlspecialchars($q['department_name'] ?? 'N/A') ?></td>
+                                        <td>RM <?= number_format($q['additional_quota'], 2) ?></td>
+                                        <td><?= date('d M Y H:i', strtotime($q['updated_at'])) ?></td>
+                                        <td><?= nl2br(htmlspecialchars($q['notes'])) ?></td>
+                                        <td>
+                                            <!-- Edit Button -->
+                                            <button type="button" class="btn btn-sm btn-warning edit-quota-btn" 
+                                                data-quota-id="<?= $q['id'] ?>"
+                                                data-staff-name="<?= htmlspecialchars($q['staff_name']) ?>"
+                                                data-current-quota="<?= $q['additional_quota'] ?>"
+                                                data-current-notes="<?= htmlspecialchars($q['notes']) ?>">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </button>
+                                            
+                                            <!-- Delete Button -->
+                                            <form method="POST" action="../Controller/quotaController.php" style="display: inline-block;">
+                                                <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                                                <input type="hidden" name="quota_id" value="<?= $q['id'] ?>">
+                                                <button type="submit" name="delete_quota" class="btn btn-sm btn-danger" 
+                                                    onclick="return confirm('Are you sure you want to delete this quota?');">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+
+                                    <?php if (empty($allStaffQuotas)): ?>
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">No quota adjustments have been made yet.</td>
+                                    </tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Quota Modal -->
+    <div class="modal fade" id="editQuotaModal" tabindex="-1" aria-labelledby="editQuotaModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" action="../Controller/quotaController.php" id="editQuotaForm">
+                    <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                    <input type="hidden" name="quota_id" id="edit_quota_id">
+                    <input type="hidden" name="update_quota" value="1"> <!-- Added this line -->
+                        
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="editQuotaModalLabel">Edit Quota</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Staff Member</label>
+                            <input type="text" class="form-control" id="edit_staff_name" readonly>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="edit_additional_quota" class="form-label">Additional Quota (RM)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">RM</span>
+                                <input type="number" step="0.01" min="0" class="form-control" 
+                                       id="edit_additional_quota" name="additional_quota" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="edit_notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="edit_notes" name="notes" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" name="update_quota" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize modal
+        const editModal = new bootstrap.Modal('#editQuotaModal');
+        
+        // Handle edit button clicks
+        document.querySelectorAll('.edit-quota-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.getElementById('edit_quota_id').value = this.dataset.quotaId;
+                document.getElementById('edit_staff_name').value = this.dataset.staffName;
+                document.getElementById('edit_additional_quota').value = this.dataset.currentQuota;
+                document.getElementById('edit_notes').value = this.dataset.currentNotes;
+                
+                editModal.show();
+            });
+        });
+
+        // Handle staff selection change to populate existing quota
+        document.getElementById('staff_id').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            document.getElementById('additional_quota').value = selectedOption.getAttribute('data-current-quota') || 0;
+            document.getElementById('notes').value = selectedOption.getAttribute('data-current-notes') || '';
+        });
+    });
+    </script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle form submission
+    const editForm = document.getElementById('editQuotaForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function(e) {
+            // The form will submit normally to quotaController.php
+            // The controller will process it and redirect back to adminQuotaManagement.php
+            // No need for preventDefault() or AJAX here
+        });
+    }
+
+    // Rest of your existing JavaScript...
+});
+</script>
 </body>
 </html>

@@ -421,24 +421,16 @@ $staff = $staffModel->getAllStaff();
                                        value="<?= $generatedStaffNo ?>" readonly>
                             </div>-->
                             <div class="col-md-3">
-                                <label>Role <span class="text-danger">*</span></label>
-                                <select name="roles" class="form-control" required>
+                                <label>Role <span class="text-danger">* </span></label>
+                                <select name="roles" class="form-select"  required>
                               <?php foreach ($roles as $r): ?>
                                   <option value="<?= $r['role_name'] ?>"><?= htmlspecialchars($r['role_name']) ?></option>
                               <?php endforeach; ?>
-                          </select>
-                                <!-- <select name="roles" class="form-control" required>
-                                    <?php foreach ($roles as $r): ?>
-                                        <option value="<?= $r['id'] ?>" <?= 
-                                            ($formData['roles'] ?? '') == $r['id'] ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($r['role_name']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select> -->
+                                </select>
                             </div>
                             <div class="col-md-3">
                                 <label>Department <span class="text-danger">*</span></label>
-                                <select name="departments_id" class="form-control" required>
+                                <select name="departments_id" class="form-select" required>
                                     <?php foreach ($departments as $d): ?>
                                         <option value="<?= $d['id'] ?>" <?= 
                                             ($formData['departments_id'] ?? '') == $d['id'] ? 'selected' : '' ?>>
@@ -449,7 +441,7 @@ $staff = $staffModel->getAllStaff();
                             </div>
                             <div class="col-md-3">
                                 <label>Company <span class="text-danger">*</span></label>
-                                <select name="company_id" class="form-control" required>
+                                <select name="company_id" class="form-select" required>
                                     <?php foreach ($companies as $c): ?>
                                         <option value="<?= $c['id'] ?>" <?= 
                                             ($formData['company_id'] ?? '') == $c['id'] ? 'selected' : '' ?>>
@@ -463,7 +455,7 @@ $staff = $staffModel->getAllStaff();
                         <div class="row mt-3">
                             <div class="col-md-3">
                                 <label>Branch <span class="text-danger">*</span></label>
-                                <select name="company_branch" class="form-control" required>
+                                <select name="company_branch" class="form-select" required>
                                     <?php foreach ($branches as $branch): ?>
                                         <option value="<?= $branch['id'] ?>" <?= 
                                             ($formData['company_branch'] ?? '') == $branch['id'] ? 'selected' : '' ?>>
@@ -488,7 +480,7 @@ $staff = $staffModel->getAllStaff();
                             </div>
                             <div class="col-md-3">
                                 <label>Shift</label>
-                                <select name="shift_id" class="form-control">
+                                <select name="shift_id" class="form-select">
                                     <?php foreach ($shifts as $shift): ?>
                                         <option value="<?= $shift['id'] ?>" <?= 
                                             ($formData['shift_id'] ?? '') == $shift['id'] ? 'selected' : '' ?>>
@@ -502,17 +494,17 @@ $staff = $staffModel->getAllStaff();
                         <div class="row mt-3">
                             <div class="col-md-3">
                                 <label>Employment Start Date</label>
-                                <input type="date" name="start_date" class="form-control" 
+                                <input type="date" name="start_date" class="form-select" 
                                        value="<?= htmlspecialchars($formData['start_date'] ?? date('Y-m-d')) ?>" required>
                             </div>
                             <div class="col-md-3">
                                 <label>Employment End Date (if applicable)</label>
-                                <input type="date" name="end_date" class="form-control" 
+                                <input type="date" name="end_date" class="form-select" 
                                        value="<?= htmlspecialchars($formData['end_date'] ?? '') ?>">
                             </div>
                             <div class="col-md-3">
                                 <label>Status <span class="text-danger">*</span></label>
-                                <select name="status" class="form-control" required>
+                                <select name="status" class="form-select" required>
                                     <option value="1" <?= ($formData['status'] ?? '1') == '1' ? 'selected' : '' ?>>Active</option>
                                     <option value="0" <?= ($formData['status'] ?? '1') == '0' ? 'selected' : '' ?>>Inactive</option>
                                 </select>
@@ -522,7 +514,7 @@ $staff = $staffModel->getAllStaff();
                         <div class="row mt-3">
                             <div class="col-md-3">
                                 <label>Role Status</label>
-                                <select name="role_status" class="form-control">
+                                <select name="role_status" class="form-select">
                                     <option value="1" <?= ($formData['role_status'] ?? '1') == '1' ? 'selected' : '' ?>>Permanent</option>
                                     <option value="0" <?= ($formData['role_status'] ?? '1') == '0' ? 'selected' : '' ?>>Contract</option>
                                 </select>
@@ -530,7 +522,7 @@ $staff = $staffModel->getAllStaff();
 
                             <div class="col-md-3">
                                 <label>QR Code Status</label>
-                                <select name="status_qrcode" class="form-control">
+                                <select name="status_qrcode" class="form-select">
                                     <option value="1" <?= ($formData['status_qrcode'] ?? '1') == '1' ? 'selected' : '' ?>>Enable</option>
                                     <option value="0" <?= ($formData['status_qrcode'] ?? '1') == '0' ? 'selected' : '' ?>>Disable</option>
                                 </select>
@@ -538,7 +530,7 @@ $staff = $staffModel->getAllStaff();
 
                             <div class="col-md-3">
                                 <label>Selfie Status</label>
-                                <select name="status_swafoto" class="form-control">
+                                <select name="status_swafoto" class="form-select">
                                     <option value="1" <?= ($formData['status_swafoto'] ?? '1') == '1' ? 'selected' : '' ?>>Enable</option>
                                     <option value="0" <?= ($formData['status_swafoto'] ?? '1') == '0' ? 'selected' : '' ?>>Disable</option>
                                 </select>
@@ -546,7 +538,7 @@ $staff = $staffModel->getAllStaff();
 
                             <div class="col-md-3">
                                 <label>Monitoring Status</label>
-                                <select name="status_monitor" class="form-control">
+                                <select name="status_monitor" class="form-select">
                                     <option value="1" <?= ($formData['status_monitor'] ?? '1') == '1' ? 'selected' : '' ?>>Enable</option>
                                     <option value="0" <?= ($formData['status_monitor'] ?? '1') == '0' ? 'selected' : '' ?>>Disable</option>
                                 </select>
