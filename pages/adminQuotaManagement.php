@@ -389,10 +389,10 @@ unset($_SESSION['success'], $_SESSION['error']);
 
                 <!-- CURRENT QUOTAS TABLE -->
 <div class="card">
-    <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+    <div class="card-header bg-light text-dark d-flex justify-content-between align-items-center">
         <div class="d-flex align-items-center">
             <i class="bi bi-list-ul fs-4 me-2"></i>
-            <span class="fs-4 fw-bold">Staff Quota List</span>
+            <span class="fs-5 fw-bold">Staff Quota List</span>
         </div>
         <div>
             <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addQuotaModal">
@@ -402,9 +402,9 @@ unset($_SESSION['success'], $_SESSION['error']);
     </div>
 
     
-                    <div class="card-body">
+                    <div class="card">
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover mb-0">
+                            <!--<table class="table table-striped table-hover mb-0">
                                 <thead class="table-dark">
                                     <tr>
                                         <th>Staff Name</th>
@@ -423,18 +423,18 @@ unset($_SESSION['success'], $_SESSION['error']);
                                         <td>RM <?= number_format($q['additional_quota'], 2) ?></td>
                                         <td><?= date('d M Y H:i', strtotime($q['updated_at'])) ?></td>
                                         <td><?= nl2br(htmlspecialchars($q['notes'])) ?></td>
-                                        <td>
+                                        <td> -->
                                             <!-- Edit Button -->
-                                            <button type="button" class="btn btn-sm btn-warning edit-quota-btn" 
+                                            <!-- <button type="button" class="btn btn-sm btn-warning edit-quota-btn" 
                                                 data-quota-id="<?= $q['id'] ?>"
                                                 data-staff-name="<?= htmlspecialchars($q['staff_name']) ?>"
                                                 data-current-quota="<?= $q['additional_quota'] ?>"
                                                 data-current-notes="<?= htmlspecialchars($q['notes']) ?>">
                                                 <i class="bi bi-pencil"></i> Edit
-                                            </button>
+                                            </button> -->
                                             
                                             <!-- Delete Button -->
-                                            <form method="POST" action="../Controller/quotaController.php" style="display: inline-block;">
+                                            <!-- <form method="POST" action="../Controller/quotaController.php" style="display: inline-block;">
                                                 <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
                                                 <input type="hidden" name="quota_id" value="<?= $q['id'] ?>">
                                                 <button type="submit" name="delete_quota" class="btn btn-sm btn-danger" 
@@ -452,7 +452,53 @@ unset($_SESSION['success'], $_SESSION['error']);
                                     </tr>
                                     <?php endif; ?>
                                 </tbody>
-                            </table>
+                            </table> -->
+                            <!-- Modify the table structure to show all entries -->
+<table class="table table-striped table-hover mb-0">
+  <thead class="table-dark">
+        <tr>
+            <th>Staff Name</th>
+            <th>Department</th>
+            <th>Additional Quota (RM)</th>
+            <th>Date Added</th>
+            <th>Last Updated</th>
+            <th>Notes</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($allStaffQuotas as $q): ?>
+        <tr>
+            <td><?= htmlspecialchars($q['staff_name']) ?></td>
+            <td><?= htmlspecialchars($q['department_name'] ?? 'N/A') ?></td>
+            <td>RM <?= number_format($q['additional_quota'], 2) ?></td>
+            <td><?= date('d M Y H:i', strtotime($q['created_at'])) ?></td>
+            <td><?= date('d M Y H:i', strtotime($q['updated_at'])) ?></td>
+            <td><?= nl2br(htmlspecialchars($q['notes'])) ?></td>
+            <td>
+                <!-- Edit Button -->
+                <button type="button" class="btn btn-sm btn-warning edit-quota-btn" 
+                    data-quota-id="<?= $q['id'] ?>"
+                    data-staff-name="<?= htmlspecialchars($q['staff_name']) ?>"
+                    data-current-quota="<?= $q['additional_quota'] ?>"
+                    data-current-notes="<?= htmlspecialchars($q['notes']) ?>">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+                
+                <!-- Delete Button -->
+                <form method="POST" action="../Controller/quotaController.php" style="display: inline-block;">
+                    <input type="hidden" name="csrf_token" value="<?= $csrf ?>">
+                    <input type="hidden" name="quota_id" value="<?= $q['id'] ?>">
+                    <button type="submit" name="delete_quota" class="btn btn-sm btn-danger" 
+                        onclick="return confirm('Are you sure you want to delete this quota entry?');">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </form>
+            </td>
+        </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
                         </div>
                     </div>
                 </div>

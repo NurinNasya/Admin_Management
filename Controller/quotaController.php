@@ -21,18 +21,30 @@ $quota = new Quota($conn);
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        if (isset($_POST['add_quota'])) {
+    //     if (isset($_POST['add_quota'])) {
+    // $staffId = intval($_POST['staff_id']);
+    // $additionalQuota = floatval($_POST['additional_quota']);
+    // $notes = htmlspecialchars($_POST['notes']);
+    
+    // if ($quota->addQuota($staffId, $additionalQuota, $notes)) {
+    //     $existing = $quota->getStaffQuota($staffId);
+    //     if ($existing && $existing['additional_quota'] > $additionalQuota) {
+    //         $_SESSION['success'] = "Quota added to existing amount. New total: RM " . number_format($existing['additional_quota'], 2);
+    //     } else {
+    //         $_SESSION['success'] = "Quota added successfully";
+    //     }
+    // } else {
+    //     $_SESSION['error'] = "Failed to add quota";
+    // }
+
+
+    if (isset($_POST['add_quota'])) {
     $staffId = intval($_POST['staff_id']);
     $additionalQuota = floatval($_POST['additional_quota']);
     $notes = htmlspecialchars($_POST['notes']);
     
     if ($quota->addQuota($staffId, $additionalQuota, $notes)) {
-        $existing = $quota->getStaffQuota($staffId);
-        if ($existing && $existing['additional_quota'] > $additionalQuota) {
-            $_SESSION['success'] = "Quota added to existing amount. New total: RM " . number_format($existing['additional_quota'], 2);
-        } else {
-            $_SESSION['success'] = "Quota added successfully";
-        }
+        $_SESSION['success'] = "Quota added successfully";
     } else {
         $_SESSION['error'] = "Failed to add quota";
     }

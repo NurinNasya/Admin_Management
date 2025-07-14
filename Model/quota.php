@@ -8,33 +8,45 @@ class Quota {
         $this->conn = $conn;
     }
 
-    public function addQuota($staffId, $additionalQuota, $notes) {
-        // Check if staff already has a quota record
-        $existingQuota = $this->getStaffQuota($staffId);
+public function addQuota($staffId, $additionalQuota, $notes) {
+    // Always insert new record instead of updating existing one
+    $stmt = $this->conn->query("
+        INSERT INTO staff_medical_quota 
+        (staff_id, additional_quota, notes, created_at, updated_at)
+        VALUES ($staffId, $additionalQuota, '$notes', NOW(), NOW())
+    ");
+    
+    return $stmt;
+}
+
+
+    // public function addQuota($staffId, $additionalQuota, $notes) {
+    //     // Check if staff already has a quota record
+    //     $existingQuota = $this->getStaffQuota($staffId);
         
-        if ($existingQuota) {
-            // If exists, update by adding to the existing quota
-            $newQuota = $existingQuota['additional_quota'] + $additionalQuota;
-            $combinedNotes = $existingQuota['notes'] . "\n\n" . date('Y-m-d H:i') . ": Added RM " . number_format($additionalQuota, 2) . "\n" . $notes;
+    //     if ($existingQuota) {
+    //         // If exists, update by adding to the existing quota
+    //         $newQuota = $existingQuota['additional_quota'] + $additionalQuota;
+    //         $combinedNotes = $existingQuota['notes'] . "\n\n" . date('Y-m-d H:i') . ": Added RM " . number_format($additionalQuota, 2) . "\n" . $notes;
             
-            $stmt = $this->conn->query("
-                UPDATE staff_medical_quota 
-                SET additional_quota = $newQuota,
-                    notes = '$combinedNotes',
-                    updated_at = NOW()
-                WHERE staff_id = $staffId
-            ");
-        } else {
-            // If doesn't exist, insert new record
-            $stmt = $this->conn->query("
-                INSERT INTO staff_medical_quota 
-                (staff_id, additional_quota, notes, created_at, updated_at)
-                VALUES ($staffId, $additionalQuota, '$notes', NOW(), NOW())
-            ");
-        }
+    //         $stmt = $this->conn->query("
+    //             UPDATE staff_medical_quota 
+    //             SET additional_quota = $newQuota,
+    //                 notes = '$combinedNotes',
+    //                 updated_at = NOW()
+    //             WHERE staff_id = $staffId
+    //         ");
+    //     } else {
+    //         // If doesn't exist, insert new record
+    //         $stmt = $this->conn->query("
+    //             INSERT INTO staff_medical_quota 
+    //             (staff_id, additional_quota, notes, created_at, updated_at)
+    //             VALUES ($staffId, $additionalQuota, '$notes', NOW(), NOW())
+    //         ");
+    //     }
         
-        return $stmt;
-    }
+    //     return $stmt;
+    // }
 
     public function deleteQuotaById($quotaId) {
         $stmt = $this->conn->query("
@@ -55,37 +67,71 @@ class Quota {
         return $stmt;
     }
 
-    public function getAllQuotaAllocations() {
-        $query = "
-            SELECT 
-                q.id,
-                q.additional_quota,
-                q.notes,
-                q.updated_at,
-                s.name as staff_name,
-                s.id as staff_id,
-                d.name as department_name,
-                d.id as department_id
-            FROM staff_medical_quota q
-            JOIN staff s ON q.staff_id = s.id
-            LEFT JOIN departments d ON s.departments_id = d.id
-            ORDER BY q.updated_at DESC
-        ";
+    // public function getAllQuotaAllocations() {
+    //     $query = "
+    //         SELECT 
+    //             q.id,
+    //             q.additional_quota,
+    //             q.notes,
+    //             q.updated_at,
+    //             s.name as staff_name,
+    //             s.id as staff_id,
+    //             d.name as department_name,
+    //             d.id as department_id
+    //         FROM staff_medical_quota q
+    //         JOIN staff s ON q.staff_id = s.id
+    //         LEFT JOIN departments d ON s.departments_id = d.id
+    //         ORDER BY q.updated_at DESC
+    //     ";
         
-        $result = mysqli_query($this->conn, $query);
+    //     $result = mysqli_query($this->conn, $query);
         
-        if (!$result) {
-            error_log("[Quota] Database error: " . mysqli_error($this->conn));
-            return [];
-        }
+    //     if (!$result) {
+    //         error_log("[Quota] Database error: " . mysqli_error($this->conn));
+    //         return [];
+    //     }
         
-        $quotas = [];
-        while ($row = mysqli_fetch_assoc($result)) {
-            $quotas[] = $row;
-        }
+    //     $quotas = [];
+    //     while ($row = mysqli_fetch_assoc($result)) {
+    //         $quotas[] = $row;
+    //     }
         
-        return $quotas;
+    //     return $quotas;
+    // }
+
+
+public function getAllQuotaAllocations() {
+    $query = "
+        SELECT 
+            q.id,
+            q.additional_quota,
+            q.notes,
+            q.created_at,
+            q.updated_at,
+            s.name as staff_name,
+            s.id as staff_id,
+            d.name as department_name,
+            d.id as department_id
+        FROM staff_medical_quota q
+        JOIN staff s ON q.staff_id = s.id
+        LEFT JOIN departments d ON s.departments_id = d.id
+        ORDER BY q.created_at DESC
+    ";
+    
+    $result = mysqli_query($this->conn, $query);
+    
+    if (!$result) {
+        error_log("[Quota] Database error: " . mysqli_error($this->conn));
+        return [];
     }
+    
+    $quotas = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $quotas[] = $row;
+    }
+    
+    return $quotas;
+}
 
     public function getStaffQuota($staffId) {
         $result = $this->conn->query("
