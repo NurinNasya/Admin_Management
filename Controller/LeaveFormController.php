@@ -1,5 +1,4 @@
 <?php
-
 namespace Controller;
 
 use Exception;
@@ -46,7 +45,7 @@ class LeaveFormController
         }
     }
 
-    public function saveLeaveApplication(array $data): int|false
+public function saveLeaveApplication(array $data): int|false
     {
         mysqli_begin_transaction($this->conn);
 
@@ -55,28 +54,19 @@ class LeaveFormController
             $totalDays = (float) $data['total_days'];
             $leaveType = $this->escape($data['leave_type']);
 
-            if ($leaveType !== 'Unpaid Leave') {
-                $this->ensureLeaveBalanceExists($employeeId, $leaveType);
-                
-                $balanceCheck = "SELECT (quota - used - in_process) AS available 
-                                FROM leave_balances 
-                                WHERE employee_id = $employeeId 
-                                AND leave_type = '$leaveType'";
-                $result = mysqli_query($this->conn, $balanceCheck);
-                
-                if (!$result) {
-                    throw new Exception("Gagal mendapatkan maklumat baki cuti: " . mysqli_error($this->conn));
-                }
-                
-                $balance = mysqli_fetch_assoc($result);
-                
-                if (!$balance) {
-                    throw new Exception("Gagal membuat rekod baki cuti untuk jenis cuti ini");
-                }
-                
-                if ($balance['available'] < $totalDays) {
-                    throw new Exception("Baki cuti tidak mencukupi. Baki tersedia: " . $balance['available'] . " hari");
-                }
+            // Validate leave type exists and is active
+            $leaveTypeData = $this->getLeaveTypeData($leaveType);
+            if (!$leaveTypeData) {
+                throw new Exception("Jenis cuti '$leaveType' tidak wujud atau tidak aktif");
+            }
+
+            // Check if employee has enough leave balance for this leave type
+            $usedDays = $this->getEmployeeUsedDays($employeeId, $leaveType);
+            $pendingDays = $this->getEmployeePendingDays($employeeId, $leaveType);
+            $availableDays = $leaveTypeData['max_days'] - $usedDays - $pendingDays;
+
+            if ($availableDays < $totalDays) {
+                throw new Exception("Baki cuti tidak mencukupi. Baki tersedia: " . $availableDays . " hari");
             }
 
             $applicationDate = date('Y-m-d');
@@ -84,31 +74,18 @@ class LeaveFormController
             $endDate = $this->escape($data['end_date']);
             $reason = $this->escape($data['reason']);
             $attachment = isset($data['attachment']) ? $this->escape($data['attachment']) : null;
-            
+
             $query = "INSERT INTO leave_applications 
                      (employee_id, application_date, start_date, end_date, total_days, leave_type, reason, status, attachment) 
                      VALUES 
-                     ($employeeId, '$applicationDate', '$startDate', '$endDate', $totalDays, '$leaveType', '$reason', 'pending', " . 
-                     ($attachment ? "'$attachment'" : "NULL") . ")";
-            
+                     ($employeeId, '$applicationDate', '$startDate', '$endDate', $totalDays, '$leaveType', '$reason', 'pending', " .
+                ($attachment ? "'$attachment'" : "NULL") . ")";
+
             if (!mysqli_query($this->conn, $query)) {
                 throw new Exception("Gagal menyimpan permohonan cuti: " . mysqli_error($this->conn));
             }
 
             $applicationId = mysqli_insert_id($this->conn);
-
-            if ($leaveType !== 'Unpaid Leave') {
-                $update_sql = "UPDATE leave_balances 
-                              SET 
-                                  in_process = in_process + $totalDays,
-                                  available_balance = (quota - used - (in_process + $totalDays))
-                              WHERE employee_id = $employeeId 
-                              AND leave_type = '$leaveType'";
-
-                if (!mysqli_query($this->conn, $update_sql)) {
-                    throw new Exception("Gagal mengemaskini baki cuti: " . mysqli_error($this->conn));
-                }
-            }
 
             mysqli_commit($this->conn);
             return $applicationId;
@@ -118,55 +95,76 @@ class LeaveFormController
             throw $e;
         }
     }
-
-    public function updateLeaveApplication(int $id, array $data): bool
+     public function updateLeaveApplication(int $id, array $data): bool
     {
-        $startDate = $this->escape($data['start_date']);
-        $endDate = $this->escape($data['end_date']);
-        $totalDays = (float) $data['total_days'];
-        $leaveType = $this->escape($data['leave_type']);
-        $reason = $this->escape($data['reason']);
+        mysqli_begin_transaction($this->conn);
 
-        $query = "UPDATE leave_applications SET 
-            start_date = '$startDate', 
-            end_date = '$endDate', 
-            total_days = $totalDays, 
-            leave_type = '$leaveType', 
-            reason = '$reason'
-            WHERE id = $id";
+        try {
+            $startDate = $this->escape($data['start_date']);
+            $endDate = $this->escape($data['end_date']);
+            $totalDays = (float) $data['total_days'];
+            $leaveType = $this->escape($data['leave_type']);
+            $reason = $this->escape($data['reason']);
 
-        $result = mysqli_query($this->conn, $query);
-        if (!$result) {
-            error_log("Update failed: " . mysqli_error($this->conn));
+            // Validate leave type
+            $leaveTypeData = $this->getLeaveTypeData($leaveType);
+            if (!$leaveTypeData) {
+                throw new Exception("Jenis cuti '$leaveType' tidak wujud atau tidak aktif");
+            }
+
+            // Dapatkan employee_id permohonan cuti ini
+            $result = mysqli_query($this->conn, "SELECT employee_id FROM leave_applications WHERE id = $id");
+            if (!$result || mysqli_num_rows($result) === 0) {
+                throw new Exception("Permohonan cuti tidak dijumpai untuk dikemaskini");
+            }
+            $row = mysqli_fetch_assoc($result);
+            $employeeId = (int) $row['employee_id'];
+
+            // Semak baki cuti (exclude current application)
+            $usedDays = $this->getEmployeeUsedDays($employeeId, $leaveType, $id);
+            $pendingDays = $this->getEmployeePendingDays($employeeId, $leaveType);
+            $availableDays = $leaveTypeData['max_days'] - $usedDays - $pendingDays;
+
+            if ($availableDays < $totalDays) {
+                throw new Exception("Baki cuti tidak mencukupi untuk kemaskini. Baki tersedia: $availableDays hari");
+            }
+
+            // Update permohonan
+            $query = "UPDATE leave_applications SET 
+                start_date = '$startDate', 
+                end_date = '$endDate', 
+                total_days = $totalDays, 
+                leave_type = '$leaveType', 
+                reason = '$reason'
+                WHERE id = $id";
+
+            $result = mysqli_query($this->conn, $query);
+            if (!$result) {
+                throw new Exception("Gagal mengemaskini permohonan: " . mysqli_error($this->conn));
+            }
+
+            mysqli_commit($this->conn);
+            return true;
+        } catch (Exception $e) {
+            mysqli_rollback($this->conn);
+            error_log("[UpdateLeave] " . $e->getMessage());
+            throw $e;
         }
-        return $result;
     }
-
     public function approveApplication(int $application_id): bool
     {
         mysqli_begin_transaction($this->conn);
 
         try {
             $app = $this->getLeaveApplication($application_id);
-            if (!$app) throw new Exception("Permohonan tidak dijumpai");
-
-            if ($app['leave_type'] !== 'Unpaid Leave') {
-                $sql = "UPDATE leave_balances 
-                        SET 
-                            in_process = in_process - {$app['total_days']},
-                            used = used + {$app['total_days']},
-                            available_balance = (quota - (used + {$app['total_days']}) - (in_process - {$app['total_days']}))
-                        WHERE employee_id = {$app['employee_id']} 
-                        AND leave_type = '{$app['leave_type']}'";
-                
-                if (!mysqli_query($this->conn, $sql)) {
-                    throw new Exception("Gagal update baki cuti: " . mysqli_error($this->conn));
-                }
+            if (!$app) {
+                throw new Exception("Permohonan tidak dijumpai");
             }
 
             $sql = "UPDATE leave_applications 
                     SET status = 'approved', approved_at = NOW() 
                     WHERE id = $application_id";
+
             if (!mysqli_query($this->conn, $sql)) {
                 throw new Exception("Gagal update status permohonan: " . mysqli_error($this->conn));
             }
@@ -186,15 +184,8 @@ class LeaveFormController
 
         try {
             $app = $this->getLeaveApplication($application_id);
-            if (!$app) throw new Exception("Permohonan tidak dijumpai");
-
-            if ($app['leave_type'] !== 'Unpaid Leave') {
-                $sql = "UPDATE leave_balances 
-                        SET in_process = in_process - {$app['total_days']} 
-                        WHERE employee_id = {$app['employee_id']} AND leave_type = '{$app['leave_type']}'";
-                if (!mysqli_query($this->conn, $sql)) {
-                    throw new Exception("Gagal update baki cuti: " . mysqli_error($this->conn));
-                }
+            if (!$app) {
+                throw new Exception("Permohonan tidak dijumpai");
             }
 
             $sql = "UPDATE leave_applications SET status = 'rejected' WHERE id = $application_id";
@@ -211,85 +202,79 @@ class LeaveFormController
         }
     }
 
-  public function deleteApplication(int $application_id): bool
-{
-    mysqli_begin_transaction($this->conn);
+    public function deleteApplication(int $application_id): bool
+    {
+        mysqli_begin_transaction($this->conn);
 
-    try {
-        // Dapatkan maklumat permohonan
-        $app = $this->getLeaveApplication($application_id);
-        if (!$app) {
-            throw new Exception("Permohonan tidak dijumpai");
-        }
-
-        // Jika status pending dan bukan Unpaid Leave, update baki cuti
-        if ($app['status'] === 'pending' && $app['leave_type'] !== 'Unpaid Leave') {
-            $sql = "UPDATE leave_balances 
-                    SET in_process = in_process - {$app['total_days']},
-                        available_balance = available_balance + {$app['total_days']}
-                    WHERE employee_id = {$app['employee_id']} 
-                    AND leave_type = '{$app['leave_type']}'";
-            
-            if (!mysqli_query($this->conn, $sql)) {
-                throw new Exception("Gagal update baki cuti: " . mysqli_error($this->conn));
+        try {
+            $app = $this->getLeaveApplication($application_id);
+            if (!$app) {
+                throw new Exception("Permohonan tidak dijumpai");
             }
-        }
 
-        // Delete permohonan dari database
-        $sql = "DELETE FROM leave_applications WHERE id = $application_id";
-        if (!mysqli_query($this->conn, $sql)) {
-            throw new Exception("Gagal hapus permohonan: " . mysqli_error($this->conn));
-        }
+            $sql = "DELETE FROM leave_applications WHERE id = $application_id";
+            if (!mysqli_query($this->conn, $sql)) {
+                throw new Exception("Gagal hapus permohonan: " . mysqli_error($this->conn));
+            }
 
-        mysqli_commit($this->conn);
-        
-        // Bahagian baru untuk return JSON response
-        if ($this->isAjaxRequest()) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => true,
-                'message' => 'Permohonan cuti berjaya dipadam'
-            ]);
-            exit;
+            mysqli_commit($this->conn);
+
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Permohonan cuti berjaya dipadam'
+                ]);
+                exit;
+            }
+
+            return true;
+
+        } catch (Exception $e) {
+            mysqli_rollback($this->conn);
+            error_log($e->getMessage());
+
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ]);
+                exit;
+            }
+
+            return false;
         }
-        
-        return true;
-        
-    } catch (Exception $e) {
-        mysqli_rollback($this->conn);
-        error_log($e->getMessage());
-        
-        // Bahagian baru untuk return error JSON
-        if ($this->isAjaxRequest()) {
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'error' => $e->getMessage()
-            ]);
-            exit;
-        }
-        
-        return false;
     }
-}
 
-// Tambahkan fungsi baru ini dalam class untuk check AJAX request
-private function isAjaxRequest(): bool
-{
-    return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-           strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
-}
+
+
+
+
+
+
+
+
+
+    private function isAjaxRequest(): bool
+    {
+        return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+    }
+
     public function getLeaveApplication(int $id): array|false
     {
         $query = "SELECT la.*, 
-                 lt.type_name AS type_name,
+                 lt.type_name,
+                 lt.description,
+                 lt.max_days,
                  la.supported_at,
                  la.approved_at, 
                  la.hr_checked_at,
                  la.attachment
                  FROM leave_applications la
-                 LEFT JOIN leave_types lt ON la.leave_type = lt.id
+                 LEFT JOIN leave_types lt ON la.leave_type = lt.type_name
                  WHERE la.id = $id";
         $result = mysqli_query($this->conn, $query);
         return ($result && mysqli_num_rows($result) > 0) ? mysqli_fetch_assoc($result) : false;
@@ -302,49 +287,314 @@ private function isAjaxRequest(): bool
         return $result ? mysqli_fetch_assoc($result) : [];
     }
 
-    public function getLeaveTypes(): array
+    /**
+     * Get all active leave types from database
+     * Returns array with numerical indices
+     */
+    public function getLeaveTypes()
     {
+        $leave_types = [];
+
         $query = "SELECT * FROM leave_types";
+        $result = mysqli_query($this->conn, $query);
+
+        if ($result) {
+            while ($row = mysqli_fetch_assoc($result)) {
+                $leave_types[$row['type_name']] = $row;  // Gunakan type_name sebagai key
+            }
+        }
+
+        return $leave_types;
+    }
+
+    /**
+     * Get leave types formatted for view (associative array with type_name as key)
+     * This method returns data in the format expected by your view
+     */
+    public function getLeaveTypesForView(): array
+    {
+        $query = "SELECT * FROM leave_types WHERE is_active = 1 ORDER BY type_name";
         $result = mysqli_query($this->conn, $query);
         $types = [];
         if ($result) {
             while ($row = mysqli_fetch_assoc($result)) {
-                $types[] = $row;
+                $types[$row['type_name']] = $row; // Use type_name as key
             }
         }
         return $types;
     }
 
-    public function getLeaveBalanceWithUsage(int $employeeId, string $year): array
+    /**
+     * Get leave types formatted for dropdown/select options
+     */
+    public function getLeaveTypesForDropdown(): array
     {
-        $query = "SELECT lt.type_name as type_name, lt.quota,
-                 IFNULL(SUM(la.total_days), 0) as usage
-                 FROM leave_types lt
-                 LEFT JOIN leave_applications la 
-                 ON la.leave_type = lt.type_name 
-                 AND la.employee_id = $employeeId 
-                 AND YEAR(la.start_date) = '$year'
-                 GROUP BY lt.type_name";
-
-        $result = mysqli_query($this->conn, $query);
-        $balances = [];
-        if ($result) {
-            while ($row = mysqli_fetch_assoc($result)) {
-                $balance = (float)$row['quota'] - (float)$row['usage'];
-                $balances[$row['type_name']] = [
-                    'type_name' => $row['type_name'],
-                    'quota' => $row['quota'],
-                    'usage' => $row['usage'],
-                    'available' => max($balance, 0)
-                ];
-            }
+        $types = $this->getLeaveTypes();
+        $options = [];
+        foreach ($types as $type) {
+            $options[] = [
+                'value' => $type['type_name'],
+                'text' => $type['type_name'],
+                'description' => $type['description'] ?? '',
+                'max_days' => (int) $type['max_days'],
+                'is_active' => (int) $type['is_active']
+            ];
         }
-        return $balances;
+        return $options;
     }
 
+    /**
+     * Prepare data for leave form view
+     * This method consolidates all data needed for the form
+     */
+    public function prepareLeaveFormData(int $applicationId = null): array
+    {
+        $data = [];
+
+        // Get leave types for radio buttons (formatted for view)
+        $data['leave_types'] = $this->getLeaveTypesForView();
+
+        // Get employee data
+        $data['employee'] = $this->getEmployeeData();
+
+        // If editing, get application data
+        if ($applicationId) {
+            $data['application'] = $this->getLeaveApplication($applicationId);
+        } else {
+            $data['application'] = null;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get specific leave type data
+     */
+    private function getLeaveTypeData(string $leaveType): array|false
+    {
+        $leaveType = $this->escape($leaveType);
+        $query = "SELECT * FROM leave_types WHERE type_name = '$leaveType' AND is_active = 1";
+        $result = mysqli_query($this->conn, $query);
+        return ($result && mysqli_num_rows($result) > 0) ? mysqli_fetch_assoc($result) : false;
+    }
+
+    /**
+     * Get employee's used days for a specific leave type
+     */
+    private function getEmployeeUsedDays(int $employeeId, string $leaveType, int $excludeApplicationId = null): float
+    {
+        $leaveType = $this->escape($leaveType);
+        $excludeClause = $excludeApplicationId ? "AND id != $excludeApplicationId" : "";
+        
+        $query = "SELECT COALESCE(SUM(total_days), 0) as used_days 
+                 FROM leave_applications 
+                 WHERE employee_id = $employeeId 
+                 AND leave_type = '$leaveType' 
+                 AND status = 'approved'
+                 AND YEAR(start_date) = YEAR(CURDATE())
+                 $excludeClause";
+
+        $result = mysqli_query($this->conn, $query);
+        if ($result) {
+            $row = mysqli_fetch_assoc($result);
+            return (float) $row['used_days'];
+        }
+        return 0.0;
+    }
+
+    /**
+     * Get leave balance summary for an employee
+     */
+    public function getLeaveBalanceSummary($employee_id): array
+    {
+        $current_year = date('Y');
+        $summary = [];
+
+        // Get all active leave types
+        $leave_types = $this->getLeaveTypes();
+
+        foreach ($leave_types as $type) {
+            // Skip if type_name is not set
+            if (empty($type['type_name'])) {
+                continue;
+            }
+
+            // Calculate used days
+            $used = $this->calculateUsedDays($employee_id, $type['type_name'], $current_year);
+
+            // Calculate pending days
+            $pending = $this->calculatePendingDays($employee_id, $type['type_name']);
+
+            $summary[] = [
+                'type_name' => $type['type_name'],
+                'max_days' => (float) $type['max_days'],
+                'used_days' => (float) $used,
+                'pending_days' => (float) $pending,
+                'available_days' => (float) ($type['max_days'] - $used - $pending)
+            ];
+        }
+
+        return $summary;
+    }
+
+    //1-penambahan baru 
+    public function getLeaveBalance(int $employeeId): array
+    {
+        $balance = [];
+        $leaveTypes = $this->getLeaveTypesForView();
+        
+        foreach ($leaveTypes as $typeName => $typeData) {
+            $usedDays = $this->getEmployeeUsedDays($employeeId, $typeName);
+            $pendingDays = $this->getEmployeePendingDays($employeeId, $typeName);
+            $availableDays = $typeData['max_days'] - $usedDays - $pendingDays;
+            
+            $balance[$typeName] = [
+                'max_days' => (float) $typeData['max_days'],
+                'used' => $usedDays,
+                'pending' => $pendingDays,
+                'available' => max(0, $availableDays) // Pastikan tidak negatif
+            ];
+        }
+        
+        return $balance;
+    }
+
+    //2-penamabahan yang baru
+
+    private function getEmployeePendingDays(int $employeeId, string $leaveType): float
+    {
+        $leaveType = $this->escape($leaveType);
+        $query = "SELECT COALESCE(SUM(total_days), 0) as pending_days 
+                 FROM leave_applications 
+                 WHERE employee_id = $employeeId 
+                 AND leave_type = '$leaveType' 
+                 AND status = 'pending'
+                 AND YEAR(start_date) = YEAR(CURDATE())";
+
+        $result = mysqli_query($this->conn, $query);
+        if ($result) {
+            $row = mysqli_fetch_assoc($result);
+            return (float) $row['pending_days'];
+        }
+        return 0.0;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    private function calculateUsedDays($employee_id, $leave_type_name, $year): float
+    {
+        $leave_type_name = $this->escape($leave_type_name);
+        $sql = "SELECT COALESCE(SUM(total_days), 0) AS total 
+                FROM leave_applications 
+                WHERE employee_id = $employee_id 
+                AND leave_type = '$leave_type_name' 
+                AND status = 'approved'
+                AND YEAR(start_date) = $year";
+
+        $result = mysqli_query($this->conn, $sql);
+        if ($result) {
+            $row = mysqli_fetch_assoc($result);
+            return (float) $row['total'];
+        }
+        return 0.0;
+    }
+
+    private function calculatePendingDays($employee_id, $leave_type_name): float
+    {
+        $leave_type_name = $this->escape($leave_type_name);
+        $sql = "SELECT COALESCE(SUM(total_days), 0) AS total 
+                FROM leave_applications 
+                WHERE employee_id = $employee_id 
+                AND leave_type = '$leave_type_name' 
+                AND status = 'pending'";
+
+        $result = mysqli_query($this->conn, $sql);
+        if ($result) {
+            $row = mysqli_fetch_assoc($result);
+            return (float) $row['total'];
+        }
+        return 0.0;
+    }
+
+    // In LeaveFormController.php
+
+/**
+ * Get active leave types for dropdown/select
+ */
+public function getActiveLeaveTypes(): array
+{
+    $types = [];
+    $query = "SELECT type_name, max_days FROM leave_types WHERE is_active = 1 ORDER BY type_name";
+    $result = mysqli_query($this->conn, $query);
+
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $types[$row['type_name']] = $row;
+        }
+    }
+    return $types;
+}
+
+
+/**
+ * Validate if a leave type exists and is active
+ */
+public function isValidLeaveType(string $leaveType): bool
+{
+    $leaveType = $this->escape($leaveType);
+    $query = "SELECT 1 FROM leave_types WHERE type_name = '$leaveType' AND is_active = 1";
+    $result = mysqli_query($this->conn, $query);
+    return ($result && mysqli_num_rows($result) > 0);
+}
+
+
+
+
+
+
+
+    
+
+    /**
+     * Get employee's pending days for a specific leave type
+     */
+    /*private function getEmployeePendingDays(int $employeeId, string $leaveType): float
+    {
+        $leaveType = $this->escape($leaveType);
+        $query = "SELECT COALESCE(SUM(total_days), 0) as pending_days 
+                 FROM leave_applications 
+                 WHERE employee_id = $employeeId 
+                 AND leave_type = '$leaveType' 
+                 AND status = 'pending'
+                 AND YEAR(start_date) = YEAR(CURDATE())";
+
+        $result = mysqli_query($this->conn, $query);
+        if ($result) {
+            $row = mysqli_fetch_assoc($result);
+            return (float) $row['pending_days'];
+        }
+        return 0.0;
+    }     */
+
+    /**
+     * Get leave applications with proper type details from database
+     */
     public function getLeaveApplicationsWithTypes(int $employeeId): array
     {
-        $query = "SELECT la.*, lt.type_name AS type_name 
+        $query = "SELECT la.*, 
+                        lt.type_name,
+                        lt.description,
+                        lt.max_days,
+                        lt.is_active
                  FROM leave_applications la 
                  LEFT JOIN leave_types lt ON la.leave_type = lt.type_name 
                  WHERE la.employee_id = $employeeId 
@@ -352,14 +602,57 @@ private function isAjaxRequest(): bool
 
         $result = mysqli_query($this->conn, $query);
         $applications = [];
+
         if ($result) {
             while ($row = mysqli_fetch_assoc($result)) {
                 $row['start_date_formatted'] = date('d/m/Y', strtotime($row['start_date']));
                 $row['end_date_formatted'] = date('d/m/Y', strtotime($row['end_date']));
+                $row['application_date_formatted'] = date('d/m/Y', strtotime($row['application_date']));
+                $row['leave_type_display'] = $row['type_name'] ?? $row['leave_type'];
                 $applications[] = $row;
             }
         }
+
         return $applications;
+    }
+
+    /**
+     * Generate radio buttons HTML for leave types
+     * Updated to use the correct data format
+     */
+    public function generateLeaveTypesRadioButtons(string $selectedValue = ''): string
+    {
+        $leaveTypes = $this->getLeaveTypesForView(); // Use the view-formatted data
+        $html = '';
+
+        foreach ($leaveTypes as $type_name => $type_data) {
+            $checked = ($selectedValue === $type_name) ? 'checked' : '';
+            $html .= '<label class="leave-type-radio-item">';
+            $html .= '<input type="radio" name="leave_type" value="' . htmlspecialchars($type_name) . '" ' . $checked . '>';
+            $html .= '<span class="leave-type-name">' . htmlspecialchars($type_name) . '</span>';
+            $html .= '<span class="leave-type-desc">' . htmlspecialchars($type_data['description'] ?? '') . '</span>';
+            $html .= '<span class="leave-type-max">Max: ' . $type_data['max_days'] . ' hari</span>';
+            $html .= '</label>';
+        }
+
+        return $html;
+    }
+
+    /**
+     * Debug method to check leave types data
+     * Remove this after fixing the issue
+     */
+    public function debugLeaveTypes(): void
+    {
+        echo "<h3>Debug Leave Types Data:</h3>";
+        echo "<pre>";
+        echo "Raw leave types from database:\n";
+        print_r($this->getLeaveTypes());
+        echo "\nFormatted for view:\n";
+        print_r($this->getLeaveTypesForView());
+        echo "\nPrepared form data:\n";
+        print_r($this->prepareLeaveFormData());
+        echo "</pre>";
     }
 
     public function getMessage(): ?array
@@ -452,7 +745,7 @@ private function isAjaxRequest(): bool
         }
 
         if ($this->updateLeaveApplication($applicationId, $data)) {
-            $this->setMessage('success', 'Leave application successfully updated');
+            $this->setMessage('success', 'Permohonan cuti berjaya dikemaskini');
         } else {
             $this->setMessage('error', 'Gagal mengemaskini permohonan');
         }
@@ -494,66 +787,22 @@ private function isAjaxRequest(): bool
         return mysqli_query($this->conn, $query) ?: "Gagal menyimpan maklumat lampiran: " . mysqli_error($this->conn);
     }
 
-    private function escape(string $value): string
-    {
-        return mysqli_real_escape_string($this->conn, trim($value));
-    }
 
-    private function ensureLeaveBalanceExists(int $employeeId, string $leaveType): void
+
+
+
+
+
+
+
+
+
+
+    private function escape(?string $value): string
     {
-        $checkQuery = "SELECT id FROM leave_balances 
-                      WHERE employee_id = $employeeId AND leave_type = '$leaveType'";
-        $result = mysqli_query($this->conn, $checkQuery);
-        
-        if (!$result) {
-            throw new Exception("Gagal semak rekod baki cuti: " . mysqli_error($this->conn));
+        if ($value === null) {
+            return '';
         }
-        
-        if (mysqli_num_rows($result) == 0) {
-            $quotaQuery = "SELECT quota FROM leave_types WHERE type_name = '$leaveType'";
-            $quotaResult = mysqli_query($this->conn, $quotaQuery);
-            
-            if (!$quotaResult) {
-                $quotaQuery = "SELECT days_quota as quota FROM leave_types WHERE type_name = '$leaveType'";
-                $quotaResult = mysqli_query($this->conn, $quotaQuery);
-                
-                if (!$quotaResult) {
-                    $quotaQuery = "SELECT days_allowed as quota FROM leave_types WHERE leave_name = '$leaveType'";
-                    $quotaResult = mysqli_query($this->conn, $quotaQuery);
-                }
-            }
-            
-            if (!$quotaResult) {
-                throw new Exception("Gagal mendapatkan quota untuk jenis cuti ini: " . mysqli_error($this->conn));
-            }
-            
-            $quotaRow = mysqli_fetch_assoc($quotaResult);
-            if (!$quotaRow) {
-                $defaultQuotas = [
-                    'Annual Leave' => 14,
-                    'Medical Leave' => 14,
-                    'Emergency Leave' => 3,
-                    'Maternity Leave' => 60,
-                    'Paternity Leave' => 7
-                ];
-                
-                $quota = $defaultQuotas[$leaveType] ?? 0;
-                
-                if ($quota == 0) {
-                    throw new Exception("Jenis cuti '$leaveType' tidak wujud dalam sistem dan tiada quota default");
-                }
-            } else {
-                $quota = (float) $quotaRow['quota'];
-            }
-            
-            $insertQuery = "INSERT INTO leave_balances 
-                           (employee_id, leave_type, quota, used, in_process, available_balance, year) 
-                           VALUES 
-                           ($employeeId, '$leaveType', $quota, 0, 0, $quota, YEAR(CURDATE()))";
-            
-            if (!mysqli_query($this->conn, $insertQuery)) {
-                throw new Exception("Gagal membuat rekod baki cuti: " . mysqli_error($this->conn));
-            }
-        }
+        return mysqli_real_escape_string($this->conn, trim($value));
     }
 }
