@@ -4,8 +4,7 @@ require_once __DIR__ . '/../Model/medClaim.php';
 
 $medClaim = new MedClaim($conn);
 
-
-// Add this function at the top of your controller file
+// File size formatting helper
 function formatFileSize($bytes) {
     if ($bytes == 0) return '0 Bytes';
     $units = ['Bytes', 'KB', 'MB', 'GB'];
@@ -19,21 +18,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     
     switch ($_POST['action']) {
         case 'approve':
-            $medClaim->approveClaim($claimId);
+            if ($medClaim->approveClaim($claimId)) {
+                header("Location: adminMedClaim.php?approved=1");
+                exit;
+            }
             break;
+            
         case 'reject':
-            $reason = mysqli_real_escape_string($conn, $_POST['reject_reason']);
-            $medClaim->rejectClaim($claimId, $reason);
+            if (isset($_POST['reject_reason'])) {
+                $reason = mysqli_real_escape_string($conn, $_POST['reject_reason']);
+                if ($medClaim->rejectClaim($claimId, $reason)) {
+                    header("Location: adminMedClaim.php?rejected=1");
+                    exit;
+                }
+            }
             break;
     }
     
-    header("Location: adminMedClaim.php?updated=1");
+    // If we get here, something went wrong
+    header("Location: adminMedClaim.php?error=1");
     exit;
 }
 
-// Get pending claims
+// Get claims data
 $pendingClaims = $medClaim->getPendingClaims();
-
-// Get recent approvals/rejections (last 30 days)
-$recentApprovals = $medClaim->getRecentApprovals();
-?>
+$recentApprovals = $medClaim->getRecentApprovals(30); // Last 30 days
