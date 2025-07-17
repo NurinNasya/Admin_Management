@@ -50,6 +50,8 @@ $is_settings_page = in_array($current_page, ['company', 'department', 'roles', '
 
   <!-- In your header-navbar.php or before </body> -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
   <style>
     /* Your custom CSS styles */
     .claim-card {
@@ -400,6 +402,7 @@ $is_settings_page = in_array($current_page, ['company', 'department', 'roles', '
             <span class="nav-link-text ms-1">Staff</span>
           </a>
         </li>
+        
         <li class="nav-item">
           <a class="nav-link collapsed <?php echo $is_settings_page ? 'active' : ''; ?>" data-bs-toggle="collapse" href="#settingsMenu" role="button" aria-expanded="<?php echo $is_settings_page ? 'true' : 'false'; ?>" aria-controls="settingsMenu">
             <div class="icon icon-shape icon-sm border-radius-md text-center me-2 d-flex align-items-center justify-content-center">
